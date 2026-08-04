@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridgebuilder - Ultimate Classroom Game</title>
+    <script>
+        // GLOBAL ERROR CATCHER - MUST REMAIN AT TOP
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            alert("Error caught:\n" + msg + "\nLine: " + lineNo);
+            return false;
+        };
+    </script>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --panel-bg: #161b22;
+            --text-main: #e6edf3;
+            --hex-neutral: #1a237e;
+            --hex-border: #ffca28;
+            --hover-color: #ffffff;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* --- UI Components --- */
+        h1, h2, h3 { margin-bottom: 10px; font-weight: 600; }
+        p { margin-bottom: 15px; line-height: 1.5; }
+        
+        button {
+            background-color: #238636;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        button:hover { background-color: #2ea043; }
+        button.secondary { background-color: #21262d; border: 1px solid #30363d; }
+        button.secondary:hover { background-color: #30363d; }
+        button.danger { background-color: #da3633; }
+        button.danger:hover { background-color: #f85149; }
+        button.action { background-color: #8a2be2; }
+        button.action:hover { background-color: #9c40f0; }
+
+        input, select, textarea {
+            background-color: #0d1117;
+            color: var(--text-main);
+            border: 1px solid #30363d;
+            padding: 8px;
+            border-radius: 6px;
+            font-family: var(--font-family);
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        
+        textarea.code-font {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            background: #000;
+            color: #0f0;
+            resize: none;
+        }
+
+        /* --- Strict Screen & Element Toggling --- */
+        .app-screen { 
+            display: none !important; 
+            width: 100%;
+            height: 100%;
+        }
+        .app-screen.active-screen { 
+            display: flex !important; 
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: none !important;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-overlay.active-modal {
+            display: flex !important;
+        }
+
+        .d-none { display: none !important; }
+        .d-block { display: block !important; }
+
+        /* --- Landing Screen Specifics --- */
+        #landing-screen {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1a237e 0%, #0d1117 80%);
+            padding: 20px;
+        }
+        .landing-graphic-container {
+            margin-bottom: 40px;
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.7));
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .landing-controls {
+            background-color: rgba(22, 27, 34, 0.9);
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            border: 2px solid var(--hex-border);
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .landing-subtitle-input {
+            font-size: 1.5rem;
+            text-align: center;
+            padding: 15px;
+            background: rgba(0,0,0,0.5);
+            border: 1px dashed var(--hex-border);
+            color: var(--hex-border);
+            margin-bottom: 25px;
+        }
+
+        /* --- Setup Screen Specifics --- */
+        #setup-screen {
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            padding: 40px;
+            background: radial-gradient(circle at center, #1a237e 0%, #0d1117 70%);
+        }
+        .setup-container {
+            background-color: rgba(22, 27, 34, 0.9);
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 900px;
+            width: 100%;
+            border: 2px solid var(--hex-border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+        .grid-2-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .instructions-box {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-left: 4px solid var(--hex-border);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        /* --- Game Screen Specifics --- */
+        #game-screen {
+            flex-direction: row; 
+        }
+        
+        #main-game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #timer-bar-container {
+            width: 100%;
+            height: 10px;
+            background: #30363d;
+        }
+        #timer-bar {
+            height: 100%;
+            width: 100%;
+            background: #4caf50; 
+            transition: width 1s linear;
+        }
+
+        #board-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #11183c 0%, #0d1117 100%);
+        }
+        
+        #board-wrapper {
+            background: rgba(0,0,0,0.4);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        svg#hex-board {
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+        }
+
+        .hex-polygon {
+            stroke: var(--hex-border);
+            stroke-width: 3;
+            cursor: pointer;
+            transition: fill 0.3s, transform 0.1s, stroke 0.2s;
+        }
+        .hex-polygon:hover {
+            stroke: var(--hover-color);
+            stroke-width: 5;
+        }
+        .hex-text {
+            font-size: 28px;
+            font-weight: bold;
+            fill: #ffffff;
+            text-anchor: middle;
+            dominant-baseline: central;
+            pointer-events: none;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Right Sidebar */
+        #right-sidebar {
+            width: 340px;
+            background-color: var(--panel-bg);
+            border-left: 2px solid #30363d;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+            z-index: 20;
+            overflow-y: auto;
+        }
+        
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .turn-indicator-box {
+            background-color: #0d1117;
+            border: 2px solid var(--hex-border);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(255, 202, 40, 0.2);
+        }
+        
+        .team-edit-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            border: 2px solid transparent;
+            transition: filter 0.2s, transform 0.2s, border 0.2s;
+        }
+        .team-edit-input:focus {
+            outline: 2px solid #fff;
+            filter: brightness(1.2);
+        }
+        .active-turn {
+            transform: scale(1.05);
+            border: 3px solid var(--hex-border) !important;
+            box-shadow: 0 0 15px var(--hex-border);
+            z-index: 5;
+            position: relative;
+        }
+
+        /* Modal Internals */
+        .modal-content {
+            background: var(--panel-bg);
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 700px;
+            width: 90%;
+            border: 2px solid var(--hex-border);
+            box-shadow: 0 0 40px rgba(255, 202, 40, 0.2);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        #question-display { font-size: 1.8rem; margin: 20px 0; font-weight: bold; color: var(--hex-border); }
+        #answer-display { font-size: 1.5rem; margin: 20px 0; color: #4caf50; }
+        .team-buttons { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+        .team-buttons button { width: auto; font-size: 1.1rem; padding: 12px 25px; }
+        
+        .copyright {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: #666;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .landing-hex-text { font-family: 'Arial', sans-serif; font-size: 42px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== LANDING SCREEN ==================== -->
+    <div id="landing-screen" class="app-screen active-screen">
+        <div class="landing-graphic-container">
+            <svg width="100%" style="max-width: 630px;" viewBox="0 0 630 200">
+                <!-- Row 1: BRIDGE (6 Hexagons) Perfectly mathematically centered (translate X = 48.5) -->
+                <g transform="translate(48.5, 10)">
+                    <!-- B -->
+                    <polygon points="50,0 93.3,25 93.3,75 50,100 6.7,75 6.7,25" fill="#ffca28" stroke="#ffffff" stroke-width="3"/>
+                    <text x="50" y="50" class="landing-hex-text" fill="#000000">B</text>
+                    <!-- R -->
+                    <polygon points="136.6,0 179.9,25 179.9,75 136.6,100 93.3,75 93.3,25" fill="#1a237e" stroke="#ffca28" stroke-width="3"/>
+                    <text x="136.6" y="50" class="landing-hex-text" fill="#ffffff">R</text>
+                    <!-- I -->
+                    <polygon points="223.2,0 266.5,25 266.5,75 223.2,100 179.9,75 179.9,25" fill="#f44336" stroke="#ffffff" stroke-width="3"/>
+                    <text x="223.2" y="50" class="landing-hex-text" fill="#ffffff">I</text>
+                    <!-- D -->
+                    <polygon points="309.8,0 353.1,25 353.1,75 309.8,100 266.5,75 266.5,25" fill="#4caf50" stroke="#ffca28" stroke-width="3"/>
+                    <text x="309.8" y="50" class="landing-hex-text" fill="#ffffff">D</text>
+                    <!-- G -->
+                    <polygon points="396.4,0 439.7,25 439.7,75 396.4,100 353.1,75 353.1,25" fill="#ffffff" stroke="#1a237e" stroke-width="3"/>
+                    <text x="396.4" y="50" class="landing-hex-text" fill="#000000">G</text>
+                    <!-- E -->
+                    <polygon points="483,0 526.3,25 526.3,75 483,100 439.7,75 439.7,25" fill="#ffca28" stroke="#ffffff" stroke-width="3"/>
+                    <text x="483" y="50" class="landing-hex-text" fill="#000000">E</text>
+                </g>
+                <!-- Row 2: BUILDER (7 Hexagons) Perfectly mathematically centered (translate X = 5.2) -->
+                <g transform="translate(5.2, 85)">
+                    <!-- B -->
+                    <polygon points="50,0 93.3,25 93.3,75 50,100 6.7,75 6.7,25" fill="#1a237e" stroke="#ffca28" stroke-width="3"/>
+                    <text x="50" y="50" class="landing-hex-text" fill="#ffffff">B</text>
+                    <!-- U -->
+                    <polygon points="136.6,0 179.9,25 179.9,75 136.6,100 93.3,75 93.3,25" fill="#f44336" stroke="#ffffff" stroke-width="3"/>
+                    <text x="136.6" y="50" class="landing-hex-text" fill="#ffffff">U</text>
+                    <!-- I (Changed to Green) -->
+                    <polygon points="223.2,0 266.5,25 266.5,75 223.2,100 179.9,75 179.9,25" fill="#4caf50" stroke="#ffca28" stroke-width="3"/>
+                    <text x="223.2" y="50" class="landing-hex-text" fill="#ffffff">I</text>
+                    <!-- L (Changed to White) -->
+                    <polygon points="309.8,0 353.1,25 353.1,75 309.8,100 266.5,75 266.5,25" fill="#ffffff" stroke="#1a237e" stroke-width="3"/>
+                    <text x="309.8" y="50" class="landing-hex-text" fill="#000000">L</text>
+                    <!-- D -->
+                    <polygon points="396.4,0 439.7,25 439.7,75 396.4,100 353.1,75 353.1,25" fill="#ffca28" stroke="#ffffff" stroke-width="3"/>
+                    <text x="396.4" y="50" class="landing-hex-text" fill="#000000">D</text>
+                    <!-- E -->
+                    <polygon points="483,0 526.3,25 526.3,75 483,100 439.7,75 439.7,25" fill="#1a237e" stroke="#ffca28" stroke-width="3"/>
+                    <text x="483" y="50" class="landing-hex-text" fill="#ffffff">E</text>
+                    <!-- R -->
+                    <polygon points="569.6,0 612.9,25 612.9,75 569.6,100 526.3,75 526.3,25" fill="#f44336" stroke="#ffffff" stroke-width="3"/>
+                    <text x="569.6" y="50" class="landing-hex-text" fill="#ffffff">R</text>
+                </g>
+            </svg>
+        </div>
+        
+        <div class="landing-controls">
+            <p style="font-size: 1.1rem; color: #aaa; margin-bottom: 5px;">Game Edition:</p>
+            <input type="text" id="landing-subtitle-input" class="landing-subtitle-input" value="General Knowledge Edition" placeholder="Enter game edition subtitle...">
+            <button id="btn-landing-setup" style="font-size: 1.4rem; padding: 15px;">Configure & Play</button>
+        </div>
+    </div>
+
+    <!-- ==================== SETUP SCREEN ==================== -->
+    <div id="setup-screen" class="app-screen">
+        <h1 style="font-size: 3.5rem; color: var(--hex-border); text-shadow: 0 0 20px rgba(255,202,40,0.5); margin-bottom: 0;">BRIDGEBUILDER</h1>
+        <p id="setup-subtitle-display" style="font-size: 1.2rem; color: #aaa;">The Ultimate Classroom Knowledge Challenge</p>
+        
+        <div class="setup-container">
+            <div class="grid-2-col">
+                <div>
+                    <h2>Game Settings</h2>
+                    <label>Game Mode:</label>
+                    <select id="setup-sel-mode">
+                        <option value="2" selected>2-Team Mode (Classic: Connect opposite sides)</option>
+                        <option value="3">3-Team Mode (Connect ANY two sides)</option>
+                        <option value="multi">Multi-Team (Territory Grab - 4 Teams)</option>
+                        <option value="solo">Single Player Challenge (Race the timer)</option>
+                    </select>
+
+                    <label>Board Size:</label>
+                    <select id="setup-sel-size">
+                        <option value="5x4" selected>5x4 (Classic - 20 Hexagons)</option>
+                        <option value="6x5">6x5 (Balanced - 30 Hexagons)</option>
+                        <option value="7x6">7x6 (Epic - 42 Hexagons)</option>
+                    </select>
+
+                    <label>Content Type:</label>
+                    <select id="setup-sel-content">
+                        <option value="letters">Letters (e.g. A, B, C)</option>
+                        <option value="icons" selected>Icons (Emojis/Symbols)</option>
+                    </select>
+
+                    <div id="setup-solo-settings" class="d-none" style="margin-top: 10px;">
+                        <label>Timer (Seconds):</label>
+                        <input type="number" id="setup-solo-timer" value="120" min="10" max="600">
+                    </div>
+                </div>
+
+                <div>
+                    <h2>How to Play</h2>
+                    <div class="instructions-box" id="setup-mode-instructions">
+                        <strong>2-Team Classic:</strong><br>
+                        White Team starts and tries to build a bridge from the LEFT edge to the RIGHT edge.<br>
+                        Blue Team goes next and tries to build a bridge from the TOP edge to the BOTTOM edge.<br>
+                        Answer correctly to claim a hex. Incorrect answers pass the turn and reset the hex with a new question!
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button id="btn-setup-ai" class="action">AI Generation Instructions</button>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border-color: #30363d; margin: 20px 0;">
+
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <div>
+                    <h2 style="display: inline-block;">Question Set</h2>
+                    <button id="btn-setup-clear" class="secondary" style="width: auto; padding: 4px 10px; margin-left: 10px; font-size: 0.8rem;">Clear All</button>
+                </div>
+                <span style="font-size: 0.9rem; color: #aaa;">Format: <code>Symbol | Question | Answer</code></span>
+            </div>
+            
+            <textarea id="setup-question-input" rows="8"></textarea>
+            
+            <div style="display: flex; gap: 15px; margin-top: 15px;">
+                <button id="btn-setup-back" class="secondary" style="font-size: 1.2rem; padding: 15px; flex: 1;">Back</button>
+                <button id="btn-setup-save" class="action" style="font-size: 1.2rem; padding: 15px; flex: 1.5;">Save Game File</button>
+                <button id="btn-setup-start" style="font-size: 1.5rem; padding: 15px; background-color: var(--hex-border); color: #000; flex: 2;">START BUILDING</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== GAME SCREEN ==================== -->
+    <div id="game-screen" class="app-screen">
+        
+        <!-- Main Game Area -->
+        <div id="main-game-area">
+            <div id="timer-bar-container" class="d-none">
+                <div id="timer-bar"></div>
+            </div>
+            <div id="board-container">
+                <div id="board-wrapper">
+                    <svg id="hex-board"></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar (HUD & Host Controls) -->
+        <div id="right-sidebar">
+            <div class="sidebar-section" style="text-align: center; border-bottom: 1px solid #30363d; padding-bottom: 15px;">
+                <h2 style="color: var(--hex-border); margin: 0;">BRIDGEBUILDER</h2>
+                <p id="game-subtitle-display" style="color:#aaa; font-size:0.8rem; margin:5px 0 0 0;"></p>
+            </div>
+            
+            <div class="turn-indicator-box" id="turn-box">
+                <h3 style="margin: 0; font-size: 0.9rem; color: #aaa; text-transform: uppercase;">Current Turn</h3>
+                <h2 id="current-turn-display" style="margin: 5px 0 0 0; font-size: 1.8rem;">White Team</h2>
+            </div>
+
+            <div class="sidebar-section" id="team-hud-section">
+                <div id="team-inputs-container">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+
+            <div class="sidebar-section" style="margin-top: auto;">
+                <h3 style="margin-bottom: 10px; color: #aaa; font-size: 0.9rem; text-transform: uppercase;">Host Controls</h3>
+                
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: #0d1117; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #30363d;">
+                    <input type="checkbox" id="chk-override" style="width: auto; margin: 0;"> 
+                    <strong style="font-size: 0.9rem;">Enable Manual Override</strong>
+                </label>
+
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button id="btn-game-fullscreen" class="secondary">Toggle Fullscreen</button>
+                    <button id="btn-game-quit" class="danger">Return to Setup</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Save File Modal -->
+    <div id="modal-save" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2 style="color: var(--hex-border); margin-bottom: 20px;">Save Game File</h2>
+            <p style="text-align: left; margin-bottom: 15px;">This will download a completely self-contained HTML file containing your customized questions, settings, and title. You can open it anytime to play without an internet connection.</p>
+            <label style="display: block; text-align: left; margin-bottom: 5px;">File Name:</label>
+            <input type="text" id="save-filename-input" value="bridgebuilder-custom" style="margin-bottom: 25px;">
+            
+            <div style="display: flex; justify-content: center; gap: 15px;">
+                <button id="btn-modal-save-confirm" class="action">Download File</button>
+                <button id="btn-modal-save-cancel" class="secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI INSTRUCTIONS MODAL -->
+    <div id="modal-ai" class="modal-overlay">
+        <div class="modal-content" style="text-align: left;">
+            <h2 style="color: var(--hex-border); margin-bottom: 20px; text-align: center;">Generate Questions with AI</h2>
+            <p>You can easily generate custom question sets using ChatGPT, Gemini, or Claude. Copy the prompt below, paste it into your AI of choice, and then paste the resulting text directly into the "Question Set" box in Bridgebuilder.</p>
+            
+            <textarea id="ai-prompt-text" class="code-font" rows="10" readonly>Act as an expert trivia game generator. I need a set of 75 trivia questions for a game called Bridgebuilder (this provides extra questions in case teams answer incorrectly and a new question needs to be generated).
+
+Please output the questions using EXACTLY this format, one question per line, with no extra text, markdown formatting, or numbering:
+Symbol | Question | Answer
+
+If the category is letters, the Symbol should be the first letter of the Answer. If the answer is multiple words, use an initialism (e.g., South America should be SA).
+If the category is emojis/icons, the Symbol should be a relevant single emoji.</textarea>
+            
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+                <button id="btn-modal-ai-copy" class="action" style="width: auto;">Copy Prompt</button>
+                <button id="btn-modal-ai-close" class="secondary" style="width: auto;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUESTION MODAL -->
+    <div id="modal-question" class="modal-overlay">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="width: 30px;"></div> <!-- Spacer -->
+                <div id="q-hex-symbol" style="font-size: 3rem; background: var(--hex-neutral); border: 4px solid var(--hex-border); display: inline-block; width: auto; min-width: 80px; padding: 0 15px; height: 80px; line-height: 72px; border-radius: 12px; margin-bottom: 10px; font-family: 'Arial', sans-serif;">A</div>
+                <button id="btn-modal-question-close" class="secondary" style="width: auto; padding: 5px 15px; font-size: 1.2rem; background: transparent; border: none; color: #888;">&times;</button>
+            </div>
+            
+            <div id="question-display">What is the question?</div>
+            <button id="btn-reveal" style="font-size: 1.2rem; padding: 10px 30px; margin-bottom: 10px; width: auto;">Reveal Answer</button>
+            <div id="answer-display" class="d-none">The Answer</div>
+            
+            <div id="scoring-controls" class="d-none">
+                <!-- Buttons injected dynamically based on turn -->
+                <div class="team-buttons" id="turn-award-buttons">
+                    <!-- Standard Turn Buttons -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OVERRIDE MODAL -->
+    <div id="modal-override" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Manual Override</h2>
+            <p>Set hexagon state to:</p>
+            <div class="team-buttons" id="override-buttons">
+                <!-- Injected via JS -->
+            </div>
+            <button id="btn-modal-override-cancel" class="secondary" style="margin-top: 15px; width: auto;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- WIN MODAL -->
+    <div id="modal-win" class="modal-overlay">
+        <div class="modal-content" style="box-shadow: 0 0 50px rgba(255, 255, 255, 0.5);">
+            <h1 style="font-size: 4rem; margin-bottom: 10px;" id="win-title">WINNER!</h1>
+            <p style="font-size: 1.5rem;" id="win-subtitle">Team has built the bridge.</p>
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 30px;">
+                <button id="btn-modal-win-setup" style="font-size: 1.2rem; width: auto;">Return to Setup</button>
+                <button id="btn-modal-win-view" class="secondary" style="font-size: 1.2rem; width: auto;">View Board</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="copyright">&copy; 2026 Martin Allen. All rights reserved.</div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+        /* --- UTILITY: NULL-SAFE GETTER --- */
+        function getEl(id) {
+            return document.getElementById(id);
+        }
+
+        /* --- SCREEN CONTROLLER --- */
+        function showScreen(screenId) {
+            const screens = ['landing-screen', 'setup-screen', 'game-screen'];
+            screens.forEach(id => {
+                const el = getEl(id);
+                if (el) {
+                    if (id === screenId) el.classList.add('active-screen');
+                    else el.classList.remove('active-screen');
+                }
+            });
+        }
+
+        function openModal(modalId) {
+            const el = getEl(modalId);
+            if (el) el.classList.add('active-modal');
+        }
+
+        function closeAllModals() {
+            const modals = ['modal-save', 'modal-ai', 'modal-question', 'modal-override', 'modal-win'];
+            modals.forEach(id => {
+                const el = getEl(id);
+                if (el) el.classList.remove('active-modal');
+            });
+            state.activeHex = null;
+        }
+
+        /* --- DEFAULT QUESTION SETS (Ascii/Unicode Safe) --- */
+        const defaultLetters = `SA | What 'SA' is the continent where the Amazon Rainforest is located? | South America
+B | What 'B' is a flying mammal? | Bat
+C | What 'C' is the chemical element diamond is made of? | Carbon
+D | What 'D' is the currency of the United States? | Dollar
+ME | What 'ME' is the highest mountain in the world? | Mount Everest
+P | What 'P' is the process by which plants make their food? | Photosynthesis
+G | What 'G' is the force that pulls objects toward the center of the Earth? | Gravity
+H | What 'H' is the organ that pumps blood through the body? | Heart
+I | What 'I' is the solid form of water? | Ice
+J | What 'J' is the largest planet in our solar system? | Jupiter
+K | What 'K' is a marsupial native to Australia that hops? | Kangaroo
+L | What 'L' is the capital city of the United Kingdom? | London
+M | What 'M' is the red planet? | Mars
+N | What 'N' is the gas that makes up 78% of the Earth's atmosphere? | Nitrogen
+AO | What 'AO' is the ocean on the east coast of the USA? | Atlantic Ocean
+P | What 'P' is the capital of France? | Paris
+Q | What 'Q' is a gemstone made of silicon dioxide? | Quartz
+R | What 'R' is the holy month of fasting in Islam? | Ramadan
+S | What 'S' is the closest star to Earth? | Sun
+MT | What 'MT' is the world's deepest ocean trench? | Mariana Trench
+U | What 'U' is the planet that rotates on its side? | Uranus
+V | What 'V' is the Roman goddess of love? | Venus
+T | What 'T' is a weather phenomenon characterized by a funnel cloud? | Tornado
+XR | What 'XR' is a medical image of the inside of the body? | X-Ray
+Y | What 'Y' is the yellow part of an egg? | Yolk
+Z | What 'Z' is an African animal with black and white stripes? | Zebra
+BB | What 'BB' is the clock tower located at the Palace of Westminster in London? | Big Ben
+GW | What 'GW' is the long defensive structure built across the historical northern borders of China? | Great Wall
+NY | What 'NY' is the most populous city in the United States? | New York
+SC | What 'SC' is the chapel in the Vatican famous for its ceiling painted by Michelangelo? | Sistine Chapel
+HP | What 'HP' is the famous fictional teenage wizard created by J.K. Rowling? | Harry Potter
+RN | What 'RN' is the longest river in the world, located in Africa? | River Nile
+EU | What 'EU' is the political and economic union of 27 member states that are located primarily in Europe? | European Union
+WT | What 'WT' is a machine used to generate electricity from the wind? | Wind Turbine
+CC | What 'CC' is a popular brown carbonated soft drink? | Coca Cola
+PB | What 'PB' is a spread made from ground, dry-roasted peanuts? | Peanut Butter
+IR | What 'IR' is the period of transition to new manufacturing processes in Europe and the US? | Industrial Revolution
+CD | What 'CD' is a small plastic disc used for the storage of digital data, first developed in 1982? | Compact Disc
+FF | What 'FF' is a type of food easily prepared and served quickly, like burgers and fries? | Fast Food
+MC | What 'MC' was the French scientist who won Nobel Prizes in both Physics and Chemistry? | Marie Curie
+VR | What 'VR' is a simulated experience that can be similar to or completely different from the real world? | Virtual Reality
+AI | What 'AI' stands for the simulation of human intelligence processes by machines? | Artificial Intelligence
+UK | What 'UK' is the island country comprising England, Scotland, Wales, and Northern Ireland? | United Kingdom
+WHO | What 'WHO' is the specialized agency of the UN responsible for international public health? | World Health Organization
+ML | What 'ML' is the famous portrait painted by Leonardo da Vinci? | Mona Lisa
+ET | What 'ET' is the wrought-iron lattice tower on the Champ de Mars in Paris? | Eiffel Tower
+TM | What 'TM' is the ivory-white marble mausoleum in Agra, India? | Taj Mahal
+SL | What 'SL' is the colossal copper sculpture on Liberty Island in New York Harbor? | Statue of Liberty
+PO | What 'PO' is the largest and deepest of Earth's oceanic divisions? | Pacific Ocean
+MK | What 'MK' is a dormant volcano in Tanzania and the highest mountain in Africa? | Mount Kilimanjaro
+NM | What 'NM' was the anti-apartheid revolutionary who became South Africa's first black head of state? | Nelson Mandela
+WC | What 'WC' was the British Prime Minister who led the country to victory in the Second World War? | Winston Churchill
+IN | What 'IN' was the English mathematician who formulated the laws of motion and universal gravitation? | Isaac Newton
+AE | What 'AE' was the theoretical physicist who developed the theory of relativity? | Albert Einstein
+WS | What 'WS' was the English playwright who wrote Romeo and Juliet and Hamlet? | William Shakespeare
+CD | What 'CD' was the English naturalist who proposed the theory of biological evolution by natural selection? | Charles Darwin
+QV | What 'QV' was the Queen of the United Kingdom of Great Britain and Ireland from 1837 to 1901? | Queen Victoria
+KH | What 'KH' was the King of England known for his six marriages? | King Henry VIII
+BH | What 'BH' is a region of spacetime where gravity is so strong that nothing can escape from it? | Black Hole
+MW | What 'MW' is the galaxy that contains our Solar System? | Milky Way
+SS | What 'SS' is the gravitationally bound system of the Sun and the objects that orbit it? | Solar System
+GW | What 'GW' is the long-term heating of Earth's climate system? | Global Warming
+CD | What 'CD' is a colorless gas that plants absorb during photosynthesis? | Carbon Dioxide
+O | What 'O' is the chemical element with the symbol O and atomic number 8, essential for human respiration? | Oxygen
+H | What 'H' is the lightest element and the most abundant chemical substance in the universe? | Hydrogen
+CIA | What 'CIA' is the civilian foreign intelligence service of the federal government of the United States? | Central Intelligence Agency
+FBI | What 'FBI' is the domestic intelligence and security service of the United States? | Federal Bureau of Investigation
+ATM | What 'ATM' is an electronic telecommunications device used for financial transactions? | Automated Teller Machine
+PIN | What 'PIN' is a numeric password shared between a user and a system? | Personal Identification Number
+PC | What 'PC' is a multi-purpose computer whose size and capabilities make it useful for individuals? | Personal Computer
+TV | What 'TV' is a telecommunication medium used for transmitting moving images in monochrome or color? | Television
+GPS | What 'GPS' is a satellite-based radionavigation system owned by the United States? | Global Positioning System
+SO | What 'SO' is a water-soluble compound used for washing and cleaning? | Soap
+SW | What 'SW' is the fictional sci-fi franchise created by George Lucas? | Star Wars
+T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 1912? | Titanic`;
+
+        const defaultIcons = 
+"\uD83C\uDF4E | What fruit keeps the doctor away? | Apple\n" +
+"\uD83C\uDF4C | What yellow fruit do monkeys love? | Banana\n" +
+"\uD83D\uDC31 | What animal purrs and likes milk? | Cat\n" +
+"\uD83D\uDC36 | What animal is known as man's best friend? | Dog\n" +
+"\uD83E\uDD8A | What cunning woodland animal is typically red? | Fox\n" +
+"\uD83C\uDF47 | What fruit is used to make wine? | Grapes\n" +
+"\uD83E\uDD81 | What big cat is known as the king of the jungle? | Lion\n" +
+"\uD83D\uDC3C | What black and white bear eats bamboo? | Panda\n" +
+"\uD83D\uDC22 | What reptile carries its home on its back? | Turtle\n" +
+"\uD83D\uDC0D | What legless reptile slithers? | Snake\n" +
+"\uD83D\uDC18 | What is the largest land mammal? | Elephant\n" +
+"\uD83E\uDD92 | What animal has the longest neck? | Giraffe\n" +
+"\uD83D\uDC27 | What flightless bird lives in Antarctica? | Penguin\n" +
+"\uD83D\uDC38 | What amphibian starts as a tadpole? | Frog\n" +
+"\uD83E\uDD88 | What apex predator rules the ocean? | Shark\n" +
+"\uD83E\uDD8B | What beautiful insect starts as a caterpillar? | Butterfly\n" +
+"\uD83D\uDC1D | What insect makes honey? | Bee\n" +
+"\uD83D\uDD77\uFE0F | What creature spins a web? | Spider\n" +
+"\uD83E\uDD89 | What bird of prey is associated with wisdom? | Owl\n" +
+"\uD83D\uDC2C | What highly intelligent marine mammal loves to jump? | Dolphin\n" +
+"\uD83D\uDC05 | What is the largest living cat species, easily recognized by its dark vertical stripes? | Tiger\n" +
+"\uD83D\uDC06 | What large cat is known for its incredible running speed? | Cheetah\n" +
+"\uD83E\uDD93 | What African equine is characterized by distinctive black-and-white striped coats? | Zebra\n" +
+"\uD83E\uDD8F | What large herbivore has one or two upright horns on its snout? | Rhinoceros\n" +
+"\uD83E\uDD8D | What is the largest living primate? | Gorilla\n" +
+"\uD83E\uDDA7 | What great ape is native to the rainforests of Indonesia and Malaysia, known for its red hair? | Orangutan\n" +
+"\uD83D\uDC2A | What animal is known as the 'ship of the desert'? | Camel\n" +
+"\uD83E\uDD99 | What domesticated South American camelid is widely used as a meat and pack animal? | Llama\n" +
+"\uD83D\uDC11 | What domestic animal is commonly kept for its wool, meat, and milk? | Sheep\n" +
+"\uD83D\uDC10 | What hardy domesticated ruminant has backward-curving horns? | Goat\n" +
+"\uD83D\uDC0E | What solid-hoofed plant-eating domesticated mammal is used for riding and racing? | Horse\n" +
+"\uD83D\uDC16 | What omnivorous domesticated hoofed mammal is raised primarily for meat? | Pig\n" +
+"\uD83D\uDC04 | What fully grown female animal of a domesticated breed of ox is kept for milk or meat? | Cow\n" +
+"\uD83D\uDC13 | What is an adult male chicken called? | Rooster\n" +
+"\uD83E\uDD83 | What large bird is traditionally eaten at Thanksgiving? | Turkey\n" +
+"\uD83E\uDDAA | What large bird is known for the male's extravagant tail plumage? | Peacock\n" +
+"\uD83E\uDD9C | What bird is known for its ability to mimic human speech? | Parrot\n" +
+"\uD83E\uDDA2 | What large waterbird has a long flexible neck, short legs, and typically all-white plumage? | Swan\n" +
+"\uD83E\uDDA9 | What tall wading bird has mainly pink or scarlet plumage and long legs and neck? | Flamingo\n" +
+"\uD83E\uDD85 | What large bird of prey is the national bird of the United States? | Bald Eagle\n" +
+"\uD83E\uDD87 | What is the only mammal capable of true flight? | Bat\n" +
+"\uD83E\uDD94 | What small nocturnal Old World mammal has a spiny coat and can roll itself into a ball? | Hedgehog\n" +
+"\uD83D\uDC3F\uFE0F | What agile tree-dwelling rodent has a bushy tail? | Squirrel\n" +
+"\uD83E\uDDA1 | What heavily built, short-legged omnivore is known for its distinct facial stripes? | Badger\n" +
+"\uD83E\uDD98 | What large Australian marsupial moves by hopping? | Kangaroo\n" +
+"\uD83D\uDC28 | What arboreal herbivorous marsupial is native to Australia and eats eucalyptus leaves? | Koala\n" +
+"\uD83E\uDDA5 | What slow-moving tropical American mammal hangs upside down from the branches of trees? | Sloth\n" +
+"\uD83E\uDDA6 | What semiaquatic fish-eating mammal has an elongated body, dense fur, and webbed feet? | Otter\n" +
+"\uD83E\uDDAD | What fin-footed marine mammal is sometimes known as a pinniped? | Seal\n" +
+"\uD83D\uDC0B | What very large marine mammal has a streamlined body and horizontal tail fin? | Whale\n" +
+"\uD83D\uDC19 | What cephalopod mollusk has eight sucker-bearing arms? | Octopus\n" +
+"\uD83E\uDD91 | What elongated, fast-swimming cephalopod mollusk has ten arms? | Squid\n" +
+"\uD83E\uDD80 | What crustacean has a broad carapace, stalked eyes, and five pairs of legs? | Crab\n" +
+"\uD83E\uDD9E | What large marine crustacean has a cylindrical body, stalked eyes, and pincers? | Lobster\n" +
+"\uD83E\uDD90 | What small, free-swimming crustacean with an elongated body is used for food? | Shrimp\n" +
+"\uD83D\uDC0C | What mollusk has a single spirally coiled shell into which it can withdraw? | Snail\n" +
+"\uD83D\uDC1B | What is the larva of a butterfly or moth called? | Caterpillar\n" +
+"\uD83D\uDC1C | What small insect lives in a complex social colony with breeding queens? | Ant\n" +
+"\uD83D\uDC1E | What small flying insect is typically red with black spots? | Ladybug\n" +
+"\uD83E\uDD97 | What insect is known for the musical chirping sound the male makes? | Cricket\n" +
+"\uD83E\uDD9F | What slender long-legged fly takes blood from animals? | Mosquito\n" +
+"\uD83C\uDF0D | What is the third planet from the Sun? | Earth\n" +
+"\uD83C\uDF15 | What is Earth's only natural satellite? | Moon\n" +
+"\u2600\uFE0F | What is the star around which the Earth orbits? | Sun\n" +
+"\u2B50 | What is a fixed luminous point in the night sky? | Star\n" +
+"\u2601\uFE0F | What is a visible mass of condensed water vapor floating in the atmosphere? | Cloud\n" +
+"\uD83C\uDF27\uFE0F | What is moisture condensed from the atmosphere that falls visibly? | Rain\n" +
+"\u2744\uFE0F | What is atmospheric water vapor frozen into ice crystals? | Snow\n" +
+"\u26A1 | What is the occurrence of a natural electrical discharge in the sky? | Lightning\n" +
+"\uD83C\uDF08 | What is an arch of colors formed in the sky by rain and sun? | Rainbow\n" +
+"\uD83C\uDF0A | What is a long body of water curling into an arched form? | Wave\n" +
+"\uD83D\uDD25 | What is combustion or burning that gives out bright light and heat? | Fire\n" +
+"\uD83D\uDCA7 | What is a small round portion of liquid that falls or adheres to a surface? | Drop\n" +
+"\uD83C\uDF32 | What is an evergreen coniferous tree with needle-shaped leaves? | Fir Tree\n" +
+"\uD83C\uDF35 | What is a succulent plant with a thick, fleshy stem bearing spines? | Cactus";
+
+
+        /* --- GAME STATE --- */
+        const TEAM_COLORS = {
+            1: { bg: '#ffffff', text: '#000000', border: '#ffffff', name: 'White Team' }, 
+            2: { bg: '#2196f3', text: '#ffffff', border: '#2196f3', name: 'Blue Team' }, 
+            3: { bg: '#f44336', text: '#ffffff', border: '#f44336', name: 'Red Team' }, 
+            4: { bg: '#4caf50', text: '#ffffff', border: '#4caf50', name: 'Green Team' }, 
+        };
+        
+        let state = {
+            mode: '2', 
+            cols: 5,
+            rows: 4,
+            teams: [],
+            currentTeamIndex: 0,
+            questions: [], 
+            grid: [], 
+            activeHex: null, 
+            soloTime: 120,
+            soloInterval: null,
+            gameOver: false
+        };
+
+        /* --- INITIALIZATION & UI BINDINGS --- */
+        window.onload = function() {
+            bindEvents();
+            loadDefaultQuestions();
+        };
+
+        function bindEvents() {
+            // Landing
+            let btnLSetup = getEl('btn-landing-setup');
+            if (btnLSetup) btnLSetup.addEventListener('click', () => {
+                syncSubtitle();
+                showScreen('setup-screen');
+            });
+            
+            // Setup
+            let selMode = getEl('setup-sel-mode');
+            if (selMode) selMode.addEventListener('change', updateModeSettings);
+            
+            let selContent = getEl('setup-sel-content');
+            if (selContent) selContent.addEventListener('change', loadDefaultQuestions);
+
+            let btnSBack = getEl('btn-setup-back');
+            if (btnSBack) btnSBack.addEventListener('click', () => showScreen('landing-screen'));
+
+            let btnSStart = getEl('btn-setup-start');
+            if (btnSStart) btnSStart.addEventListener('click', startGame);
+
+            let btnSSave = getEl('btn-setup-save');
+            if (btnSSave) btnSSave.addEventListener('click', () => openModal('modal-save'));
+
+            let btnSClear = getEl('btn-setup-clear');
+            if (btnSClear) btnSClear.addEventListener('click', () => {
+                let qInput = getEl('setup-question-input');
+                if (qInput) qInput.value = '';
+            });
+
+            let btnSAI = getEl('btn-setup-ai');
+            if (btnSAI) btnSAI.addEventListener('click', () => openModal('modal-ai'));
+
+            // Game Controls
+            let btnGFull = getEl('btn-game-fullscreen');
+            if (btnGFull) btnGFull.addEventListener('click', toggleFullscreen);
+
+            let btnGQuit = getEl('btn-game-quit');
+            if (btnGQuit) btnGQuit.addEventListener('click', returnToSetup);
+
+            // Modals
+            let btnMSaveConfirm = getEl('btn-modal-save-confirm');
+            if (btnMSaveConfirm) btnMSaveConfirm.addEventListener('click', saveGameFile);
+
+            let btnMSaveCancel = getEl('btn-modal-save-cancel');
+            if (btnMSaveCancel) btnMSaveCancel.addEventListener('click', closeAllModals);
+
+            let btnMAICopy = getEl('btn-modal-ai-copy');
+            if (btnMAICopy) btnMAICopy.addEventListener('click', copyAIPrompt);
+
+            let btnMAIClose = getEl('btn-modal-ai-close');
+            if (btnMAIClose) btnMAIClose.addEventListener('click', closeAllModals);
+
+            let btnMQuestClose = getEl('btn-modal-question-close');
+            if (btnMQuestClose) btnMQuestClose.addEventListener('click', closeAllModals);
+
+            let btnReveal = getEl('btn-reveal');
+            if (btnReveal) btnReveal.addEventListener('click', revealAnswer);
+
+            let btnMOverCancel = getEl('btn-modal-override-cancel');
+            if (btnMOverCancel) btnMOverCancel.addEventListener('click', closeAllModals);
+
+            let btnMWinSetup = getEl('btn-modal-win-setup');
+            if (btnMWinSetup) btnMWinSetup.addEventListener('click', returnToSetup);
+
+            let btnMWinView = getEl('btn-modal-win-view');
+            if (btnMWinView) btnMWinView.addEventListener('click', closeAllModals);
+
+            // Window resize
+            window.addEventListener('resize', () => {
+                let gs = getEl('game-screen');
+                if (gs && gs.classList.contains('active-screen')) {
+                    resizeBoard();
+                }
+            });
+        }
+
+        function loadDefaultQuestions() {
+            let selContent = getEl('setup-sel-content');
+            let qInput = getEl('setup-question-input');
+            if (selContent && qInput) {
+                let type = selContent.value;
+                qInput.value = (type === 'letters') ? defaultLetters : defaultIcons;
+            }
+        }
+
+        function syncSubtitle() {
+            let subIn = getEl('landing-subtitle-input');
+            let setSub = getEl('setup-subtitle-display');
+            let gameSub = getEl('game-subtitle-display');
+            let val = subIn ? subIn.value : "General Knowledge Edition";
+            
+            if (setSub) setSub.innerText = val;
+            if (gameSub) gameSub.innerText = val;
+        }
+
+        function updateModeSettings() {
+            let selMode = getEl('setup-sel-mode');
+            let instBox = getEl('setup-mode-instructions');
+            let soloSet = getEl('setup-solo-settings');
+
+            if (!selMode || !instBox || !soloSet) return;
+            let mode = selMode.value;
+            
+            if (mode === 'solo') {
+                soloSet.classList.remove('d-none');
+                soloSet.classList.add('d-block');
+            } else {
+                soloSet.classList.remove('d-block');
+                soloSet.classList.add('d-none');
+            }
+
+            if (mode === '2') {
+                instBox.innerHTML = `<strong>2-Team Classic:</strong><br>White Team starts and tries to build a bridge from the LEFT edge to the RIGHT edge.<br>Blue Team goes next and tries to build a bridge from the TOP edge to the BOTTOM edge.<br>Answer correctly to claim a hex. Incorrect answers pass the turn and reset the hex!`;
+            } else if (mode === '3') {
+                instBox.innerHTML = `<strong>3-Team Mode:</strong><br>Take turns to build a bridge connecting <strong>ANY TWO SIDES</strong> of the board. Correct answers claim the hex, incorrect answers reset it and pass the turn.`;
+            } else if (mode === 'multi') {
+                instBox.innerHTML = `<strong>Multi-Team (Territory):</strong><br>Game continues until the board is completely filled. The team with the <strong>largest connected cluster</strong> of hexagons wins. (Tie-breaker: total hexes claimed).`;
+            } else if (mode === 'solo') {
+                instBox.innerHTML = `<strong>Single Player Challenge:</strong><br>Race against the visual timer! Build a bridge from LEFT to RIGHT before time runs out. Incorrect answers still reset the hex.`;
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function copyAIPrompt() {
+            let promptArea = getEl('ai-prompt-text');
+            if (promptArea) {
+                promptArea.select();
+                document.execCommand('copy');
+                alert("Prompt copied to clipboard! Paste this into ChatGPT or Gemini.");
+            }
+        }
+
+        function returnToSetup() {
+            state.gameOver = true;
+            if (state.soloInterval) clearInterval(state.soloInterval);
+            let overrideCheck = getEl('chk-override');
+            if (overrideCheck) overrideCheck.checked = false;
+            
+            closeAllModals();
+            showScreen('setup-screen');
+        }
+
+        /* --- SAVE GAME FEATURE --- */
+        function saveGameFile() {
+            // Push values into attributes so they are captured by outerHTML
+            let qInput = getEl('setup-question-input');
+            if (qInput) qInput.innerHTML = qInput.value;
+
+            let subInput = getEl('landing-subtitle-input');
+            if (subInput) subInput.setAttribute('value', subInput.value);
+
+            let timerInput = getEl('setup-solo-timer');
+            if (timerInput) timerInput.setAttribute('value', timerInput.value);
+
+            ['setup-sel-mode', 'setup-sel-size', 'setup-sel-content'].forEach(id => {
+                let sel = getEl(id);
+                if (sel) {
+                    Array.from(sel.options).forEach(opt => {
+                        if (opt.value === sel.value) opt.setAttribute('selected', 'selected');
+                        else opt.removeAttribute('selected');
+                    });
+                }
+            });
+
+            // Get filename
+            let fnInput = getEl('save-filename-input');
+            let filename = "bridgebuilder-custom.html";
+            if (fnInput && fnInput.value.trim() !== '') {
+                filename = fnInput.value.trim();
+                if (!filename.toLowerCase().endsWith('.html')) filename += '.html';
+            }
+
+            let htmlContent = "<!DOCTYPE html>\n<html lang=\"en\">\n" + document.documentElement.innerHTML + "\n</html>";
+            let blob = new Blob([htmlContent], { type: "text/html" });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            closeAllModals();
+        }
+
+        /* --- CORE GAME LOGIC --- */
+        function parseQuestions(raw) {
+            const lines = raw.split('\n');
+            const pool = [];
+            lines.forEach(line => {
+                const parts = line.split('|').map(p => p.trim());
+                if (parts.length >= 3 && parts[0] && parts[1] && parts[2]) {
+                    pool.push({ symbol: parts[0], q: parts[1], a: parts[2] });
+                }
+            });
+            return pool.sort(() => Math.random() - 0.5);
+        }
+
+        function getNextQuestion() {
+            if (state.questions.length === 0) {
+                return { symbol: '?', q: "Out of questions! Host must enter more.", a: "Any" };
+            }
+            return state.questions.shift();
+        }
+
+        function startGame() {
+            let selMode = getEl('setup-sel-mode');
+            let selSize = getEl('setup-sel-size');
+            let qInput = getEl('setup-question-input');
+
+            if (!selMode || !selSize || !qInput) return;
+
+            state.mode = selMode.value;
+            const sizeStr = selSize.value;
+            state.cols = parseInt(sizeStr.split('x')[0]);
+            state.rows = parseInt(sizeStr.split('x')[1]);
+            state.gameOver = false;
+            state.activeHex = null;
+            state.currentTeamIndex = 0;
+            
+            state.questions = parseQuestions(qInput.value);
+            
+            if (state.questions.length < state.cols * state.rows) {
+                alert("Warning: You have fewer unique questions than hexagons on the board.");
+            }
+
+            // Setup Teams mapping
+            if (state.mode === '2') {
+                state.teams = [
+                    { id: 1, name: TEAM_COLORS[1].name, color: TEAM_COLORS[1] },
+                    { id: 2, name: TEAM_COLORS[2].name, color: TEAM_COLORS[2] }
+                ];
+            } else if (state.mode === '3') {
+                state.teams = [
+                    { id: 1, name: TEAM_COLORS[1].name, color: TEAM_COLORS[1] },
+                    { id: 2, name: TEAM_COLORS[2].name, color: TEAM_COLORS[2] },
+                    { id: 3, name: TEAM_COLORS[3].name, color: TEAM_COLORS[3] }
+                ];
+            } else if (state.mode === 'multi') {
+                state.teams = [
+                    { id: 1, name: TEAM_COLORS[1].name, color: TEAM_COLORS[1] },
+                    { id: 2, name: TEAM_COLORS[2].name, color: TEAM_COLORS[2] },
+                    { id: 3, name: TEAM_COLORS[3].name, color: TEAM_COLORS[3] },
+                    { id: 4, name: TEAM_COLORS[4].name, color: TEAM_COLORS[4] }
+                ];
+            } else if (state.mode === 'solo') {
+                state.teams = [
+                    { id: 1, name: "Player", color: TEAM_COLORS[1] }
+                ];
+                let tInput = getEl('setup-solo-timer');
+                state.soloTime = tInput ? (parseInt(tInput.value) || 120) : 120;
+            }
+
+            syncSubtitle();
+            showScreen('game-screen');
+            buildHUD();
+            updateTurnHUD();
+            
+            // Allow DOM to apply flex layouts before generating board
+            setTimeout(() => {
+                generateBoard();
+                let tBox = getEl('turn-box');
+                let timerCont = getEl('timer-bar-container');
+                
+                if (state.mode === 'solo') {
+                    if(tBox) { tBox.classList.remove('d-block'); tBox.classList.add('d-none'); }
+                    if(timerCont) { timerCont.classList.remove('d-none'); timerCont.classList.add('d-block'); }
+                    startTimer();
+                } else {
+                    if(tBox) { tBox.classList.remove('d-none'); tBox.classList.add('d-block'); }
+                    if(timerCont) { timerCont.classList.remove('d-block'); timerCont.classList.add('d-none'); }
+                }
+            }, 50);
+        }
+
+        /* HUD & Right Sidebar Elements */
+        function buildHUD() {
+            const container = getEl('team-inputs-container');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            state.teams.forEach((t, index) => {
+                const input = document.createElement('input');
+                input.className = 'team-edit-input';
+                input.id = `team-input-${index}`;
+                input.type = 'text';
+                input.value = t.name;
+                input.style.backgroundColor = t.color.bg;
+                input.style.color = t.color.text;
+                
+                if (t.color.bg === '#ffffff') {
+                    input.style.border = '2px solid #ccc';
+                }
+
+                input.oninput = (e) => {
+                    t.name = e.target.value;
+                    updateTurnHUD();
+                    buildOverrideButtons();
+                };
+                container.appendChild(input);
+            });
+            buildOverrideButtons();
+        }
+
+        function updateTurnHUD() {
+            if(state.mode === 'solo') {
+                document.documentElement.style.setProperty('--hover-color', state.teams[0].color.bg);
+                return;
+            }
+            
+            const currentTeam = state.teams[state.currentTeamIndex];
+            const turnDisplay = getEl('current-turn-display');
+            if (turnDisplay) {
+                turnDisplay.innerText = currentTeam.name;
+                turnDisplay.style.color = currentTeam.color.bg === '#ffffff' ? '#ffca28' : currentTeam.color.bg;
+            }
+            
+            document.documentElement.style.setProperty('--hover-color', currentTeam.color.bg);
+
+            state.teams.forEach((t, index) => {
+                const input = getEl(`team-input-${index}`);
+                if (input) {
+                    if (index === state.currentTeamIndex) input.classList.add('active-turn');
+                    else input.classList.remove('active-turn');
+                }
+            });
+        }
+
+        function advanceTurn() {
+            if(state.mode === 'solo') return;
+            state.currentTeamIndex = (state.currentTeamIndex + 1) % state.teams.length;
+            updateTurnHUD();
+        }
+
+        function setupTurnButtons() {
+            const turnAwardContainer = getEl('turn-award-buttons');
+            if (!turnAwardContainer) return;
+            turnAwardContainer.innerHTML = '';
+            
+            const currentTeam = state.teams[state.currentTeamIndex];
+
+            // Correct Button
+            const btnCorrect = document.createElement('button');
+            btnCorrect.innerHTML = `\u2713 Correct (Claim for ${currentTeam.name})`;
+            btnCorrect.style.backgroundColor = currentTeam.color.bg;
+            btnCorrect.style.color = currentTeam.color.text;
+            if (currentTeam.color.bg === '#ffffff') btnCorrect.style.border = '1px solid #000';
+            btnCorrect.onclick = () => {
+                claimHex(currentTeam.id);
+                advanceTurn();
+            };
+            
+            // Incorrect Button
+            const btnIncorrect = document.createElement('button');
+            btnIncorrect.innerHTML = `\u2715 Incorrect (Reset Hex)`;
+            btnIncorrect.className = 'danger';
+            btnIncorrect.onclick = () => {
+                markIncorrect();
+                advanceTurn();
+            };
+
+            turnAwardContainer.appendChild(btnCorrect);
+            turnAwardContainer.appendChild(btnIncorrect);
+        }
+
+        function buildOverrideButtons() {
+            const overrideContainer = getEl('override-buttons');
+            if (!overrideContainer) return;
+            overrideContainer.innerHTML = '';
+
+            state.teams.forEach(t => {
+                const btnO = document.createElement('button');
+                btnO.innerText = t.name;
+                btnO.style.backgroundColor = t.color.bg;
+                btnO.style.color = t.color.text;
+                if (t.color.bg === '#ffffff') btnO.style.border = '1px solid #000';
+                btnO.onclick = () => { claimHex(t.id); closeAllModals(); };
+                overrideContainer.appendChild(btnO);
+            });
+
+            const btnN = document.createElement('button');
+            btnN.className = 'secondary';
+            btnN.innerText = "Neutral";
+            btnN.onclick = () => { resetActiveHex(); closeAllModals(); };
+            overrideContainer.appendChild(btnN);
+            
+            const btnB = document.createElement('button');
+            btnB.innerText = "Blocked";
+            btnB.style.backgroundColor = "#000";
+            btnB.style.color = "#fff";
+            btnB.style.border = "1px solid #333";
+            btnB.onclick = () => { claimHex(99); closeAllModals(); };
+            overrideContainer.appendChild(btnB);
+        }
+
+        /* --- SVG BOARD GENERATION & SCALING --- */
+        function applyBoardBorders() {
+            const wrapper = getEl('board-wrapper');
+            if (!wrapper) return;
+            wrapper.style.border = 'none';
+            wrapper.style.borderLeft = 'none';
+            wrapper.style.borderRight = 'none';
+            wrapper.style.borderTop = 'none';
+            wrapper.style.borderBottom = 'none';
+            
+            const bw = '12px'; 
+            
+            if (state.mode === '2') {
+                wrapper.style.borderLeft = `${bw} solid ${TEAM_COLORS[1].border}`;
+                wrapper.style.borderRight = `${bw} solid ${TEAM_COLORS[1].border}`;
+                wrapper.style.borderTop = `${bw} solid ${TEAM_COLORS[2].border}`;
+                wrapper.style.borderBottom = `${bw} solid ${TEAM_COLORS[2].border}`;
+            } else if (state.mode === '3') {
+                wrapper.style.border = `${bw} solid #ffca28`; 
+            } else if (state.mode === 'multi') {
+                wrapper.style.border = `${bw} solid #555555`; 
+            } else if (state.mode === 'solo') {
+                wrapper.style.borderLeft = `${bw} solid ${TEAM_COLORS[1].border}`;
+                wrapper.style.borderRight = `${bw} solid ${TEAM_COLORS[1].border}`;
+                wrapper.style.borderTop = `${bw} solid #222`;
+                wrapper.style.borderBottom = `${bw} solid #222`;
+            }
+        }
+
+        function generateBoard() {
+            applyBoardBorders();
+            
+            const svg = getEl('hex-board');
+            if (!svg) return;
+            svg.innerHTML = ''; 
+            state.grid = [];
+
+            const R = 50; 
+            const W = Math.sqrt(3) * R;
+            const H = 2 * R;
+            const xOffset = W;
+            const yOffset = H * 0.75; 
+
+            const totalWidth = state.cols * xOffset + (xOffset / 2);
+            const totalHeight = (state.rows * yOffset) + (H / 4);
+            
+            svg.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
+
+            for (let r = 0; r < state.rows; r++) {
+                const rowArr = [];
+                for (let c = 0; c < state.cols; c++) {
+                    const cx = (c * xOffset) + (r % 2 === 1 ? W / 2 : 0) + (W / 2);
+                    const cy = (r * yOffset) + (H / 2);
+
+                    const qData = getNextQuestion();
+                    
+                    const hexData = {
+                        r: r, c: c,
+                        owner: 0, 
+                        symbol: qData.symbol,
+                        question: qData.q,
+                        answer: qData.a,
+                        id: `hex-${r}-${c}`,
+                        element: null,
+                        textElement: null
+                    };
+
+                    const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                    const points = [
+                        [cx, cy - R],
+                        [cx + W/2, cy - R/2],
+                        [cx + W/2, cy + R/2],
+                        [cx, cy + R],
+                        [cx - W/2, cy + R/2],
+                        [cx - W/2, cy - R/2]
+                    ].map(p => p.join(',')).join(' ');
+
+                    polygon.setAttribute('points', points);
+                    polygon.setAttribute('fill', 'var(--hex-neutral)');
+                    polygon.setAttribute('class', 'hex-polygon');
+                    polygon.onclick = () => handleHexClick(hexData);
+
+                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute('x', cx);
+                    text.setAttribute('y', cy);
+                    text.setAttribute('class', 'hex-text');
+                    
+                    if(hexData.symbol.length > 2) {
+                        text.style.fontSize = "16px";
+                    } else if(hexData.symbol.length > 1) {
+                        text.style.fontSize = "22px";
+                    }
+                    
+                    text.textContent = hexData.symbol;
+
+                    svg.appendChild(polygon);
+                    svg.appendChild(text);
+
+                    hexData.element = polygon;
+                    hexData.textElement = text;
+                    rowArr.push(hexData);
+                }
+                state.grid.push(rowArr);
+            }
+            
+            resizeBoard();
+        }
+
+        function resizeBoard() {
+            const container = getEl('board-container');
+            const svg = getEl('hex-board');
+            
+            if (!svg || !container || !svg.getAttribute('viewBox')) return;
+            
+            const vb = svg.getAttribute('viewBox').split(' ');
+            const baseW = parseFloat(vb[2]);
+            const baseH = parseFloat(vb[3]);
+            
+            const padding = 80; 
+            const availableW = container.clientWidth - padding;
+            const availableH = container.clientHeight - padding;
+            
+            const scale = Math.min(availableW / baseW, availableH / baseH);
+            
+            svg.style.width = `${baseW * scale}px`;
+            svg.style.height = `${baseH * scale}px`;
+        }
+
+        /* --- INTERACTION LOGIC --- */
+        function handleHexClick(hexData) {
+            if (state.gameOver) return;
+            state.activeHex = hexData;
+
+            let chk = getEl('chk-override');
+            if (chk && chk.checked) {
+                openModal('modal-override');
+                return;
+            }
+
+            if (hexData.owner !== 0) return;
+
+            let sEl = getEl('q-hex-symbol');
+            let qEl = getEl('question-display');
+            let aEl = getEl('answer-display');
+            
+            if (sEl) sEl.textContent = hexData.symbol;
+            if (qEl) qEl.textContent = hexData.question;
+            if (aEl) aEl.textContent = hexData.answer;
+            
+            if (aEl) { aEl.classList.remove('d-block'); aEl.classList.add('d-none'); }
+            
+            let bRev = getEl('btn-reveal');
+            if (bRev) { bRev.classList.remove('d-none'); bRev.classList.add('d-inline-block'); }
+            
+            let sCtrl = getEl('scoring-controls');
+            if (sCtrl) { sCtrl.classList.remove('d-block'); sCtrl.classList.add('d-none'); }
+
+            openModal('modal-question');
+        }
+
+        function revealAnswer() {
+            let bRev = getEl('btn-reveal');
+            if (bRev) { bRev.classList.remove('d-inline-block'); bRev.classList.add('d-none'); }
+            
+            let aEl = getEl('answer-display');
+            if (aEl) { aEl.classList.remove('d-none'); aEl.classList.add('d-block'); }
+            
+            setupTurnButtons();
+            
+            let sCtrl = getEl('scoring-controls');
+            if (sCtrl) { sCtrl.classList.remove('d-none'); sCtrl.classList.add('d-block'); }
+        }
+
+        function claimHex(teamId) {
+            if (!state.activeHex) return;
+            
+            state.activeHex.owner = teamId;
+            const el = state.activeHex.element;
+            const textEl = state.activeHex.textElement;
+
+            if (teamId === 0) {
+                el.setAttribute('fill', 'var(--hex-neutral)');
+                textEl.setAttribute('fill', '#ffffff');
+            } else if (teamId === 99) { 
+                el.setAttribute('fill', '#000000');
+                textEl.setAttribute('fill', '#555555');
+            } else {
+                const color = TEAM_COLORS[teamId];
+                el.setAttribute('fill', color.bg);
+                textEl.setAttribute('fill', color.text);
+            }
+
+            closeAllModals();
+            setTimeout(checkWinConditions, 100);
+        }
+
+        function markIncorrect() {
+            resetActiveHex();
+            closeAllModals();
+        }
+
+        function resetActiveHex() {
+            if (!state.activeHex) return;
+            
+            const qData = getNextQuestion();
+            state.activeHex.symbol = qData.symbol;
+            state.activeHex.question = qData.q;
+            state.activeHex.answer = qData.a;
+            state.activeHex.owner = 0; 
+
+            state.activeHex.element.setAttribute('fill', 'var(--hex-neutral)');
+            state.activeHex.textElement.textContent = qData.symbol;
+            state.activeHex.textElement.setAttribute('fill', '#ffffff');
+            
+            if(qData.symbol.length > 2) {
+                state.activeHex.textElement.style.fontSize = "16px";
+            } else if(qData.symbol.length > 1) {
+                state.activeHex.textElement.style.fontSize = "22px";
+            } else {
+                state.activeHex.textElement.style.fontSize = "28px";
+            }
+        }
+
+        /* --- PATHFINDING & WIN LOGIC --- */
+        function getNeighbors(r, c) {
+            const neighbors = [];
+            const dirsEven = [[-1, -1], [-1, 0], [0, -1], [0, 1], [1, -1], [1, 0]];
+            const dirsOdd = [[-1, 0], [-1, 1], [0, -1], [0, 1], [1, 0], [1, 1]];
+            const dirs = r % 2 === 0 ? dirsEven : dirsOdd;
+
+            dirs.forEach(d => {
+                const nr = r + d[0];
+                const nc = c + d[1];
+                if (nr >= 0 && nr < state.rows && nc >= 0 && nc < state.cols) {
+                    neighbors.push(state.grid[nr][nc]);
+                }
+            });
+            return neighbors;
+        }
+
+        function checkWinConditions() {
+            if (state.mode === '2' || state.mode === 'solo') {
+                if (checkPath(1, 'left', 'right')) triggerWin(1, "Bridged Left to Right!");
+                else if (state.mode === '2' && checkPath(2, 'top', 'bottom')) triggerWin(2, "Bridged Top to Bottom!");
+                
+            } else if (state.mode === '3') {
+                [1, 2, 3].forEach(teamId => {
+                    if (checkAnyTwoEdges(teamId)) triggerWin(teamId, "Bridged two sides of the board!");
+                });
+            } else if (state.mode === 'multi') {
+                let isFull = true;
+                for (let r = 0; r < state.rows; r++) {
+                    for (let c = 0; c < state.cols; c++) {
+                        if (state.grid[r][c].owner === 0) isFull = false;
+                    }
+                }
+                if (isFull) evaluateMultiWin();
+            }
+        }
+
+        function checkPath(teamId, startEdge, endEdge) {
+            const queue = [];
+            const visited = new Set();
+
+            for (let r = 0; r < state.rows; r++) {
+                for (let c = 0; c < state.cols; c++) {
+                    const hex = state.grid[r][c];
+                    if (hex.owner !== teamId) continue;
+                    
+                    let isStart = false;
+                    if (startEdge === 'left' && c === 0) isStart = true;
+                    if (startEdge === 'top' && r === 0) isStart = true;
+
+                    if (isStart) {
+                        queue.push(hex);
+                        visited.add(hex.id);
+                    }
+                }
+            }
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                if (endEdge === 'right' && current.c === state.cols - 1) return true;
+                if (endEdge === 'bottom' && current.r === state.rows - 1) return true;
+
+                const neighbors = getNeighbors(current.r, current.c);
+                for (const n of neighbors) {
+                    if (n.owner === teamId && !visited.has(n.id)) {
+                        visited.add(n.id);
+                        queue.push(n);
+                    }
+                }
+            }
+            return false;
+        }
+
+        function checkAnyTwoEdges(teamId) {
+            const unvisitedNodes = [];
+            for(let r=0; r<state.rows; r++){
+                for(let c=0; c<state.cols; c++){
+                    if(state.grid[r][c].owner === teamId) unvisitedNodes.push(state.grid[r][c]);
+                }
+            }
+
+            const globalVisited = new Set();
+
+            for (const startNode of unvisitedNodes) {
+                if (globalVisited.has(startNode.id)) continue;
+                
+                const edgesTouched = new Set();
+                const queue = [startNode];
+                globalVisited.add(startNode.id);
+
+                while (queue.length > 0) {
+                    const curr = queue.shift();
+                    
+                    if (curr.c === 0) edgesTouched.add('left');
+                    if (curr.c === state.cols - 1) edgesTouched.add('right');
+                    if (curr.r === 0) edgesTouched.add('top');
+                    if (curr.r === state.rows - 1) edgesTouched.add('bottom');
+
+                    const neighbors = getNeighbors(curr.r, curr.c);
+                    for (const n of neighbors) {
+                        if (n.owner === teamId && !globalVisited.has(n.id)) {
+                            globalVisited.add(n.id);
+                            queue.push(n);
+                        }
+                    }
+                }
+
+                if (edgesTouched.size >= 2) return true;
+            }
+            return false;
+        }
+
+        function evaluateMultiWin() {
+            let teamStats = {};
+            let overallMaxCluster = 0;
+
+            [1, 2, 3, 4].forEach(teamId => {
+                const unvisited = [];
+                let totalHexes = 0;
+                
+                for(let r = 0; r < state.rows; r++){
+                    for(let c = 0; c < state.cols; c++){
+                        if(state.grid[r][c].owner === teamId) {
+                            unvisited.push(state.grid[r][c]);
+                            totalHexes++;
+                        }
+                    }
+                }
+                
+                const visited = new Set();
+                let teamMax = 0;
+
+                for (const startNode of unvisited) {
+                    if (visited.has(startNode.id)) continue;
+                    let size = 0;
+                    const queue = [startNode];
+                    visited.add(startNode.id);
+
+                    while (queue.length > 0) {
+                        const curr = queue.shift();
+                        size++;
+                        const neighbors = getNeighbors(curr.r, curr.c);
+                        for (const n of neighbors) {
+                            if (n.owner === teamId && !visited.has(n.id)) {
+                                visited.add(n.id);
+                                queue.push(n);
+                            }
+                        }
+                    }
+                    if (size > teamMax) teamMax = size;
+                }
+                
+                teamStats[teamId] = { maxCluster: teamMax, totalHexes: totalHexes };
+                if (teamMax > overallMaxCluster) overallMaxCluster = teamMax;
+            });
+
+            let candidates = [];
+            [1, 2, 3, 4].forEach(teamId => {
+                if (teamStats[teamId].maxCluster === overallMaxCluster && overallMaxCluster > 0) {
+                    candidates.push(teamId);
+                }
+            });
+
+            if (candidates.length === 1) {
+                let wId = candidates[0];
+                triggerWin(wId, `Largest Territory: ${overallMaxCluster} hexes! (Total claimed: ${teamStats[wId].totalHexes})`);
+            } else if (candidates.length > 1) {
+                let maxTotalHexes = 0;
+                candidates.forEach(id => {
+                    if (teamStats[id].totalHexes > maxTotalHexes) maxTotalHexes = teamStats[id].totalHexes;
+                });
+                
+                let finalWinners = candidates.filter(id => teamStats[id].totalHexes === maxTotalHexes);
+                
+                if (finalWinners.length === 1) {
+                    let wId = finalWinners[0];
+                    triggerWin(wId, `Tie-breaker Won! Largest Territory: ${overallMaxCluster} | Total Claimed: ${maxTotalHexes}`);
+                } else {
+                    triggerTie(finalWinners, overallMaxCluster, maxTotalHexes);
+                }
+            }
+        }
+
+        /* --- ENDGAME & TIMER --- */
+        function triggerWin(teamId, customMsg) {
+            state.gameOver = true;
+            if (state.soloInterval) clearInterval(state.soloInterval);
+
+            const team = state.teams.find(t => t.id === teamId);
+            let tEl = getEl('win-title');
+            let subEl = getEl('win-subtitle');
+
+            if (tEl) {
+                tEl.textContent = `${team.name} WINS!`;
+                tEl.style.color = team.color.bg === '#ffffff' ? '#ffca28' : team.color.bg;
+            }
+            if (subEl) subEl.textContent = customMsg || "Bridge completed successfully!";
+            
+            openModal('modal-win');
+        }
+
+        function triggerTie(teamIds, clusterSize, totalHexes = null) {
+            state.gameOver = true;
+            const names = teamIds.map(id => state.teams.find(t => t.id === id).name).join(" & ");
+            let tEl = getEl('win-title');
+            let subEl = getEl('win-subtitle');
+
+            if (tEl) {
+                tEl.textContent = "IT'S A TIE!";
+                tEl.style.color = '#ffca28';
+            }
+            
+            let subtitleText = `${names} tied with a cluster of ${clusterSize}!`;
+            if (totalHexes) {
+                subtitleText += ` (Both claimed ${totalHexes} total hexes)`;
+            }
+            
+            if (subEl) subEl.textContent = subtitleText;
+            openModal('modal-win');
+        }
+
+        function startTimer() {
+            let container = getEl('timer-bar-container');
+            let bar = getEl('timer-bar');
+            
+            if (!container || !bar) return;
+            
+            bar.style.width = '100%';
+            bar.style.background = '#4caf50';
+            
+            let timeRemaining = state.soloTime;
+            
+            state.soloInterval = setInterval(() => {
+                if (state.gameOver) {
+                    clearInterval(state.soloInterval);
+                    return;
+                }
+                
+                timeRemaining--;
+                const pct = (timeRemaining / state.soloTime) * 100;
+                bar.style.width = `${pct}%`;
+                
+                if (pct < 25) bar.style.background = '#f44336'; 
+
+                if (timeRemaining <= 0) {
+                    clearInterval(state.soloInterval);
+                    state.gameOver = true;
+                    
+                    let tEl = getEl('win-title');
+                    let subEl = getEl('win-subtitle');
+                    if (tEl) {
+                        tEl.textContent = "TIME'S UP!";
+                        tEl.style.color = '#f44336';
+                    }
+                    if (subEl) subEl.textContent = "The bridge collapsed. You ran out of time.";
+                    openModal('modal-win');
+                }
+            }, 1000);
+        }
+
+    </script>
+</body>
+</html>

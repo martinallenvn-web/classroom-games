@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher's Game Arcade</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --primary-color: #4a90e2;
+            --text-color: #333333;
+            --text-light: #666666;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            margin: 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+
+        .card p {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            margin: 0 0 20px 0;
+            line-height: 1.5;
+        }
+
+        .btn {
+            display: inline-block;
+            text-align: center;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #357abd;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Classroom Game Launcher</h1>
+            <p>Select a teacher-led game below to launch it instantly.</p>
+        </header>
+
+        <main class="grid">
+            <!-- 1. Bridgebuilder -->
+            <div class="card">
+                <div>
+                    <h2>Bridgebuilder</h2>
+                    <p>Teacher-led classroom game.</p>
+                </div>
+                <a href="bridgebuilder.html" class="btn">Launch Game</a>
+            </div>
+
+            <!-- 2. Get Connected -->
+            <div class="card">
+                <div>
+                    <h2>Get Connected</h2>
+                    <p>Teacher-led classroom game.</p>
+                </div>
+                <a href="get-connected.html" class="btn">Launch Game</a>
+            </div>
+
+            <!-- 3. Hangmanagram -->
+            <div class="card">
+                <div>
+                    <h2>Hangmanagram</h2>
+                    <p>Teacher-led classroom game.</p>
+                </div>
+                <a href="hangmanagram.html" class="btn">Launch Game</a>
+            </div>
+
+            <!-- 4. Kaboom! -->
+            <div class="card">
+                <div>
+                    <h2>Kaboom!</h2>
+                    <p>Teacher-led classroom game.</p>
+                </div>
+                <a href="kaboom.html" class="btn">Launch Game</a>
+            </div>
+
+            <!-- 5. Mind the Gap -->
+            <div class="card">
+                <div>
+                    <h2>Mind the Gap</h2>
+                    <p>Teacher-led classroom game.</p>
+                </div>
+                <a href="mind-the-gap.html" class="btn">Launch Game</a>
+            </div>
+
+            <!-- 6. Snakes and Ladders -->
+            <div class="card">
+                <div>
+                    <h2>Snakes and Ladders</h2>
+                    <p>Teacher-led classroom game.</p>
+                </div>
+                <a href="snakes-and-ladders.html" class="btn">Launch Game</a>
+            </div>
+
+            <!-- 7. Top Answer -->
+            <div class="card">
+                <div>
+                    <h2>Top Answer</h2>
+                    <p>Teacher-led classroom game.</p>
+                </div>
+                <a href="top-answer.html" class="btn">Launch Game</a>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

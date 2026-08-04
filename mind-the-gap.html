@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind the Gap</title>
+    <style>
+        :root {
+            --primary: #2F5597;
+            --secondary: #4472C4;
+            --accent: #FFC000;
+            --bg: #F2F2F2;
+            --text: #333333;
+            --correct: #27ae60;
+            --warning: #e74c3c;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 10px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        
+        /* Header & Fullscreen */
+        .app-header {
+            width: 100%; max-width: 1400px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom: 5px; flex-shrink: 0;
+        }
+        .app-header h1 { color: var(--primary); font-size: 2.2em; margin: 0; grid-column: 2; text-align: center; }
+        .header-controls { grid-column: 3; justify-self: end; }
+        
+        .icon-btn {
+            background: #bdc3c7; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .icon-btn:hover { background: #95a5a6; color: white; }
+
+        /* Main Layout */
+        .app-body {
+            display: flex; width: 100%; max-width: 1400px; flex: 1; gap: 15px; overflow: hidden;
+        }
+        .main-content {
+            flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative;
+        }
+        
+        /* Screens */
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; overflow: hidden; }
+        .active-screen { display: flex; }
+        
+        /* Scoreboard (Sidebar) */
+        #scoreboard-container {
+            display: none; width: 220px; background: white; padding: 10px; border-radius: 10px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex-direction: column; gap: 8px; overflow-y: auto; flex-shrink: 0;
+        }
+        .scoreboard-title { font-size: 1.1em; font-weight: bold; text-align: center; color: var(--primary); border-bottom: 2px solid var(--secondary); padding-bottom: 5px; margin: 0;}
+        
+        .team-card {
+            background: var(--bg); border: 2px solid var(--secondary); border-radius: 8px;
+            padding: 5px; display: flex; flex-direction: column; align-items: center; width: 100%; transition: 0.3s;
+        }
+        /* Highlight for Choosing Team */
+        .team-card.active-choosing {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 12px rgba(255, 192, 0, 0.8) !important;
+            transform: scale(1.03);
+            background: #fffdf2;
+        }
+        .team-card.active-choosing .team-name { color: #d35400; }
+
+        .team-name { font-weight: bold; font-size: 1.1em; border: none; background: transparent; text-align: center; border-bottom: 1px dashed #ccc; margin-bottom: 3px; width: 100%; padding: 2px; transition: 0.3s;}
+        .team-name:focus { outline: none; border-bottom: 1px solid var(--primary); }
+        .team-score { font-size: 1.8em; color: var(--primary); font-weight: bold; margin: 2px 0; line-height: 1; }
+        .score-controls { display: flex; gap: 5px; }
+        .score-controls button {
+            background: #bdc3c7; border: none; border-radius: 4px; padding: 2px 12px; font-size: 1.1em; cursor: pointer;
+        }
+        .score-controls button:hover { background: var(--secondary); color: white; }
+        
+        .team-management-btns { display: flex; gap: 5px; margin-top: 5px; }
+        .add-team-btn, .remove-team-btn { 
+            color: white; border: none; border-radius: 5px; padding: 6px; cursor: pointer; font-weight: bold; flex: 1; transition: 0.2s;
+        }
+        .add-team-btn { background: #7f8c8d; }
+        .add-team-btn:hover { background: var(--primary); }
+        .remove-team-btn { background: #e74c3c; }
+        .remove-team-btn:hover { background: #c0392b; }
+
+        /* General Buttons */
+        .btn {
+            background-color: var(--primary); color: white; border: none; padding: 8px 18px; font-size: 1.1em; border-radius: 5px; cursor: pointer; margin: 5px; transition: 0.2s;
+        }
+        .btn:hover { background-color: var(--secondary); }
+        .btn-alt { background-color: #7f8c8d; }
+        .btn-alt:hover { background-color: #5f6c6d; }
+        .btn-warning { background-color: var(--warning); }
+        .btn-success { background-color: var(--correct); }
+
+        /* Setup Screen */
+        .setup-box {
+            background: white; padding: 20px 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; overflow-y: auto; max-height: 100%; margin: auto; max-width: 800px;
+        }
+        .team-setup { margin: 15px 0; font-size: 1.2em; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .team-setup div { display: flex; flex-direction: column; align-items: center; }
+        .team-setup input, .team-setup select { font-size: 1.1em; width: 70px; text-align: center; padding: 5px; margin-top: 5px; }
+
+        /* Grid Screen */
+        .grid-wrapper { flex: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+        .grid-container {
+            display: grid; gap: 10px; flex: 1; min-height: 0; padding-bottom: 10px;
+        }
+        .grid-item {
+            background-color: var(--secondary); color: white; font-size: 2em; display: flex; align-items: center; justify-content: center;
+            border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;
+            position: relative;
+        }
+        .grid-item:hover { background-color: var(--primary); transform: scale(1.02); }
+        .grid-item.played { background-color: #bdc3c7; cursor: not-allowed; color: #7f8c8d; box-shadow: none; transform: none; }
+        
+        /* Question Screen */
+        .question-box {
+            background: white; padding: 15px 25px; border-radius: 10px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; flex: 1; overflow-y: auto;
+        }
+        .sentence { font-size: 2.2em; line-height: 1.3; margin: 10px 0 20px 0; }
+        .hint-area {
+            background: #fdfbf7; border: 2px dashed #ccc; padding: 15px; border-radius: 8px; min-height: 100px; font-size: 1.4em; display: flex; flex-direction: column; justify-content: center;
+        }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .option-box { background: var(--primary); color: white; padding: 10px; border-radius: 5px; cursor: pointer; }
+        .option-box:hover { background: var(--secondary); }
+        .static-option-box { background: #bdc3c7; color: white; padding: 10px; border-radius: 5px; }
+        
+        /* Controls within Question */
+        .q-controls-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
+        .q-type-badge { color: #7f8c8d; font-weight: bold; font-size: 1.2em; }
+        
+        .active-team-bar { 
+            background: #e9f0fe; padding: 10px 15px; border-radius: 8px; margin: 0 0 10px 0; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; 
+        }
+        .guess-input { font-size: 1.3em; padding: 6px; width: 220px; text-align: center; border: 2px solid var(--secondary); border-radius: 5px; font-weight: bold; }
+        .team-select { font-size: 1.2em; padding: 6px; border-radius: 5px; font-weight: bold; }
+        
+        /* Scoring Buttons */
+        .score-buttons-container { display: flex; gap: 5px; align-items: center; border-left: 2px solid #ccc; padding-left: 15px; }
+        .point-btn {
+            color: white; border: none; padding: 6px 10px; font-size: 1.1em; font-weight: bold; border-radius: 5px; cursor: pointer; transition: 0.2s; min-width: 45px;
+        }
+        .btn-10pt { background-color: #27ae60; }
+        .btn-8pt { background-color: #2ecc71; }
+        .btn-6pt { background-color: #f1c40f; color: #333; }
+        .btn-5pt { background-color: #f39c12; }
+        .btn-3pt { background-color: #e67e22; }
+        .btn-2pt { background-color: #d35400; }
+        .btn-1pt { background-color: #e74c3c; }
+        .point-btn.dimmed { opacity: 0.4; cursor: not-allowed; filter: grayscale(50%); }
+        .point-btn:hover:not(.dimmed) { transform: scale(1.05); filter: brightness(1.1); }
+        
+        .correct-answer-reveal { color: var(--correct); font-weight: bold; font-size: 2.2em; display: none; margin-top: 20px; margin-bottom: 5px; }
+        .unused-hints-container { display: none; margin-top: 15px; background: #f0f3f4; padding: 15px; border-radius: 8px; border: 1px solid #d5dbdb; }
+        .bottom-actions { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        
+        /* Center Panels (Winner & Landing) */
+        .center-box {
+            background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; margin: auto; max-width: 800px; width: 100%;
+        }
+        .trophy { font-size: 5em; margin: 0; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .winner-name { font-size: 3em; color: var(--primary); font-weight: bold; margin: 10px 0; }
+        .winner-score { font-size: 2em; color: var(--correct); margin-bottom: 20px; }
+        .standings-list { text-align: left; font-size: 1.3em; margin: 20px auto; max-width: 400px; border-top: 2px solid #eee; padding-top: 20px;}
+
+        /* CSS Brick Wall Illustration */
+        .brick-wall-container {
+            display: inline-block;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 450px;
+        }
+        .brick-wall {
+            background-color: #ecf0f1; /* Mortar */
+            padding: 8px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            border: 3px solid #bdc3c7;
+        }
+        .brick-row {
+            display: flex;
+            gap: 8px;
+            height: 60px;
+        }
+        .brick {
+            background-color: #c0392b; /* Terracotta Red */
+            flex: 1;
+            border-radius: 4px;
+            box-shadow: inset 0 -5px 0 rgba(0,0,0,0.15), inset 0 3px 0 rgba(255,255,255,0.2);
+        }
+        .brick.half {
+            flex: 0.5;
+        }
+        .brick.gap {
+            background-color: #fdfbf7;
+            box-shadow: none;
+            border: 3px dashed #bdc3c7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7f8c8d;
+            font-size: 2em;
+            font-weight: bold;
+            opacity: 0.8;
+        }
+
+        /* Modals */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto;
+        }
+        
+        /* Curveball Modal Specifics */
+        .curveball-modal-content {
+            background: linear-gradient(135deg, #f39c12, #d35400); color: white; border: 4px solid #fff; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            padding: 40px; border-radius: 15px; text-align: center; max-width: 600px; width: 90%;
+        }
+        .curveball-text-box {
+            background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; font-size: 2.2em; font-weight: bold; min-height: 120px;
+            display: flex; align-items: center; justify-content: center; margin: 20px 0; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); line-height: 1.2;
+        }
+
+        .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; margin-bottom: 20px; }
+        .edit-grid label { font-weight: bold; font-size: 0.9em; color: #555; }
+        .edit-grid input, .edit-grid select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        .edit-grid .full-width { grid-column: span 2; }
+        
+        .ai-prompt-box {
+            background: #fdfbf7; border-left: 4px solid var(--primary); padding: 15px; 
+            font-family: monospace; white-space: pre-wrap; font-size: 0.9em; text-align: left; 
+            border-radius: 0 5px 5px 0; overflow-y: auto; max-height: 300px; border: 1px solid #eee;
+        }
+
+        /* Footer */
+        .site-footer {
+            padding: 5px; text-align: center; font-size: 0.85em; color: #7f8c8d; width: 100%; flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-header">
+        <div></div> <!-- Spacer for perfect centering -->
+        <h1>Mind the Gap</h1>
+        <div class="header-controls">
+            <button class="icon-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+        </div>
+    </div>
+
+    <div class="app-body">
+        <div class="main-content">
+            
+            <!-- Landing / Front Page Screen -->
+            <div id="landing-screen" class="screen active-screen">
+                <div class="center-box" style="margin-top: 5vh; border: 4px solid var(--primary);">
+                    <h1 style="font-size: 4.5em; color: var(--primary); margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 2px;">Mind the Gap</h1>
+                    <p style="font-size: 1.3em; color: #555; margin-bottom: 30px; font-weight: bold;">A fast-paced Use of English classroom challenge</p>
+                    
+                    <!-- CSS Brick Wall Graphic -->
+                    <div class="brick-wall-container">
+                        <div class="brick-wall">
+                            <div class="brick-row">
+                                <div class="brick"></div>
+                                <div class="brick gap">?</div>
+                                <div class="brick"></div>
+                            </div>
+                            <div class="brick-row">
+                                <div class="brick half"></div>
+                                <div class="brick"></div>
+                                <div class="brick"></div>
+                                <div class="brick half"></div>
+                            </div>
+                            <div class="brick-row">
+                                <div class="brick"></div>
+                                <div class="brick"></div>
+                                <div class="brick"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                    
+                    <button class="btn btn-warning" style="font-size: 2.2em; padding: 15px 60px; border-radius: 50px; font-weight: bold; box-shadow: 0 8px 20px rgba(230, 126, 34, 0.4);" onclick="goToSetup()">Enter Setup</button>
+                </div>
+            </div>
+
+            <!-- Setup Screen -->
+            <div id="setup-screen" class="screen">
+                <div class="setup-box">
+                    <h2>Game Setup</h2>
+                    <div style="background: #e9f0fe; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: left; font-size:0.95em;">
+                        <strong>Quick Rules:</strong> Teams <strong>select</strong> guesses, but only score or lose control when they <strong>lock in</strong>.<br>
+                        • <strong>Stage 0:</strong> Lock in (10 Pts).<br>
+                        • <strong>Stage 1:</strong> Lock in early guess (8 Pts) | Lock in new guess (6 Pts).<br>
+                        • <strong>Stage 2:</strong> Lock in early guess (5 Pts) | Lock in new guess (3 Pts).<br>
+                        • <strong>Stage 3 (50/50):</strong> Lock in early guess (2 Pts) | Lock in new guess (1 Pt).<br>
+                        <em>Incorrect lock-ins instantly pass control to the next team!</em>
+                    </div>
+
+                    <div class="team-setup">
+                        <div>
+                            <label for="num-teams"><strong>Teams: </strong></label>
+                            <input type="number" id="num-teams" min="1" max="6" value="2">
+                        </div>
+                        <div>
+                            <label for="grid-size"><strong>Grid Size: </strong></label>
+                            <select id="grid-size">
+                                <option value="24" selected>24</option>
+                                <option value="21">21</option>
+                                <option value="20">20</option>
+                                <option value="18">18</option>
+                                <option value="16">16</option>
+                                <option value="15">15</option>
+                                <option value="12">12</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="num-curveballs"><strong>Hidden Curveballs: </strong></label>
+                            <select id="num-curveballs">
+                                <option value="0" selected>0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin: 20px 0; border: 2px dashed #ccc; padding: 20px; border-radius: 8px;">
+                        <label for="file-upload" style="font-weight:bold; font-size:1.1em; display:block; margin-bottom:10px;">Import Questions (.csv) or Load Game (.json):</label>
+                        <input type="file" id="file-upload" accept=".csv, .json" style="font-size: 1em;">
+                    </div>
+                    
+                    <div id="file-loaded-msg" style="display:none; color: var(--correct); font-size: 1.2em; font-weight:bold; margin-bottom:15px;">✓ Question Data Ready</div>
+                    <button class="btn" id="start-btn" style="display:none; font-size: 1.3em;" onclick="startGame()">Start Game</button>
+                    <button class="btn btn-alt" id="save-setup-btn" style="display:none; font-size: 1.3em;" onclick="saveGameFromSetup()">💾 Save Game (.json)</button>
+                    <br>
+                    <button class="btn btn-alt" style="margin-top:15px;" onclick="document.getElementById('format-modal').style.display='flex'">How to Format / Generate Questions</button>
+                </div>
+            </div>
+
+            <!-- Grid Screen -->
+            <div id="grid-screen" class="screen">
+                <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; flex-shrink: 0; flex-wrap: wrap;">
+                    <button class="btn btn-alt" onclick="returnToSetup()">⚙️ Setup</button>
+                    <button class="btn btn-alt" onclick="document.getElementById('rules-modal').style.display='flex'">View Rules</button>
+                    <button class="btn btn-alt" onclick="downloadGameState()">💾 Save Game (.json)</button>
+                    <button class="btn btn-warning" onclick="endGame()">🏆 End Game Early</button>
+                </div>
+                <div class="grid-wrapper">
+                    <div class="grid-container" id="grid-container"></div>
+                </div>
+            </div>
+
+            <!-- Question Screen -->
+            <div id="question-screen" class="screen">
+                <div class="question-box">
+                    <div class="q-controls-top">
+                        <span class="q-type-badge" id="q-type-badge"></span>
+                        <button class="btn btn-alt" style="padding: 5px 10px; font-size: 0.9em; margin:0;" onclick="openEditModal()">✏️ Edit Question</button>
+                    </div>
+
+                    <div class="sentence" id="q-sentence"></div>
+                    
+                    <div class="active-team-bar">
+                        <!-- Active Team Dropdown -->
+                        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <label style="font-weight:bold; font-size: 0.8em; color: #555; text-transform: uppercase;">Active Team</label>
+                            <select id="active-team-select" class="team-select"></select>
+                        </div>
+
+                        <!-- Typing / Selecting Guess -->
+                        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <label style="font-weight:bold; font-size: 0.8em; color: #555; text-transform: uppercase;">Type Guess</label>
+                            <div style="display:flex; gap:5px;">
+                                <input type="text" id="current-guess" class="guess-input" placeholder="Type here...">
+                                <button class="btn btn-alt" style="margin:0; padding: 6px 12px;" onclick="selectGuess()">Select</button>
+                            </div>
+                        </div>
+
+                        <!-- Lock In Display -->
+                        <div style="background: #fff; border: 2px solid var(--secondary); padding: 5px 10px; border-radius: 5px; text-align: center; min-width: 180px;">
+                            <div style="font-size: 0.7em; color: #7f8c8d; text-transform: uppercase; font-weight:bold;">Selected Answer</div>
+                            <div id="selected-answer-text" style="font-size: 1.4em; font-weight: bold; margin: 2px 0; color: var(--primary);">[ None ]</div>
+                            <button id="btn-lock-in" class="btn btn-warning" style="display:none; padding: 4px 15px; margin:0 auto; font-weight:bold;" onclick="lockInAnswer()">Lock In!</button>
+                        </div>
+
+                        <!-- Manual Overrides (Synonyms) -->
+                        <div class="score-buttons-container">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 3px;">
+                                <div style="font-size: 0.7em; color: #7f8c8d; text-transform: uppercase; font-weight:bold;">Manual Override</div>
+                                <div style="display:flex; gap:3px;">
+                                    <button class="point-btn btn-10pt" id="btn-score-10" onclick="awardPoints(10, this)">+10</button>
+                                    <button class="point-btn btn-8pt" id="btn-score-8" onclick="awardPoints(8, this)">+8</button>
+                                    <button class="point-btn btn-6pt" id="btn-score-6" onclick="awardPoints(6, this)">+6</button>
+                                    <button class="point-btn btn-5pt" id="btn-score-5" onclick="awardPoints(5, this)">+5</button>
+                                    <button class="point-btn btn-3pt" id="btn-score-3" onclick="awardPoints(3, this)">+3</button>
+                                    <button class="point-btn btn-2pt" id="btn-score-2" onclick="awardPoints(2, this)">+2</button>
+                                    <button class="point-btn btn-1pt" id="btn-score-1" onclick="awardPoints(1, this)">+1</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Display for Steals/Corrects -->
+                    <div id="lock-in-status" style="text-align:center; font-weight:bold; font-size:1.1em; height: 25px; margin-bottom:5px;"></div>
+
+                    <div class="hint-area" id="hint-area">
+                        <div id="hint-text">No hints revealed yet.</div>
+                    </div>
+                    
+                    <div class="correct-answer-reveal" id="correct-answer"></div>
+                    <div class="unused-hints-container" id="unused-hints-container"></div>
+
+                    <div class="bottom-actions">
+                        <button class="btn" id="next-hint-btn" onclick="nextHint()">Reveal hint</button>
+                        <button class="btn btn-alt" id="next-question-btn" style="display:none;" onclick="returnToGrid()">Next question</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Winner Screen -->
+            <div id="winner-screen" class="screen">
+                <div class="center-box">
+                    <div class="trophy">🏆</div>
+                    <h2>Game Over!</h2>
+                    <div id="winner-announcement"></div>
+                    <div class="standings-list" id="standings-list"></div>
+                    <button class="btn" style="margin-top:20px;" onclick="returnToSetup()">Play Again</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Scoreboard (Visible during play) -->
+        <div id="scoreboard-container">
+            <h3 class="scoreboard-title">Scoreboard</h3>
+            <div id="teams-wrapper" style="display: flex; flex-direction: column; gap: 6px;"></div>
+            <div class="team-management-btns">
+                <button class="add-team-btn" onclick="addTeam()">+ Add Team</button>
+                <button class="remove-team-btn" onclick="removeTeam()">- Remove</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Curveball Modal -->
+    <div id="curveball-modal" class="modal">
+        <div class="curveball-modal-content">
+            <h2 style="margin:0; font-size: 2.5em; text-transform: uppercase; letter-spacing: 2px;">🌀 Curveball! 🌀</h2>
+            <div class="curveball-text-box" id="curveball-text">
+                Ready to spin...
+            </div>
+            
+            <button id="curveball-spin-btn" class="btn" style="background: white; color: #d35400; font-size: 1.5em; padding: 15px 40px; font-weight:bold; border-radius: 30px;" onclick="spinCurveball()">SPIN!</button>
+            
+            <div id="curveball-target-area" style="display:none; margin-top: 15px;">
+                <label style="font-size: 1.2em; font-weight: bold; display:block; margin-bottom:5px;">Select Target Team:</label>
+                <select id="curveball-target-select" style="font-size: 1.2em; padding: 5px; color: black; border-radius: 5px;"></select>
+            </div>
+            
+            <button id="curveball-continue-btn" class="btn" style="display:none; background: #27ae60; border: 2px solid white; font-size: 1.2em; margin-top: 20px; font-weight:bold;" onclick="applyCurveballAndContinue()">Apply & Play Question</button>
+        </div>
+    </div>
+
+    <!-- Formatting & AI Prompt Modal -->
+    <div id="format-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">Creating Question Sets</h2>
+            <p>The app requires a <code>.csv</code> file with exactly 12 columns in this specific order (including the header row):</p>
+            <div style="background: #eee; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 0.85em; overflow-x: auto; text-align: left; margin-bottom: 20px;">
+                Question_Type, Level, Sentence, Correct_Answer, Option_A, Option_B, Option_C, Option_D, Part_1_Discriminator, Part_2_3_Clue, Hint_3_Remaining_1, Hint_3_Remaining_2
+            </div>
+            
+            <h3 style="margin-bottom: 5px;">Using AI to Generate Questions</h3>
+            <p style="margin-top: 0; font-size: 0.95em; color: #555;">You can easily generate completely new sets of questions by copying and pasting the prompt below into an AI tool (like Gemini or ChatGPT). Just update the text in brackets <strong>[ ]</strong> to target the specific level and language areas your class needs!</p>
+            
+            <div class="ai-prompt-box">Generate a CSV set of [24] Use of English questions at [B2 / FCE] level. Please include an equal mix of Part 1, Part 2, and Part 3 questions, arranged randomly. 
+
+[Optional: Focus the questions on the target language area: e.g., Travel vocabulary, Conditionals, Gerunds & Infinitives, Phrasal verbs].
+
+Please output strictly as raw CSV text with no markdown blocks or extra conversational text.
+
+Use these exact 12 headers:
+Question_Type, Level, Sentence, Correct_Answer, Option_A, Option_B, Option_C, Option_D, Part_1_Discriminator, Part_2_3_Clue, Hint_3_Remaining_1, Hint_3_Remaining_2
+
+Rules for generation:
+1. Sentence must use '___' for the gap.
+2. Option_A through Option_D are the 4 choices (For Parts 2 & 3, generate these to serve as the multiple choice hint).
+3. Part_1_Discriminator applies only to Part 1 (e.g., 'Collocation', 'Meaning / nuance', 'Grammar pattern'). Leave blank for P2/3.
+4. Part_2_3_Clue applies only to P2/P3 (e.g., 'Word type: Preposition', 'Word family: CARE'). Leave blank for P1.
+5. Hint_3_Remaining_1 and Hint_3_Remaining_2 must be the correct answer and exactly one incorrect distractor from the 4 options.
+6. Use British English spelling conventions.</div>
+            
+            <div style="text-align:center; margin-top: 20px;">
+                <button class="btn btn-alt" onclick="document.getElementById('format-modal').style.display='none'">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="rules-modal" class="modal">
+        <div class="modal-content">
+            <h2>Game Instructions & Setup</h2>
+            <p><strong>Mechanics:</strong> Teams <strong>select</strong> guesses using the input box, but only score or lose control when they <strong>lock in</strong> an answer. Incorrect locked-in answers instantly pass control to the next team.</p>
+            <p><strong>Early Selection Bonus:</strong> Making an early guess pays off. If you select a correct guess at Stage 0, but wait for Stage 1 to Lock In, you score <strong>8 points</strong> instead of 6. If you select at Stage 1, but wait for Stage 2 to Lock In, you score <strong>5 points</strong> instead of 3. If you select at Stage 2, but wait for Stage 3 to Lock In, you score <strong>2 points</strong> instead of 1.</p>
+            <p><strong>Turn Order:</strong> The team highlighted in <span style="color:#d35400; font-weight:bold;">Orange</span> on the scoreboard gets to choose the grid number. This order rotates perfectly each round, regardless of mid-round steals or curveballs.</p>
+            <p><strong>Auto-Scoring vs Manual:</strong> Using the "Lock In!" button automatically checks the answer. <em>(Note: For valid synonyms not in the answer key, teachers can use the Manual Override buttons to award points directly).</em></p>
+            <div style="text-align:center; margin-top: 20px;">
+                <button class="btn btn-alt" onclick="document.getElementById('rules-modal').style.display='none'">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="site-footer">
+        &copy; 2026 Martin Allen. All rights reserved. Free for classroom use; duplication or distribution of the source code is prohibited.
+    </div>
+
+    <script>
+        let rawQuestions = [];
+        let questions = [];
+        let teams = [];
+        let currentQuestion = null;
+        let currentQuestionIndex = null;
+        let currentHintLevel = 0;
+        let currentGridSquare = null;
+        
+        let choosingTeamIndex = 0; 
+        let attemptsThisQuestion = 0; 
+        
+        let currentSelectedGuessRaw = "";
+        let guessSelectedAtHintLevel = 0;
+        
+        /* Curveball Variables */
+        let curveballSquares = [];
+        let currentCurveballEffect = null;
+        let curveballPendingIndex = null;
+        let curveballPendingBtn = null;
+        const CURVEBALLS = [
+            { id: 'swap', text: 'Swap scores with another team', needsTarget: true },
+            { id: 'win10', text: 'Win 10 points', needsTarget: false },
+            { id: 'lose5', text: 'Lose 5 points', needsTarget: false },
+            { id: 'lose10', text: 'Lose 10 points', needsTarget: false },
+            { id: 'target_lose5', text: 'Select a team to lose 5 points', needsTarget: true },
+            { id: 'miss', text: 'Miss this turn', needsTarget: false },
+            { id: 'double', text: 'Double points (minimum +10)', needsTarget: false },
+            { id: 'steal5', text: 'Steal 5 points from another team', needsTarget: true },
+            { id: 'all_lose5', text: 'All other teams lose 5 points', needsTarget: false }
+        ];
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {});
+            } else {
+                if (document.exitFullscreen) { document.exitFullscreen(); }
+            }
+        }
+
+        /* Screen Management */
+        function goToSetup() {
+            document.getElementById('landing-screen').classList.remove('active-screen');
+            document.getElementById('setup-screen').classList.add('active-screen');
+        }
+
+        function returnToSetup() {
+            if(confirm("Returning to setup will reset current game progress and scores. Continue?")) {
+                document.getElementById('grid-screen').classList.remove('active-screen');
+                document.getElementById('question-screen').classList.remove('active-screen');
+                document.getElementById('winner-screen').classList.remove('active-screen');
+                document.getElementById('scoreboard-container').style.display = 'none';
+                document.getElementById('setup-screen').classList.add('active-screen');
+            }
+        }
+
+        /* Robust CSV Parsing */
+        function parseCSVLine(text) {
+            let result = [];
+            let cell = '';
+            let inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                if (char === '"') {
+                    if (inQuotes && text[i + 1] === '"') {
+                        cell += '"';
+                        i++; 
+                    } else {
+                        inQuotes = !inQuotes; 
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(cell.trim());
+                    cell = '';
+                } else {
+                    cell += char;
+                }
+            }
+            result.push(cell.trim());
+            return result;
+        }
+
+        /* File Handling */
+        const fileUploadEl = document.getElementById('file-upload');
+        if (fileUploadEl) {
+            fileUploadEl.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    const text = event.target.result;
+                    if(file.name.endsWith('.json')) {
+                        try {
+                            rawQuestions = JSON.parse(text);
+                            checkDataReady();
+                        } catch (err) {
+                            alert("Error reading JSON file.");
+                        }
+                    } else {
+                        parseCSV(text);
+                        checkDataReady();
+                    }
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        function parseCSV(text) {
+            const lines = text.split(/\r?\n/);
+            rawQuestions = [];
+            for(let i = 1; i < lines.length; i++) {
+                if(!lines[i].trim()) continue;
+                const row = parseCSVLine(lines[i]); 
+                if(row.length >= 12) {
+                    rawQuestions.push({
+                        type: row[0], level: row[1], sentence: row[2], answer: row[3],
+                        options: [row[4], row[5], row[6], row[7]],
+                        part1Disc: row[8], part23Clue: row[9],
+                        rem1: row[10], rem2: row[11]
+                    });
+                }
+            }
+        }
+
+        function checkDataReady() {
+            if(rawQuestions.length > 0) {
+                document.getElementById('start-btn').style.display = 'inline-block';
+                const saveSetupBtn = document.getElementById('save-setup-btn');
+                if (saveSetupBtn) saveSetupBtn.style.display = 'inline-block';
+                
+                const msgDiv = document.getElementById('file-loaded-msg');
+                msgDiv.innerText = `✓ Question Data Ready (${rawQuestions.length} questions)`;
+                msgDiv.style.display = 'block';
+                
+                // Update dropdown to prevent selecting grids larger than dataset
+                const gridSelect = document.getElementById('grid-size');
+                gridSelect.innerHTML = '';
+                const standardSizes = [24, 21, 20, 18, 16, 15, 12];
+                let count = rawQuestions.length;
+                
+                if (!standardSizes.includes(count) && count > 0) {
+                    gridSelect.innerHTML += `<option value="${count}">${count} (All)</option>`;
+                }
+                standardSizes.forEach(size => {
+                    if (count >= size) {
+                        gridSelect.innerHTML += `<option value="${size}">${size}</option>`;
+                    }
+                });
+                gridSelect.selectedIndex = 0;
+            } else {
+                alert("No valid questions found.");
+            }
+        }
+
+        /* Game & Team Setup */
+        function startGame() {
+            const numTeams = parseInt(document.getElementById('num-teams').value) || 2;
+            teams = [];
+            for(let i=1; i<=numTeams; i++) { teams.push({ name: "Team " + i, score: 0 }); }
+            
+            const gridSize = parseInt(document.getElementById('grid-size').value) || 24;
+            questions = rawQuestions.slice(0, Math.min(gridSize, rawQuestions.length));
+            
+            // Set up curveballs
+            curveballSquares = [];
+            const numCurveballs = parseInt(document.getElementById('num-curveballs').value) || 0;
+            let indices = Array.from({length: questions.length}, (_, i) => i);
+            indices = indices.sort(() => 0.5 - Math.random()); // Shuffle array
+            curveballSquares = indices.slice(0, numCurveballs); // Pick first N
+            
+            choosingTeamIndex = 0;
+            
+            document.getElementById('setup-screen').classList.remove('active-screen');
+            document.getElementById('grid-screen').classList.add('active-screen');
+            document.getElementById('scoreboard-container').style.display = 'flex';
+            
+            renderScoreboard();
+            updateChoosingTeamHighlight();
+            generateGrid();
+            updateTeamDropdowns();
+        }
+
+        function addTeam() {
+            teams.push({ name: "Team " + (teams.length + 1), score: 0 });
+            renderScoreboard();
+            updateChoosingTeamHighlight();
+            updateTeamDropdowns();
+        }
+        
+        function removeTeam() {
+            if (teams.length > 1) {
+                teams.pop();
+                if (choosingTeamIndex >= teams.length) choosingTeamIndex = 0;
+                renderScoreboard();
+                updateChoosingTeamHighlight();
+                updateTeamDropdowns();
+            } else {
+                alert("You must have at least one team.");
+            }
+        }
+
+        function renderScoreboard() {
+            const wrapper = document.getElementById('teams-wrapper');
+            wrapper.innerHTML = '';
+            teams.forEach((team, index) => {
+                const card = document.createElement('div');
+                card.className = 'team-card';
+                card.id = `team-card-${index}`;
+                card.innerHTML = `
+                    <input type="text" class="team-name" value="${team.name}" onchange="updateTeamName(${index}, this.value)">
+                    <div class="team-score">${team.score}</div>
+                    <div class="score-controls">
+                        <button onclick="adjustScore(${index}, -1)">-</button>
+                        <button onclick="adjustScore(${index}, 1)">+</button>
+                    </div>
+                `;
+                wrapper.appendChild(card);
+            });
+        }
+        
+        function updateChoosingTeamHighlight() {
+            const cards = document.querySelectorAll('.team-card');
+            cards.forEach((card, index) => {
+                if (index === choosingTeamIndex) {
+                    card.classList.add('active-choosing');
+                } else {
+                    card.classList.remove('active-choosing');
+                }
+            });
+        }
+
+        function updateTeamName(index, newName) {
+            teams[index].name = newName;
+            updateTeamDropdowns();
+        }
+
+        function adjustScore(index, delta) {
+            teams[index].score += delta;
+            renderScoreboard();
+            updateChoosingTeamHighlight();
+        }
+
+        function updateTeamDropdowns() {
+            const select = document.getElementById('active-team-select');
+            const currentValue = select.value;
+            select.innerHTML = '';
+            teams.forEach((team, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.innerText = team.name;
+                select.appendChild(opt);
+            });
+            if (currentValue && parseInt(currentValue) < teams.length) {
+                select.value = currentValue;
+            } else {
+                select.value = choosingTeamIndex; 
+            }
+        }
+
+        /* Selection and Lock In Logic */
+        function selectGuess() {
+            const guessVal = document.getElementById('current-guess').value.trim();
+            const display = document.getElementById('selected-answer-text');
+            const lockBtn = document.getElementById('btn-lock-in');
+            
+            if (guessVal) {
+                if (guessVal !== currentSelectedGuessRaw) {
+                    currentSelectedGuessRaw = guessVal;
+                    guessSelectedAtHintLevel = currentHintLevel; 
+                }
+                display.innerText = `"${guessVal}"`;
+                lockBtn.style.display = 'block';
+            } else {
+                currentSelectedGuessRaw = "";
+                display.innerText = "[ None ]";
+                lockBtn.style.display = 'none';
+            }
+        }
+
+        function selectOption(text) {
+            document.getElementById('current-guess').value = text;
+            selectGuess(); 
+        }
+
+        function lockInAnswer() {
+            const guessRaw = document.getElementById('selected-answer-text').innerText;
+            if (guessRaw === "[ None ]") return;
+            
+            const guess = guessRaw.replace(/^"|"$/g, '').trim();
+            const correctAns = currentQuestion.answer.trim().toLowerCase();
+            const cleanGuess = guess.toLowerCase();
+            
+            const statusDiv = document.getElementById('lock-in-status');
+            const currentTeamSelect = document.getElementById('active-team-select');
+            let currentTeamIndex = parseInt(currentTeamSelect.value);
+
+            if (cleanGuess === correctAns) {
+                let ptsToAward = 1;
+                
+                if (currentHintLevel === 0) { 
+                    ptsToAward = 10; 
+                } else if (currentHintLevel === 1) { 
+                    ptsToAward = (guessSelectedAtHintLevel < 1) ? 8 : 6; 
+                } else if (currentHintLevel === 2) { 
+                    ptsToAward = (guessSelectedAtHintLevel < 2) ? 5 : 3; 
+                } else if (currentHintLevel === 3) { 
+                    ptsToAward = (guessSelectedAtHintLevel < 3) ? 2 : 1; 
+                }
+
+                adjustScore(currentTeamIndex, ptsToAward);
+                statusDiv.innerHTML = `<span style="color:var(--correct);">✓ Correct! ${ptsToAward} Pts awarded to ${teams[currentTeamIndex].name}!</span>`;
+                revealAnswer();
+            } else {
+                attemptsThisQuestion++;
+                
+                if (attemptsThisQuestion >= teams.length) {
+                    statusDiv.innerHTML = `<span style="color:var(--warning);">✗ All teams incorrect!</span>`;
+                    revealAnswer();
+                } else {
+                    let nextTeamIndex = (currentTeamIndex + 1) % teams.length;
+                    statusDiv.innerHTML = `<span style="color:var(--warning);">✗ Incorrect! Play stolen by ${teams[nextTeamIndex].name}!</span>`;
+                    currentTeamSelect.value = nextTeamIndex;
+                    document.getElementById('selected-answer-text').innerText = "[ None ]";
+                    document.getElementById('current-guess').value = "";
+                    document.getElementById('btn-lock-in').style.display = 'none';
+                    currentSelectedGuessRaw = "";
+                }
+            }
+        }
+
+        /* Direct Point Awarding (Manual Overrides) */
+        function awardPoints(pts, btnElement) {
+            const teamIndex = document.getElementById('active-team-select').value;
+            adjustScore(teamIndex, pts);
+            const originalText = btnElement.innerText;
+            btnElement.innerText = "✓";
+            setTimeout(() => { btnElement.innerText = originalText; }, 1200);
+            revealAnswer(); 
+        }
+
+        /* Grid Logic */
+        function generateGrid() {
+            const grid = document.getElementById('grid-container');
+            grid.innerHTML = '';
+            
+            const numQ = questions.length;
+            let cols = 6;
+            if (numQ <= 4) cols = 2;
+            else if (numQ <= 9) cols = 3;
+            else if (numQ <= 12) cols = 4;
+            else if (numQ <= 15) cols = 5;
+            else if (numQ === 16) cols = 4;
+            else if (numQ <= 18) cols = 6;
+            else if (numQ <= 20) cols = 5;
+            else if (numQ === 21) cols = 7;
+            else cols = 6;
+            
+            grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+            questions.forEach((q, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'grid-item';
+                btn.innerText = index + 1;
+                btn.onclick = () => openQuestion(index, btn);
+                grid.appendChild(btn);
+            });
+        }
+
+        function openQuestion(index, btnElement, bypassCurveball = false) {
+            if(btnElement.classList.contains('played')) return;
+            
+            // Check for hidden curveball
+            if(!bypassCurveball && curveballSquares.includes(index)) {
+                curveballSquares = curveballSquares.filter(i => i !== index); // Remove so it doesn't fire twice
+                curveballPendingIndex = index;
+                curveballPendingBtn = btnElement;
+                showCurveballModal();
+                return;
+            }
+            
+            currentQuestionIndex = index;
+            currentQuestion = questions[index];
+            currentGridSquare = btnElement;
+            currentHintLevel = 0;
+            attemptsThisQuestion = 0;
+            
+            currentSelectedGuessRaw = "";
+            guessSelectedAtHintLevel = 0;
+
+            document.getElementById('grid-screen').classList.remove('active-screen');
+            document.getElementById('question-screen').classList.add('active-screen');
+            
+            document.getElementById('active-team-select').value = choosingTeamIndex;
+
+            document.getElementById('current-guess').value = ""; 
+            document.getElementById('selected-answer-text').innerText = "[ None ]";
+            document.getElementById('btn-lock-in').style.display = 'none';
+            document.getElementById('lock-in-status').innerHTML = "";
+            document.getElementById('correct-answer').style.display = 'none';
+            document.getElementById('unused-hints-container').style.display = 'none';
+            document.getElementById('next-hint-btn').style.display = 'inline-block';
+            document.getElementById('next-question-btn').style.display = 'none';
+
+            refreshQuestionView();
+        }
+
+        function updateScoreButtonHighlighting() {
+            const btn10 = document.getElementById('btn-score-10');
+            const btn8 = document.getElementById('btn-score-8');
+            const btn6 = document.getElementById('btn-score-6');
+            const btn5 = document.getElementById('btn-score-5');
+            const btn3 = document.getElementById('btn-score-3');
+            const btn2 = document.getElementById('btn-score-2');
+            const btn1 = document.getElementById('btn-score-1');
+            
+            btn10.className = 'point-btn btn-10pt' + (currentHintLevel === 0 ? '' : ' dimmed');
+            btn8.className = 'point-btn btn-8pt' + (currentHintLevel === 1 ? '' : ' dimmed');
+            btn6.className = 'point-btn btn-6pt' + (currentHintLevel === 1 ? '' : ' dimmed');
+            btn5.className = 'point-btn btn-5pt' + (currentHintLevel === 2 ? '' : ' dimmed');
+            btn3.className = 'point-btn btn-3pt' + (currentHintLevel === 2 ? '' : ' dimmed');
+            btn2.className = 'point-btn btn-2pt' + (currentHintLevel === 3 ? '' : ' dimmed');
+            btn1.className = 'point-btn btn-1pt' + (currentHintLevel === 3 ? '' : ' dimmed');
+        }
+
+        function refreshQuestionView() {
+            document.getElementById('q-type-badge').innerText = `${currentQuestion.type} (${currentQuestion.level})`;
+            document.getElementById('q-sentence').innerText = currentQuestion.sentence;
+            
+            updateScoreButtonHighlighting();
+            
+            const hintArea = document.getElementById('hint-text');
+            if (currentHintLevel === 0) {
+                hintArea.innerHTML = "No hints revealed yet.<br><span style='font-size:0.7em; color:#7f8c8d;'>(Stage 0 - Open Guess)</span>";
+            } else if (currentHintLevel === 1) {
+                if(currentQuestion.type.includes("Part 1")) {
+                    hintArea.innerHTML = "<strong>Hint 1:</strong>" + buildOptionsHTML(currentQuestion.options);
+                } else {
+                    hintArea.innerHTML = `<strong>Hint 1:</strong> ${currentQuestion.part23Clue}`;
+                }
+            } else if (currentHintLevel === 2) {
+                if(currentQuestion.type.includes("Part 1")) {
+                    hintArea.innerHTML = `<strong>Hint 1:</strong>` + buildOptionsHTML(currentQuestion.options) + `<br><strong>Hint 2 (Clue):</strong> ${currentQuestion.part1Disc}`;
+                } else {
+                    hintArea.innerHTML = `<strong>Hint 1:</strong> ${currentQuestion.part23Clue}<br><strong>Hint 2:</strong>` + buildOptionsHTML(currentQuestion.options);
+                }
+            } else if (currentHintLevel === 3) {
+                hintArea.innerHTML = `<strong>Hint 3 (50/50):</strong> <div class="options-grid">
+                    <div class="option-box" onclick="selectOption('${currentQuestion.rem1}')">${currentQuestion.rem1}</div>
+                    <div class="option-box" onclick="selectOption('${currentQuestion.rem2}')">${currentQuestion.rem2}</div>
+                </div>`;
+            }
+        }
+
+        function buildOptionsHTML(optionsArray) {
+            const labels = ['A', 'B', 'C', 'D'];
+            let html = '<div class="options-grid">';
+            optionsArray.forEach((opt, i) => {
+                html += `<div class="option-box" onclick="selectOption('${opt}')"><strong>${labels[i]})</strong> ${opt}</div>`;
+            });
+            html += '</div>';
+            return html;
+        }
+        
+        function buildStaticOptionsHTML(optionsArray) {
+            const labels = ['A', 'B', 'C', 'D'];
+            let html = '<div class="options-grid">';
+            optionsArray.forEach((opt, i) => {
+                html += `<div class="static-option-box"><strong>${labels[i]})</strong> ${opt}</div>`;
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function nextHint() {
+            currentHintLevel++;
+            if(currentHintLevel >= 3) {
+                currentHintLevel = 3;
+                document.getElementById('next-hint-btn').style.display = 'none';
+            }
+            refreshQuestionView();
+        }
+
+        function displayUnusedHints() {
+            if (currentHintLevel >= 3) return; // All hints shown
+            
+            const unusedDiv = document.getElementById('unused-hints-container');
+            let html = "<div style='font-size: 1.1em; font-weight:bold; color: #7f8c8d; margin-bottom:10px;'>Unused Hints</div>";
+            html += "<div style='font-size: 1.1em; text-align: left; background: #fff; padding: 15px; border-radius: 5px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);'>";
+            
+            const isPart1 = currentQuestion.type.includes("Part 1");
+            let h1 = isPart1 ? buildStaticOptionsHTML(currentQuestion.options) : currentQuestion.part23Clue;
+            let h2 = isPart1 ? currentQuestion.part1Disc : buildStaticOptionsHTML(currentQuestion.options);
+            let h3 = `<div class="options-grid"><div class="static-option-box">${currentQuestion.rem1}</div><div class="static-option-box">${currentQuestion.rem2}</div></div>`;
+
+            if (currentHintLevel < 1) html += `<div style="margin-bottom:10px;"><strong>Hint 1:</strong> ${h1}</div>`;
+            if (currentHintLevel < 2) html += `<div style="margin-bottom:10px;"><strong>Hint 2:</strong> ${h2}</div>`;
+            if (currentHintLevel < 3) html += `<div><strong>Hint 3 (50/50):</strong> ${h3}</div>`;
+            
+            html += "</div>";
+            unusedDiv.innerHTML = html;
+            unusedDiv.style.display = 'block';
+        }
+
+        function revealAnswer() {
+            const answerDiv = document.getElementById('correct-answer');
+            answerDiv.innerText = `Correct Answer: ${currentQuestion.answer}`;
+            answerDiv.style.display = 'block';
+            currentGridSquare.classList.add('played');
+            
+            document.getElementById('next-hint-btn').style.display = 'none';
+            document.getElementById('btn-lock-in').style.display = 'none'; 
+            
+            const nxtBtn = document.getElementById('next-question-btn');
+            const allPlayed = document.querySelectorAll('.grid-item.played').length === questions.length;
+            if(allPlayed) {
+                nxtBtn.innerText = "View Podium";
+            } else {
+                nxtBtn.innerText = "Next question";
+            }
+            nxtBtn.style.display = 'inline-block';
+            
+            displayUnusedHints();
+        }
+
+        function returnToGrid() {
+            if (teams.length > 0) {
+                choosingTeamIndex = (choosingTeamIndex + 1) % teams.length;
+            }
+            updateChoosingTeamHighlight();
+            
+            document.getElementById('question-screen').classList.remove('active-screen');
+            document.getElementById('grid-screen').classList.add('active-screen');
+            
+            const allPlayed = document.querySelectorAll('.grid-item.played').length === questions.length;
+            if (allPlayed) {
+                endGame();
+            }
+        }
+
+        /* ---------------- CURVEBALL LOGIC ---------------- */
+        
+        function showCurveballModal() {
+            document.getElementById('curveball-text').innerText = "Ready to spin...";
+            document.getElementById('curveball-spin-btn').style.display = 'inline-block';
+            document.getElementById('curveball-target-area').style.display = 'none';
+            document.getElementById('curveball-continue-btn').style.display = 'none';
+            document.getElementById('curveball-modal').style.display = 'flex';
+        }
+
+        function spinCurveball() {
+            document.getElementById('curveball-spin-btn').style.display = 'none';
+            let spins = 0;
+            let spinInterval = setInterval(() => {
+                let rand = CURVEBALLS[Math.floor(Math.random() * CURVEBALLS.length)];
+                document.getElementById('curveball-text').innerText = rand.text;
+                spins++;
+                if(spins > 20) {
+                    clearInterval(spinInterval);
+                    finishSpin();
+                }
+            }, 80);
+        }
+
+        function finishSpin() {
+            let finalCB = CURVEBALLS[Math.floor(Math.random() * CURVEBALLS.length)];
+            
+            // Failsafe for 1-team games: Re-roll if target is needed or applies to "other" teams
+            while (teams.length < 2 && (finalCB.needsTarget || finalCB.id === 'all_lose5' || finalCB.id === 'swap')) {
+                finalCB = CURVEBALLS[Math.floor(Math.random() * CURVEBALLS.length)];
+            }
+            
+            currentCurveballEffect = finalCB;
+            document.getElementById('curveball-text').innerText = finalCB.text;
+            
+            if (finalCB.needsTarget) {
+                populateCurveballTargets();
+                document.getElementById('curveball-target-area').style.display = 'block';
+            }
+            
+            document.getElementById('curveball-continue-btn').style.display = 'inline-block';
+        }
+
+        function populateCurveballTargets() {
+            const select = document.getElementById('curveball-target-select');
+            select.innerHTML = '';
+            teams.forEach((t, i) => {
+                if (i !== choosingTeamIndex) { 
+                    select.innerHTML += `<option value="${i}">${t.name}</option>`;
+                }
+            });
+        }
+
+        function applyCurveballAndContinue() {
+            const activeT = choosingTeamIndex;
+            let targetT = null;
+            if (currentCurveballEffect.needsTarget) {
+                targetT = parseInt(document.getElementById('curveball-target-select').value);
+            }
+            
+            switch(currentCurveballEffect.id) {
+                case 'win10': 
+                    adjustScore(activeT, 10); 
+                    break;
+                case 'lose5': 
+                    adjustScore(activeT, -5); 
+                    break;
+                case 'lose10': 
+                    adjustScore(activeT, -10); 
+                    break;
+                case 'double': 
+                    let currentS = teams[activeT].score;
+                    let ptsToAdd = currentS > 10 ? currentS : 10;
+                    adjustScore(activeT, ptsToAdd);
+                    break;
+                case 'all_lose5':
+                    teams.forEach((t, i) => { if(i !== activeT) adjustScore(i, -5); });
+                    break;
+                case 'miss':
+                    if (teams.length > 1) {
+                        choosingTeamIndex = (choosingTeamIndex + 1) % teams.length;
+                        updateChoosingTeamHighlight();
+                        updateTeamDropdowns();
+                    }
+                    break;
+                case 'swap':
+                    if (targetT !== null && !isNaN(targetT)) {
+                        let temp = teams[activeT].score;
+                        teams[activeT].score = teams[targetT].score;
+                        teams[targetT].score = temp;
+                        renderScoreboard();
+                    }
+                    break;
+                case 'steal5':
+                    if (targetT !== null && !isNaN(targetT)) {
+                        adjustScore(targetT, -5);
+                        adjustScore(activeT, 5);
+                    }
+                    break;
+                case 'target_lose5':
+                    if (targetT !== null && !isNaN(targetT)) {
+                        adjustScore(targetT, -5);
+                    }
+                    break;
+            }
+            
+            document.getElementById('curveball-modal').style.display = 'none';
+            openQuestion(curveballPendingIndex, curveballPendingBtn, true); // Bypass curveball check now
+        }
+        
+        /* End Game Logic */
+        function endGame() {
+            document.getElementById('grid-screen').classList.remove('active-screen');
+            document.getElementById('question-screen').classList.remove('active-screen');
+            document.getElementById('winner-screen').classList.add('active-screen');
+            
+            let sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+            let maxScore = sortedTeams[0].score;
+            let winners = sortedTeams.filter(t => t.score === maxScore);
+            
+            const announceDiv = document.getElementById('winner-announcement');
+            if (winners.length === 1) {
+                announceDiv.innerHTML = `<div class="winner-name">${winners[0].name} Wins!</div>
+                                         <div class="winner-score">${winners[0].score} Points</div>`;
+            } else {
+                let names = winners.map(w => w.name).join(" & ");
+                announceDiv.innerHTML = `<div class="winner-name">It's a Tie!</div>
+                                         <div style="font-size: 1.8em; color: #555;">${names}</div>
+                                         <div class="winner-score">${maxScore} Points</div>`;
+            }
+            
+            let standingsHTML = "<ol style='padding-left: 20px;'>";
+            sortedTeams.forEach(t => {
+                standingsHTML += `<li style="margin-bottom: 10px;"><strong>${t.name}</strong> - ${t.score} pts</li>`;
+            });
+            standingsHTML += "</ol>";
+            document.getElementById('standings-list').innerHTML = standingsHTML;
+        }
+
+        /* Edit Logic */
+        function openEditModal() {
+            const q = currentQuestion;
+            document.getElementById('edit-type').value = q.type;
+            document.getElementById('edit-level').value = q.level;
+            document.getElementById('edit-sentence').value = q.sentence;
+            document.getElementById('edit-answer').value = q.answer;
+            document.getElementById('edit-opt-a').value = q.options[0];
+            document.getElementById('edit-opt-b').value = q.options[1];
+            document.getElementById('edit-opt-c').value = q.options[2];
+            document.getElementById('edit-opt-d').value = q.options[3];
+            document.getElementById('edit-p1-disc').value = q.part1Disc;
+            document.getElementById('edit-p23-clue').value = q.part23Clue;
+            document.getElementById('edit-rem1').value = q.rem1;
+            document.getElementById('edit-rem2').value = q.rem2;
+            
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function saveEditedQuestion() {
+            questions[currentQuestionIndex] = {
+                type: document.getElementById('edit-type').value,
+                level: document.getElementById('edit-level').value,
+                sentence: document.getElementById('edit-sentence').value,
+                answer: document.getElementById('edit-answer').value,
+                options: [
+                    document.getElementById('edit-opt-a').value,
+                    document.getElementById('edit-opt-b').value,
+                    document.getElementById('edit-opt-c').value,
+                    document.getElementById('edit-opt-d').value
+                ],
+                part1Disc: document.getElementById('edit-p1-disc').value,
+                part23Clue: document.getElementById('edit-p23-clue').value,
+                rem1: document.getElementById('edit-rem1').value,
+                rem2: document.getElementById('edit-rem2').value
+            };
+            currentQuestion = questions[currentQuestionIndex];
+            document.getElementById('edit-modal').style.display = 'none';
+            refreshQuestionView();
+        }
+
+        /* Download JSON Logic */
+        function downloadGameState() {
+            let filename = prompt("Please enter a name for your save file:", "mind_the_gap_questions");
+            if (filename === null || filename.trim() === "") return;
+            if (!filename.endsWith(".json")) {
+                filename += ".json";
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", filename);
+            dlAnchorElem.click();
+        }
+
+        function saveGameFromSetup() {
+            let filename = prompt("Please enter a name for your save file:", "mind_the_gap_game");
+            if (filename === null || filename.trim() === "") return;
+            if (!filename.endsWith(".json")) {
+                filename += ".json";
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(rawQuestions, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", filename);
+            dlAnchorElem.click();
+        }
+    </script>
+</body>
+</html>

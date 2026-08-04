@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snakes, Ladders and Curveballs</title>
+    
+    <!-- 1. ISOLATED GLOBAL ERROR CATCHER -->
+    <!-- If the main script fails to load for ANY reason, this will catch it and tell us why. -->
+    <script>
+        window.onerror = function(msg, url, lineNo) {
+            alert("System Error: " + msg + "\nLine: " + lineNo + "\nThe game caught a compatibility issue during load.");
+            return false;
+        };
+    </script>
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #27ae60;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #1a252f;
+            --ladder: #e67e22;
+            --snake: #8e44ad;
+            --curveball: #3498db;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light); color: var(--dark);
+            overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        /* Dedicated Header Bar */
+        header.top-bar {
+            background: var(--dark); padding: 10px 20px; display: flex;
+            justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 1000;
+        }
+        .header-title { color: white; font-weight: bold; font-size: 1.2rem; letter-spacing: 1px; }
+        .top-controls { display: flex; gap: 10px; }
+
+        /* Tactile Buttons */
+        button {
+            background-color: var(--primary); color: white; border: none;
+            padding: 8px 15px; border-radius: 5px; cursor: pointer;
+            font-size: 14px; font-weight: bold; transition: 0.1s;
+        }
+        button:hover { background-color: #34495e; }
+        button:active { transform: scale(0.95); }
+        
+        .btn-danger { background-color: var(--danger); }
+        .btn-danger:hover { background-color: #c0392b; }
+        .btn-success { background-color: var(--secondary); }
+        .btn-success:hover { background-color: #219150; }
+        .btn-info { background-color: var(--curveball); }
+        .btn-info:hover { background-color: #2980b9; }
+
+        /* Strict Screen Management */
+        .screen {
+            display: none; flex: 1; width: 100%; height: calc(100% - 80px);
+            position: relative; box-sizing: border-box;
+        }
+        .screen.active { display: flex; }
+
+        /* 1. Landing Screen */
+        #landing-screen {
+            flex-direction: column; align-items: center; justify-content: center;
+            overflow-y: auto; padding: 20px;
+        }
+        .game-title {
+            text-align: center; margin-bottom: 10px; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 1px; display: flex;
+            flex-direction: column; align-items: center; gap: 10px;
+        }
+        .title-line { display: flex; align-items: center; justify-content: center; font-size: 4.5rem; }
+        .word-group { display: flex; align-items: baseline; }
+
+        .snake-s {
+            display: inline-block; width: 1.2em; height: 1.2em; margin-right: -5px;
+            position: relative; top: 10px; overflow: visible;
+        }
+        .ladder-a {
+            display: inline-block; width: 0.75em; height: 1em; margin: 0 2px;
+            position: relative; top: 5px;
+        }
+        .curveball-c {
+            display: inline-block; width: 0.75em; height: 0.75em; border-radius: 50%;
+            border: 0.18em solid var(--curveball); border-right-color: transparent;
+            position: relative; margin-right: 2px; top: 5px;
+        }
+        .curveball-c::after {
+            content: '\26BE'; position: absolute; font-size: 0.5em;
+            top: 50%; left: 50%; transform: translate(-20%, -50%);
+        }
+
+        .editable-sub {
+            font-size: 1.5rem; color: #555; padding: 10px;
+            border: 1px dashed transparent; text-align: center; margin-bottom: 30px; min-width: 300px;
+        }
+        .editable-sub:hover, .editable-sub:focus { border-color: #ccc; outline: none; background: #fff; }
+
+        /* 2. Rules Screen */
+        #rules-screen {
+            flex-direction: column; align-items: center; padding: 40px 20px;
+            overflow-y: auto; background-color: white;
+        }
+        .rules-container {
+            width: 100%; max-width: 800px; background: #f8f9fa; padding: 30px;
+            border-radius: 10px; border: 1px solid #e0e0e0; font-size: 1.1rem; line-height: 1.6;
+        }
+        .rules-container h2 { color: var(--primary); border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+        .rules-container h3 { color: var(--dark); margin-top: 25px; }
+        .rule-highlight { font-weight: bold; color: var(--danger); }
+
+        /* 3. Set-up Screen */
+        #setup-screen {
+            flex-direction: column; align-items: center; padding: 40px 20px;
+            overflow-y: auto; background-color: white;
+        }
+        .setup-container {
+            width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+        .setup-panel {
+            background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #e0e0e0;
+        }
+        .setup-panel.ai-panel {
+            grid-column: 1 / -1; background: #eaf2f8; border: 2px solid var(--curveball);
+        }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--dark); }
+        .input-group input, .input-group select {
+            width: 100%; padding: 8px; border: 1px solid #ccc;
+            border-radius: 4px; box-sizing: border-box; font-size: 1rem;
+        }
+        textarea {
+            width: 100%; height: 120px; margin-top: 10px; padding: 10px;
+            box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;
+            font-family: monospace; resize: vertical;
+        }
+        .instruction-code {
+            display: block; background: #eee; padding: 5px;
+            font-family: monospace; font-size: 0.85rem; margin: 5px 0; border-radius: 3px;
+        }
+
+        /* 4. Game Screen */
+        #game-screen { flex-direction: row; }
+        #board-container {
+            flex: 3; position: relative; background-color: #81ecec;
+            margin: 10px; border-radius: 10px; border: 3px solid var(--primary);
+            overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+        #squares-layer { position: absolute; top: 2%; left: 2%; width: 96%; height: 96%; }
+
+        .square {
+            position: absolute; background: white; border: 2px solid var(--dark);
+            box-sizing: border-box; display: flex; align-items: center;
+            justify-content: center; font-weight: bold; box-shadow: inset -2px -2px 0px rgba(0,0,0,0.1); color: #111;
+        }
+        .square-number { 
+            position: relative; z-index: 2; font-size: 1.6rem;
+            text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 0 0 8px rgba(255,255,255,1);
+        }
+        .square-icon {
+            position: absolute; font-size: 3.5rem; opacity: 1; pointer-events: none;
+            z-index: 1; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.9)) drop-shadow(2px 4px 4px rgba(0,0,0,0.5));
+        }
+
+        .square:nth-child(4n+1) { background-color: #ff7675; }
+        .square:nth-child(4n+2) { background-color: #74b9ff; }
+        .square:nth-child(4n+3) { background-color: #55efc4; }
+        .square:nth-child(4n+4) { background-color: #ffeaa7; }
+        .square.type-finish { background: gold !important; border: 4px solid #f39c12; }
+        
+        #tokens-layer { position: absolute; top: 2%; left: 2%; width: 96%; height: 96%; pointer-events: none; }
+
+        .token {
+            position: absolute; width: 25px; height: 25px; border-radius: 50%; border: 2px solid white;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.6); transition: all 0.5s ease-in-out;
+            transform: translate(-50%, -50%); z-index: 100;
+        }
+
+        #side-panel {
+            flex: 1; background: white; margin: 10px 10px 10px 0; border-radius: 10px;
+            padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex;
+            flex-direction: column; overflow-y: auto;
+        }
+
+        /* Teams list */
+        .team-row {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+            padding: 5px; border-radius: 5px; background: #f8f9fa; border: 1px solid #eee;
+        }
+        .team-row.active-turn { border-left: 5px solid var(--primary); background: #eaf2f8; }
+        .team-row input[type="color"] { width: 30px; height: 30px; border: none; cursor: pointer; padding: 0; background: none; }
+        .team-row input[type="text"] { flex: 1; padding: 5px; font-weight: bold; border: 1px solid transparent; background: transparent; }
+        .team-row input[type="text"]:focus { border: 1px solid #ccc; background: white; }
+        .team-score { font-weight: bold; font-family: monospace; width: 50px; text-align: right; }
+        .btn-remove-team { background: none; border: none; color: var(--danger); font-weight: bold; cursor: pointer; padding: 5px; }
+        .btn-remove-team:hover { color: #c0392b; transform: scale(1.1); }
+
+        .dice-area { text-align: center; padding: 15px 0; background: #f8f9fa; border-radius: 10px; margin-top: auto; }
+        .dice {
+            font-size: 5.5rem; color: var(--primary); cursor: pointer; user-select: none;
+            display: inline-block; transition: transform 0.1s; margin: 0; line-height: 1;
+            filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.2));
+        }
+        .dice-instruction { margin: 0; font-size: 1.2rem; font-weight: bold; color: #555; }
+        .dice.rolling { animation: shake 0.3s infinite; color: var(--secondary); }
+        @keyframes shake {
+            0% { transform: rotate(0deg) scale(1.1); }
+            25% { transform: rotate(15deg) scale(1.1); }
+            50% { transform: rotate(0deg) scale(1.1); }
+            75% { transform: rotate(-15deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1.1); }
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; justify-content: center;
+            align-items: center; z-index: 2000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 10px; text-align: center;
+            width: 80%; max-width: 600px; box-shadow: 0 5px 25px rgba(0,0,0,0.5); transition: 0.3s;
+        }
+        .modal-content h2 { margin-top: 0; color: var(--primary); }
+        .question-text { font-size: 1.3rem; margin: 20px 0; font-weight: bold; color: #2c3e50; }
+        .answer-text { font-size: 1.2rem; color: #16a085; margin-bottom: 20px; display: none; font-weight: bold; }
+        .modal-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        
+        #modal-feedback {
+            display: none; font-size: 1.2rem; margin: 15px 0; font-weight: bold;
+            padding: 15px; border-radius: 8px; border: 2px solid transparent;
+        }
+        #btn-feedback-continue { display: block; margin: 15px auto 0 auto; }
+
+        /* 5. End Screen / Podium */
+        #end-screen {
+            flex-direction: column; justify-content: center; align-items: center;
+            background-color: var(--dark); color: white; overflow-y: auto; padding: 20px;
+        }
+        .podium-container { display: flex; align-items: flex-end; justify-content: center; gap: 40px; height: 350px; margin-top: 20px; }
+        .podium-place { display: flex; flex-direction: column; align-items: center; width: 250px; }
+        .podium-block {
+            width: 100%; background: var(--primary); display: flex; justify-content: center;
+            align-items: flex-start; padding-top: 15px; font-size: 1.5rem; font-weight: bold;
+            border-top-left-radius: 10px; border-top-right-radius: 10px; box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+        }
+        .podium-1 .podium-block { height: 200px; background: gold; color: #b8860b; }
+        .podium-2 .podium-block { height: 160px; background: silver; color: #708090; }
+        .team-name-display { text-align: center; margin-bottom: 10px; font-size: 1.5rem; font-weight: bold; word-wrap: break-word; }
+        .all-scores-list { margin-top: 15px; width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 10px; box-sizing: border-box; }
+        .all-scores-list div { display: flex; justify-content: space-between; padding: 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .all-scores-list div:last-child { border-bottom: none; }
+
+        footer {
+            height: 30px; background: var(--dark); color: #bdc3c7; display: flex; align-items: center;
+            justify-content: center; font-size: 12px; width: 100%; position: fixed; bottom: 0; z-index: 3000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dedicated Header Bar -->
+    <header class="top-bar">
+        <div class="header-title">SL&C Controller</div>
+        <div class="top-controls">
+            <button id="btn-nav-landing">&#127968; Home</button>
+            <button id="btn-nav-rules">&#128214; Rules</button>
+            <button id="btn-nav-setup">&#9881; Set-up</button>
+            <button id="btn-nav-game" style="display:none;">&#127918; Game</button>
+            <button id="btn-fullscreen">[ Full Screen ]</button>
+        </div>
+    </header>
+
+    <!-- 1. Landing Screen -->
+    <div id="landing-screen" class="screen active">
+        <div class="game-title">
+            <div class="title-line">
+                <span class="word-group">
+                    <svg class="snake-s" viewBox="0 0 100 100">
+                        <path d="M 85,30 C 70,-5 20,-5 20,25 C 20,50 80,50 80,75 C 80,105 10,105 5,80" fill="none" stroke="var(--secondary)" stroke-width="12" stroke-linecap="round"/>
+                        <ellipse cx="85" cy="26" rx="14" ry="11" fill="var(--secondary)" />
+                        <path d="M 98,28 L 75,28" stroke="var(--light)" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M 98,28 L 115,28 M 115,28 L 120,24 M 115,28 L 120,32" fill="none" stroke="#e74c3c" stroke-width="2.5" stroke-linecap="round"/>
+                        <circle cx="83" cy="21" r="2.5" fill="#000"/>
+                    </svg>NAKES,
+                </span>
+                <span class="word-group" style="margin-left: 15px;">
+                    L<svg class="ladder-a" viewBox="0 0 100 100">
+                        <line x1="50" y1="0" x2="20" y2="100" stroke="#e67e22" stroke-width="14" stroke-linecap="round"/>
+                        <line x1="50" y1="0" x2="80" y2="100" stroke="#e67e22" stroke-width="14" stroke-linecap="round"/>
+                        <line x1="43" y1="25" x2="57" y2="25" stroke="#e67e22" stroke-width="12" stroke-linecap="round"/>
+                        <line x1="36" y1="50" x2="64" y2="50" stroke="#e67e22" stroke-width="12" stroke-linecap="round"/>
+                        <line x1="29" y1="75" x2="71" y2="75" stroke="#e67e22" stroke-width="12" stroke-linecap="round"/>
+                    </svg>DDERS
+                </span>
+            </div>
+            <div class="title-line">
+                <span class="word-group" style="margin-right: 30px;">AND</span>
+                <span class="word-group">
+                    <span class="curveball-c"></span>URVEBALLS
+                </span>
+            </div>
+        </div>
+        <div class="editable-sub" contenteditable="true">The Ultimate Classroom Review Game<br>(Click to Edit Subtitle)</div>
+        <div style="display:flex; gap:20px; margin-top:20px;">
+            <button id="btn-landing-rules" class="btn-info" style="padding: 15px 30px; font-size: 1.2rem;">&#128214; How to Play</button>
+            <button id="btn-landing-setup" class="btn-success" style="padding: 15px 30px; font-size: 1.2rem;">Begin Set-up &rarr;</button>
+        </div>
+    </div>
+
+    <!-- 2. Rules Screen -->
+    <div id="rules-screen" class="screen">
+        <div class="rules-container">
+            <h2>&#128214; How to Play</h2>
+            
+            <h3>The Basics</h3>
+            <ul>
+                <li>The game is designed for a teacher-led classroom. Teams do not need devices; the teacher controls the board.</li>
+                <li>Teams start off the board. On their turn, the teacher rolls the dice, and the team's counter lands on the corresponding square.</li>
+                <li>Every square requires the team to answer a language question. Correct answers award points and moves; incorrect answers result in penalties.</li>
+            </ul>
+
+            <h3>Special Squares</h3>
+            <ul>
+                <li><strong>Normal Squares:</strong> Correct answer moves the team forward 1 square. Incorrect moves them back 1 square.</li>
+                <li><strong>&#129692; Ladders:</strong> Answer correctly to unlock the Bonus Spinner and climb the ladder! Answer incorrectly, and you miss the opportunity and stay where you are.</li>
+                <li><strong>&#128013; Snakes:</strong> Answer correctly to safely avoid the trap and stay where you are. Answer incorrectly, and you fall into the pit&mdash;spin the Bonus Spinner to see how far you drop!</li>
+                <li><strong>&#9918; Curveballs:</strong> A high-risk, high-reward square. Answer correctly for a chance at massive points or swapping positions with the leader. Answer incorrectly and risk losing points or falling to the back of the pack. (Curveballs also apply a standard +/- 1 move).</li>
+            </ul>
+
+            <h3>The Golden Rule of Movement</h3>
+            <p class="rule-highlight">
+                Teams only follow the instructions of the square their dice roll initially places them on. <br><br>
+                If a team moves forward or backwards as a result of answering a question (the +/- 1 rule, or via the Bonus Spinner), they DO NOT trigger the event of the new square they land on. The turn simply ends.
+            </p>
+
+            <h3>Winning the Game</h3>
+            <p>
+                To win the race, a team must reach the final "Finish" square and correctly answer the final question. If they get it wrong, they fall back 6 spaces!
+                <br><br>
+                There are two winners recognised at the end: The team that finishes the race first, and the team with the highest accumulated score.
+            </p>
+
+            <div style="text-align:center; margin-top:30px;">
+                <button id="btn-rules-setup" class="btn-success" style="padding: 10px 20px; font-size: 1.1rem;">Got it! Let's Set Up &rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Set-up Screen -->
+    <div id="setup-screen" class="screen">
+        <h2>Game Set-up</h2>
+        <div class="setup-container">
+            
+            <!-- Manual Panels First -->
+            <div class="setup-panel">
+                <h3>Board Configuration</h3>
+                <label>Choose Board Size (Squares):</label><br><br>
+                <select id="board-size" style="padding:10px; width:100%; font-size:1rem;">
+                    <option value="32">Quick (32 Squares)</option>
+                    <option value="50" selected>Standard (50 Squares)</option>
+                    <option value="80">Epic (80 Squares)</option>
+                </select>
+            </div>
+            
+            <div class="setup-panel">
+                <h3>Question Bank (Manual)</h3>
+                <p style="font-size: 0.85rem; margin-top:0;">Questions generated by the AI will appear in the JSON box below. You can also type manually.</p>
+                
+                <h4>Simple Format (Question | Answer)</h4>
+                <textarea id="question-data-simple">What is the capital of France? | Paris
+Translate to English: 'Bonjour' | Hello
+What is 5 x 5? | 25</textarea>
+                
+                <h4 style="margin-top: 15px;">JSON Format (from AI)</h4>
+                <textarea id="question-data-json">[]</textarea>
+                <button id="btn-download-questions" class="btn-info" style="margin-top: 10px;">&#128190; Download Questions (JSON)</button>
+            </div>
+
+            <!-- AI Generator Panel at Bottom -->
+            <div class="setup-panel ai-panel">
+                <h3 style="margin-top:0; color: var(--primary);">&#129302; Built-in AI Question Generator</h3>
+                <p style="font-size: 0.9rem; margin-top:0;">Automatically generate questions tailored for your classroom. <i>Note: This AI option may not be available at times of heavy traffic. If unavailable, please use one of the manual input methods above.</i></p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+                    <div class="input-group">
+                        <label>Target Language Level:</label>
+                        <select id="ai-level">
+                            <option value="A1">A1 (Beginner)</option>
+                            <option value="A2">A2 (Elementary)</option>
+                            <option value="B1" selected>B1 (Intermediate)</option>
+                            <option value="B2">B2 (Upper Intermediate)</option>
+                            <option value="C1">C1 (Advanced)</option>
+                            <option value="C2">C2 (Proficient)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Language Focus / Topic (Optional):</label>
+                        <input type="text" id="ai-topic" placeholder="e.g., Present Perfect, Animals, Phrasal Verbs">
+                    </div>
+                    <div class="input-group">
+                        <label>Number of Questions Requested:</label>
+                        <input type="number" id="ai-count" value="20" min="5" max="50" placeholder="20">
+                    </div>
+                    <div class="input-group">
+                        <label>AI Model:</label>
+                        <input type="text" id="ai-model" list="ai-model-list" value="gemini-3.5-flash" placeholder="e.g., gemini-3.5-flash">
+                        <datalist id="ai-model-list">
+                            <option value="gemini-3.5-flash"></option>
+                            <option value="gemini-1.5-flash"></option>
+                            <option value="gemini-1.5-pro"></option>
+                        </datalist>
+                    </div>
+                    <div class="input-group" style="grid-column: 1 / -1;">
+                        <label>API Key: <a href="https://aistudio.google.com/app/apikey" target="_blank" style="font-size:0.8rem; font-weight:normal;">(Get a free key here)</a></label>
+                        <input type="password" id="ai-api-key" placeholder="Paste your Gemini API key here">
+                    </div>
+                </div>
+                
+                <div style="display:flex; align-items:center; gap: 15px; margin-top: 10px;">
+                    <button id="btn-setup-ai" class="btn-info">Generate Questions</button>
+                    <span id="ai-status" style="font-weight:bold; color:var(--dark);"></span>
+                </div>
+            </div>
+
+        </div>
+
+        <button id="btn-setup-start" class="btn-success" style="padding: 15px 50px; font-size: 1.2rem; margin-top: 20px;">&#9654; Generate Board & Play</button>
+    </div>
+
+    <!-- 4. Game Screen -->
+    <div id="game-screen" class="screen">
+        <div id="board-container">
+            <div id="squares-layer"></div>
+            <div id="tokens-layer"></div>
+        </div>
+        
+        <div id="side-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                <h2 style="margin:0;">Teams</h2>
+                <button id="btn-game-add-team" class="btn-success">&#10133; Add Team</button>
+            </div>
+            
+            <div id="teams-list"></div>
+            
+            <div class="dice-area">
+                <h3 id="turn-indicator">Waiting to start...</h3>
+                <div id="dice-btn" class="dice">&#127922;</div>
+                <p id="dice-result" class="dice-instruction">Click to roll!</p>
+            </div>
+
+            <div style="margin-top: 15px; display:flex; flex-direction:column; gap:10px;">
+                <button id="btn-save-game" class="btn-info">&#128190; Save Game State</button>
+                <button id="btn-game-end" class="btn-danger">&#127942; End Game & Show Podium</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. End Screen / Podium -->
+    <div id="end-screen" class="screen">
+        <h1>&#127881; Game Over! &#127881;</h1>
+        <div class="podium-container">
+            <div class="podium-place podium-1" id="podium-race">
+                <h2 style="margin-bottom: 5px;">First to Finish</h2>
+                <div class="team-name-display" id="winner-race-name">Team Name</div>
+                <div class="podium-block">&#127937;</div>
+            </div>
+            <div class="podium-place podium-2" id="podium-points">
+                <h2 style="margin-bottom: 5px;">Highest Points</h2>
+                <div class="team-name-display" id="winner-points-name">Team Name</div>
+                <div class="podium-block">
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        &#127942; <span id="winner-points-score" style="font-size:1.2rem; margin-top:10px;">0 pts</span>
+                    </div>
+                </div>
+                <div class="all-scores-list" id="all-scores-list"></div>
+            </div>
+        </div>
+        <button id="btn-end-back" style="margin-top: 40px; padding: 15px 30px; font-size: 1.2rem;">&#128281; Back to Game</button>
+    </div>
+
+    <!-- Gameplay Modal -->
+    <div id="question-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modal-title">Question Time!</h2>
+            <div id="modal-context" style="color: #e67e22; font-weight: bold; margin-bottom: 10px;"></div>
+            
+            <div class="question-text" id="modal-q">Question goes here?</div>
+            <div class="answer-text" id="modal-a">Answer goes here</div>
+            
+            <button id="btn-show-answer" style="background:#95a5a6; margin-bottom: 20px;">Show Answer</button>
+            
+            <div class="modal-buttons" id="q-resolution-btns">
+                <button id="btn-modal-correct" class="btn-success">&#10004; Correct</button>
+                <button id="btn-modal-incorrect" class="btn-danger">&#10060; Incorrect</button>
+            </div>
+
+            <!-- Manual Feedback Display -->
+            <div id="modal-feedback"></div>
+            
+            <div id="bonus-spinner-area" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px dashed #ccc;">
+                <h3 id="bonus-header">Bonus Spin!</h3>
+                <div id="bonus-dice" class="dice" style="font-size: 5.5rem; margin:0; line-height:1; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.2)); color: var(--ladder);">&#127873;</div>
+                <p id="bonus-result" class="dice-instruction" style="margin-top:10px;">Click wheel to spin!</p>
+                <button id="btn-continue-bonus" class="btn-success" style="display:none; margin: 15px auto 0 auto;">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Martin Allen. All rights reserved. Free for classroom use; duplication or distribution of the source code is prohibited.
+    </footer>
+
+    <!-- MAIN JAVASCRIPT LOGIC (Vanilla ES5 for 100% compatibility) -->
+    <script>
+        /* --- CONSTANTS & STATE --- */
+        var ICON_SNAKE = '\uD83D\uDC0D';
+        var ICON_LADDER = '\uD83E\uDE9C';
+        var ICON_CURVEBALL = '\u26BE';
+        var ICON_FINISH = '\uD83C\uDFC1';
+        var ICON_WHEEL = '\uD83C\uDFA1';
+        var ICON_DICE = '\uD83C\uDFB2';
+        var DICE_FACES = ['\u2680', '\u2681', '\u2682', '\u2683', '\u2684', '\u2685'];
+        var BONUS_OPTIONS = [2, 4, 6, 8, 10];
+        
+        var state = {
+            teams: [],
+            boardSize: 0,
+            squares: [],
+            currentTeamIdx: 0,
+            questions: [],
+            activeSquareEvent: null,
+            phase: 'idle',
+            bonusDirection: 1
+        };
+
+        var defaultTeamSetup = [
+            { name: "Red Team", color: "#e74c3c" },
+            { name: "Blue Team", color: "#3498db" },
+            { name: "Green Team", color: "#2ecc71" },
+            { name: "Yellow Team", color: "#f1c40f" },
+            { name: "Purple Team", color: "#9b59b6" }
+        ];
+
+        /* --- SAFE LOCAL STORAGE WRAPPERS --- */
+        function safeGetStorage(key) {
+            try { return localStorage.getItem(key); } catch(e) { return null; }
+        }
+        function safeSetStorage(key, val) {
+            try { localStorage.setItem(key, val); } catch(e) { }
+        }
+
+        /* --- DOM BINDING & INITIALIZATION --- */
+        function bindClick(id, handler) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.onclick = function(e) {
+                    try { handler(e); } catch(err) { alert("Action Error: " + err.message); }
+                };
+            }
+        }
+
+        var isAppInitialized = false;
+        function initApp() {
+            if(isAppInitialized) return;
+            isAppInitialized = true;
+
+            bindClick('btn-nav-landing', function() { showScreen('landing'); });
+            bindClick('btn-nav-rules', function() { showScreen('rules'); });
+            bindClick('btn-nav-setup', function() { showScreen('setup'); });
+            bindClick('btn-nav-game', function() { showScreen('game'); });
+            bindClick('btn-fullscreen', toggleFullScreen);
+            
+            bindClick('btn-landing-rules', function() { showScreen('rules'); });
+            bindClick('btn-landing-setup', function() { showScreen('setup'); });
+            bindClick('btn-rules-setup', function() { showScreen('setup'); });
+
+            bindClick('btn-setup-ai', generateAIQuestions);
+            bindClick('btn-download-questions', downloadQuestions);
+            bindClick('btn-setup-start', initializeGame);
+
+            bindClick('btn-game-add-team', addTeam);
+            bindClick('btn-save-game', saveGameState);
+            bindClick('dice-btn', rollDice);
+            bindClick('btn-game-end', function() { endGame(null); });
+            bindClick('btn-end-back', function() { showScreen('game'); });
+
+            bindClick('btn-show-answer', function() {
+                var a = document.getElementById('modal-a');
+                if(a) a.style.display = 'block';
+            });
+            bindClick('btn-modal-correct', function() { resolveQuestion(true); });
+            bindClick('btn-modal-incorrect', function() { resolveQuestion(false); });
+            bindClick('btn-continue-bonus', applyBonusAndFinish);
+            bindClick('bonus-dice', spinBonus);
+
+            var savedKey = safeGetStorage('slc_api_key');
+            var keyInput = document.getElementById('ai-api-key');
+            if (savedKey && keyInput) keyInput.value = savedKey;
+        }
+
+        // Initialize immediately
+        initApp();
+
+        /* --- NAVIGATION --- */
+        function showScreen(screenId) {
+            var screens = document.querySelectorAll('.screen');
+            for(var i=0; i<screens.length; i++) {
+                screens[i].classList.remove('active');
+            }
+            var target = document.getElementById(screenId + '-screen');
+            if(target) target.classList.add('active');
+            
+            var gameNavBtn = document.getElementById('btn-nav-game');
+            if(gameNavBtn) {
+                gameNavBtn.style.display = (state.boardSize > 0) ? 'inline-block' : 'none';
+            }
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                var docEl = document.documentElement;
+                if(docEl.requestFullscreen) docEl.requestFullscreen();
+                else if(docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+                else if(docEl.msRequestFullscreen) docEl.msRequestFullscreen();
+            } else {
+                if(document.exitFullscreen) document.exitFullscreen();
+                else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if(document.msExitFullscreen) document.msExitFullscreen();
+            }
+        }
+
+        /* --- DOWNLOAD & SAVE HANDLERS --- */
+        function downloadQuestions() {
+            var qs = [];
+            var jsonBox = document.getElementById('question-data-json');
+            if(jsonBox && jsonBox.value.trim()) {
+                try {
+                    var parsed = JSON.parse(jsonBox.value.trim());
+                    if(Array.isArray(parsed)) qs = qs.concat(parsed);
+                } catch(e) {}
+            }
+            var simpleBox = document.getElementById('question-data-simple');
+            if(simpleBox && simpleBox.value.trim()) {
+                var lines = simpleBox.value.trim().split('\n');
+                for(var i=0; i<lines.length; i++) {
+                    var parts = lines[i].split('|');
+                    if(parts.length >= 2) qs.push({q: parts[0].trim(), a: parts[1].trim()});
+                }
+            }
+            
+            if(qs.length === 0) {
+                alert("No questions to download!");
+                return;
+            }
+
+            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(qs, null, 2));
+            var downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "slc_questions.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function saveGameState() {
+            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            var downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "slc_save_game.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        /* --- AI GENERATOR (Legacy Safe XMLHttpRequest) --- */
+        function generateAIQuestions() {
+            var keyInput = document.getElementById('ai-api-key');
+            var statusEl = document.getElementById('ai-status');
+            if(!keyInput || !statusEl) return;
+
+            var apiKey = keyInput.value.trim();
+            if(!apiKey) {
+                alert("Please enter a Gemini API Key to use the auto-generator.");
+                return;
+            }
+            
+            safeSetStorage('slc_api_key', apiKey);
+
+            var levelEl = document.getElementById('ai-level');
+            var level = levelEl ? levelEl.value : 'B1';
+            
+            var topicInput = document.getElementById('ai-topic');
+            var topicVal = topicInput ? topicInput.value.trim() : '';
+            var topic = topicVal ? topicVal : "general vocabulary and grammar review";
+
+            var countInput = document.getElementById('ai-count');
+            var qCount = (countInput && countInput.value) ? parseInt(countInput.value) : 20;
+            if (isNaN(qCount) || qCount < 1) qCount = 20;
+            if (qCount > 100) qCount = 50;
+            
+            var modelInput = document.getElementById('ai-model');
+            var model = (modelInput && modelInput.value.trim()) ? modelInput.value.trim() : 'gemini-3.5-flash';
+
+            var promptText = "Act as an expert English language teacher. Generate " + qCount + " review questions and answers for my class at the CEFR " + level + " level on the topic of: " + topic + ". Format the output EXACTLY as a valid JSON array of objects, where each object has a 'q' key for the question and an 'a' key for the answer. Do not include any markdown, code blocks, or conversational text outside the JSON array. Use British English spelling conventions.";
+
+            statusEl.style.color = "var(--dark)";
+            statusEl.innerText = "Generating " + qCount + " questions... (this may take a few seconds)";
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        try {
+                            var data = JSON.parse(xhr.responseText);
+                            var text = data.candidates[0].content.parts[0].text;
+                            text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+                            
+                            JSON.parse(text); // Validate
+
+                            var jsonBox = document.getElementById('question-data-json');
+                            if(jsonBox) jsonBox.value = text;
+                            
+                            statusEl.style.color = "var(--secondary)";
+                            statusEl.innerText = qCount + " questions successfully generated!";
+                        } catch (e) {
+                            statusEl.style.color = "var(--danger)";
+                            statusEl.innerText = "Parsing Error: " + e.message;
+                        }
+                    } else {
+                        statusEl.style.color = "var(--danger)";
+                        statusEl.innerText = "API Error: " + xhr.statusText + " (" + xhr.status + "). If unavailable, please use manual input.";
+                    }
+                }
+            };
+
+            var body = JSON.stringify({
+                contents: [{ parts: [{ text: promptText }] }]
+            });
+            xhr.send(body);
+        }
+
+        /* --- START GAME INITIALIZATION --- */
+        function initializeGame() {
+            state.questions = [];
+            
+            var jsonBox = document.getElementById('question-data-json');
+            if(jsonBox && jsonBox.value.trim()) {
+                try {
+                    var parsed = JSON.parse(jsonBox.value.trim());
+                    if(Array.isArray(parsed)) state.questions = state.questions.concat(parsed);
+                } catch(e) {}
+            }
+            
+            var simpleBox = document.getElementById('question-data-simple');
+            if(simpleBox && simpleBox.value.trim()) {
+                var lines = simpleBox.value.trim().split('\n');
+                for(var i=0; i<lines.length; i++) {
+                    var parts = lines[i].split('|');
+                    if(parts.length >= 2) state.questions.push({q: parts[0].trim(), a: parts[1].trim()});
+                }
+            }
+
+            if(state.questions.length === 0) {
+                alert("No valid questions found. Using a demo question.");
+                state.questions.push({q: "Demo Question", a: "Demo Answer"});
+            }
+
+            var sizeSelect = document.getElementById('board-size');
+            var newSize = sizeSelect ? parseInt(sizeSelect.value) : 50;
+            
+            if(state.boardSize !== newSize) {
+                state.boardSize = newSize;
+                
+                if(state.teams.length === 0) {
+                    for(var i=0; i<defaultTeamSetup.length; i++) {
+                        var dt = defaultTeamSetup[i];
+                        state.teams.push({ id: new Date().getTime()+i, name: dt.name, color: dt.color, pos: 0, score: 0 });
+                    }
+                } else {
+                    for(var i=0; i<state.teams.length; i++) {
+                        state.teams[i].pos = 0; 
+                        state.teams[i].score = 0;
+                    }
+                }
+                
+                state.currentTeamIdx = 0;
+                generateBoard();
+            }
+
+            var dBtn = document.getElementById('dice-btn');
+            var dRes = document.getElementById('dice-result');
+            if(dBtn) dBtn.innerText = ICON_DICE;
+            if(dRes) dRes.innerText = 'Click to roll!';
+
+            showScreen('game');
+            updateTurnUI();
+            updateTokens();
+        }
+
+        /* --- TEAMS --- */
+        function addTeam() {
+            if(state.teams.length >= 8) return alert("Maximum 8 teams recommended.");
+            var extraColors = ['#e67e22', '#1abc9c', '#34495e', '#fd79a8'];
+            var newColor = extraColors[state.teams.length % extraColors.length];
+            state.teams.push({ id: new Date().getTime(), name: "Team " + (state.teams.length + 1), color: newColor, pos: 0, score: 0 });
+            updateTeamsUI();
+            updateTokens();
+        }
+
+        window.removeTeam = function(index) {
+            if(state.teams.length <= 1) return alert("Must have at least one team.");
+            state.teams.splice(index, 1);
+            if(state.currentTeamIdx >= state.teams.length) state.currentTeamIdx = 0;
+            updateTeamsUI();
+            updateTokens();
+            updateTurnUI();
+        };
+
+        window.updateTeamData = function(index, field, value) {
+            if(!state.teams[index]) return;
+            state.teams[index][field] = value;
+            if(field === 'color') updateTokens();
+            if(field === 'score') state.teams[index][field] = parseInt(value) || 0;
+            if(field === 'name') updateTurnUI();
+        };
+
+        function updateTeamsUI() {
+            var container = document.getElementById('teams-list');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            for(var i=0; i<state.teams.length; i++) {
+                var t = state.teams[i];
+                var div = document.createElement('div');
+                div.className = "team-row " + (i === state.currentTeamIdx ? "active-turn" : "");
+                div.innerHTML = 
+                    "<input type='color' value='" + t.color + "' onchange='window.updateTeamData(" + i + ", \"color\", this.value)'>" +
+                    "<input type='text' value='" + t.name + "' onchange='window.updateTeamData(" + i + ", \"name\", this.value)'>" +
+                    "<input type='number' class='team-score' value='" + t.score + "' onchange='window.updateTeamData(" + i + ", \"score\", this.value)'>" +
+                    "<button class='btn-remove-team' onclick='window.removeTeam(" + i + ")'>&#10006;</button>";
+                container.appendChild(div);
+            }
+        }
+
+        function updateTurnUI() {
+            if(state.teams.length === 0) return;
+            var t = state.teams[state.currentTeamIdx];
+            var indicator = document.getElementById('turn-indicator');
+            if(indicator) {
+                indicator.innerText = t.name + "'s Turn";
+                indicator.style.color = t.color;
+            }
+            updateTeamsUI();
+        }
+
+        /* --- HELPER FUNCTIONS --- */
+        function findSquare(id) {
+            for(var i=0; i<state.squares.length; i++) {
+                if(state.squares[i].id === id) return state.squares[i];
+            }
+            return null;
+        }
+
+        // Temporary array search for board generation before state.squares is populated
+        function findInArray(arr, id) {
+            for(var i=0; i<arr.length; i++) {
+                if(arr[i].id === id) return arr[i];
+            }
+            return null;
+        }
+
+        function getValidInArray(arr, condition) {
+            var valid = [];
+            for(var i=0; i<arr.length; i++) {
+                if(condition(arr[i])) valid.push(arr[i]);
+            }
+            return valid;
+        }
+
+        /* --- BOARD GENERATION --- */
+        function generateBoard() {
+            var path = [];
+            var cols = 10;
+            var rows = Math.ceil(state.boardSize / cols);
+            
+            if (state.boardSize === 32) {
+                rows = 5; 
+                for(var i=1; i<=32; i++) {
+                    var gx, gy;
+                    if(i >= 1 && i <= 10) { gx = i - 1; gy = 0; }
+                    else if (i === 11) { gx = 9; gy = 1; }
+                    else if (i >= 12 && i <= 21) { gx = 9 - (i - 12); gy = 2; }
+                    else if (i === 22) { gx = 0; gy = 3; }
+                    else if (i >= 23 && i <= 32) { gx = i - 23; gy = 4; }
+                    
+                    path.push({ id: i, gridX: gx, gridY: gy, type: 'normal' });
+                }
+            } else {
+                for(var i=1; i<=state.boardSize; i++) {
+                    var row = Math.floor((i-1)/cols); 
+                    var col = (i-1) % cols;
+                    if (row % 2 !== 0) col = (cols - 1) - col; 
+                    path.push({ id: i, gridX: col, gridY: row, type: 'normal' });
+                }
+            }
+
+            var numSpecials = Math.max(3, Math.floor(state.boardSize / 8)); 
+            var placedLadders = 0;
+            var placedSnakes = 0;
+
+            var mLadder = findInArray(path, Math.random() > 0.5 ? 4 : 6);
+            if (mLadder) { mLadder.type = 'ladder'; placedLadders++; }
+
+            var mSnake1 = findInArray(path, state.boardSize - 3);
+            if (mSnake1) { mSnake1.type = 'snake'; placedSnakes++; }
+
+            var mSnake2 = findInArray(path, state.boardSize - 7);
+            if (mSnake2) { mSnake2.type = 'snake'; placedSnakes++; }
+
+            for(var i = placedLadders; i < numSpecials; i++) {
+                var validL = getValidInArray(path, function(s) { 
+                    return s.type === 'normal' && s.id % 2 === 0 && s.id <= state.boardSize - 11 && s.id > 6; 
+                });
+                if(validL.length > 0) validL[Math.floor(Math.random() * validL.length)].type = 'ladder';
+            }
+            for(var i = placedSnakes; i < numSpecials; i++) {
+                var validS = getValidInArray(path, function(s) { 
+                    return s.type === 'normal' && s.id % 2 !== 0 && s.id >= 11 && s.id < state.boardSize - 7; 
+                });
+                if(validS.length > 0) validS[Math.floor(Math.random() * validS.length)].type = 'snake';
+            }
+            for(var i = 0; i < numSpecials; i++) {
+                var validC = getValidInArray(path, function(s) { 
+                    return s.type === 'normal' && s.id > 3 && s.id < state.boardSize - 3; 
+                });
+                if(validC.length > 0) validC[Math.floor(Math.random() * validC.length)].type = 'curveball';
+            }
+
+            path[path.length-1].type = 'finish';
+            state.squares = path;
+            renderBoardGraphics(cols, rows);
+        }
+
+        function renderBoardGraphics(cols, rows) {
+            var layer = document.getElementById('squares-layer');
+            if(!layer) return;
+            layer.innerHTML = '';
+            
+            for(var i=0; i<state.squares.length; i++) {
+                var sq = state.squares[i];
+                var div = document.createElement('div');
+                div.className = "square type-" + sq.type;
+                
+                var w = 100 / cols;
+                var h = 100 / rows;
+                
+                div.style.width = w + "%";
+                div.style.height = h + "%";
+                div.style.left = (sq.gridX * w) + "%";
+                div.style.bottom = (sq.gridY * h) + "%";
+                
+                div.innerHTML = "<span class='square-number'>" + sq.id + "</span>";
+                
+                if (sq.type === 'snake') div.innerHTML += "<div class='square-icon'>" + ICON_SNAKE + "</div>";
+                if (sq.type === 'ladder') div.innerHTML += "<div class='square-icon'>" + ICON_LADDER + "</div>";
+                if (sq.type === 'curveball') div.innerHTML += "<div class='square-icon'>" + ICON_CURVEBALL + "</div>";
+                if (sq.type === 'finish') div.innerHTML += "<div class='square-icon' style='font-size:4.5rem; opacity: 1;'>" + ICON_FINISH + "</div>";
+
+                sq.cx = (sq.gridX * w) + (w/2); 
+                sq.cy = (sq.gridY * h) + (h/2); 
+
+                layer.appendChild(div);
+            }
+        }
+
+        /* --- TOKENS --- */
+        function getClutterOffset(teamIdx, totalTeams) {
+            if(teamIdx === 4) return {dx: 0, dy: 0}; 
+            var offsets = [{dx:-12, dy:-12}, {dx:12, dy:-12}, {dx:-12, dy:12}, {dx:12, dy:12}, {dx:0, dy:-18}, {dx:0, dy:18}, {dx:-18, dy:0}, {dx:18, dy:0}];
+            return offsets[teamIdx] || {dx:0, dy:0};
+        }
+
+        function updateTokens() {
+            var layer = document.getElementById('tokens-layer');
+            if(!layer) return;
+            layer.innerHTML = '';
+            
+            for(var i=0; i<state.teams.length; i++) {
+                var team = state.teams[i];
+                if (team.pos === 0) continue;
+
+                var sq = findSquare(team.pos);
+                if(!sq) continue;
+                
+                var offset = getClutterOffset(i, state.teams.length);
+                var div = document.createElement('div');
+                div.className = 'token';
+                div.style.backgroundColor = team.color;
+                
+                div.style.left = "calc(" + sq.cx + "% + " + offset.dx + "px)";
+                div.style.bottom = "calc(" + sq.cy + "% + " + offset.dy + "px)";
+                layer.appendChild(div);
+            }
+        }
+
+        /* --- GAMEPLAY LOOP --- */
+        var diceAnimInterval;
+        
+        function rollDice() {
+            if(state.phase !== 'idle' || state.teams.length === 0) return;
+            state.phase = 'rolling';
+            var diceBtn = document.getElementById('dice-btn');
+            var diceRes = document.getElementById('dice-result');
+            if(!diceBtn || !diceRes) return;
+            
+            diceBtn.classList.add('rolling');
+            diceRes.innerText = "Rolling...";
+
+            var ticks = 0;
+            diceAnimInterval = setInterval(function() {
+                diceBtn.innerText = DICE_FACES[ticks % 6];
+                ticks++;
+            }, 80);
+            
+            setTimeout(function() {
+                clearInterval(diceAnimInterval);
+                diceBtn.classList.remove('rolling');
+                
+                var roll = Math.floor(Math.random() * 6) + 1;
+                
+                diceBtn.innerText = DICE_FACES[roll - 1];
+                diceRes.innerText = "You rolled a " + roll + "!";
+                
+                moveTeam(roll);
+            }, 800);
+        }
+
+        function moveTeam(amount) {
+            var t = state.teams[state.currentTeamIdx];
+            var newPos = t.pos + amount;
+            
+            if(newPos >= state.boardSize) newPos = state.boardSize;
+            
+            t.pos = newPos;
+            updateTokens();
+            
+            setTimeout(function() { triggerSquareEvent(t.pos); }, 1800);
+        }
+
+        function getQuestion() {
+            return state.questions[Math.floor(Math.random() * state.questions.length)];
+        }
+
+        function triggerSquareEvent(posId) {
+            var sq = findSquare(posId);
+            state.activeSquareEvent = sq;
+            if(!sq) return;
+            
+            var q = getQuestion();
+            
+            var mq = document.getElementById('modal-q');
+            var ma = document.getElementById('modal-a');
+            if(mq) mq.innerText = q.q;
+            if(ma) {
+                ma.innerText = q.a;
+                ma.style.display = 'none';
+            }
+            
+            var btnAnswer = document.getElementById('btn-show-answer');
+            var resBtns = document.getElementById('q-resolution-btns');
+            var bonusArea = document.getElementById('bonus-spinner-area');
+            var feedbackArea = document.getElementById('modal-feedback');
+            
+            if(btnAnswer) btnAnswer.style.display = 'inline-block';
+            if(resBtns) resBtns.style.display = 'flex';
+            if(bonusArea) bonusArea.style.display = 'none';
+            if(feedbackArea) feedbackArea.style.display = 'none';
+            
+            var context = "Normal Square: Correct = +1 space. Incorrect = -1 space.";
+            if(sq.type === 'ladder') context = ICON_LADDER + " LADDER! Correct = Advance via Spinner. Incorrect = Stay here.";
+            if(sq.type === 'snake') context = ICON_SNAKE + " SNAKE! Correct = Avoid trap (stay). Incorrect = Fall back via Spinner.";
+            if(sq.type === 'curveball') context = ICON_CURVEBALL + " CURVEBALL! Risk/Reward points and positions!";
+            if(sq.type === 'finish') context = ICON_FINISH + " FINISH LINE! Correct = WIN RACE. Incorrect = Fall back 6 spaces.";
+            
+            var mCtx = document.getElementById('modal-context');
+            if(mCtx) mCtx.innerText = context;
+            
+            var modal = document.getElementById('question-modal');
+            if(modal) modal.classList.add('active');
+            
+            state.phase = 'resolving-square';
+        }
+
+        function showFeedback(message, type, callback) {
+            var fb = document.getElementById('modal-feedback');
+            if(!fb) return;
+            
+            fb.style.display = 'block';
+            
+            var htmlContent = "<div>" + message + "</div>";
+            
+            if (callback) {
+                htmlContent += "<button id='btn-feedback-continue' class='btn-success' style='display:block; margin: 15px auto 0 auto;'>Continue</button>";
+            }
+            
+            fb.innerHTML = htmlContent;
+            
+            if (type === 'success') {
+                fb.style.backgroundColor = '#d4edda';
+                fb.style.color = '#155724';
+                fb.style.borderColor = '#c3e6cb';
+            } else if (type === 'error') {
+                fb.style.backgroundColor = '#f8d7da';
+                fb.style.color = '#721c24';
+                fb.style.borderColor = '#f5c6cb';
+            } else {
+                fb.style.backgroundColor = '#e2e3e5';
+                fb.style.color = '#383d41';
+                fb.style.borderColor = '#d6d8db';
+            }
+
+            if (callback) {
+                bindClick('btn-feedback-continue', function() {
+                    var modal = document.getElementById('question-modal');
+                    if(modal) modal.classList.remove('active');
+                    callback();
+                });
+            }
+        }
+
+        function resolveQuestion(isCorrect) {
+            var resBtns = document.getElementById('q-resolution-btns');
+            var showAns = document.getElementById('btn-show-answer');
+            if(resBtns) resBtns.style.display = 'none';
+            if(showAns) showAns.style.display = 'none';
+            
+            var sq = state.activeSquareEvent;
+            var t = state.teams[state.currentTeamIdx];
+
+            if(sq.type === 'finish') {
+                if(isCorrect) {
+                    t.score += 500;
+                    showFeedback("Correct! You cross the finish line!", "success", function() { endGame(t); });
+                } else {
+                    t.score -= 100;
+                    t.pos -= 6;
+                    showFeedback("Incorrect! You fall back 6 spaces!", "error", finishTurn);
+                }
+                return;
+            }
+
+            if(sq.type === 'normal') {
+                if(isCorrect) {
+                    t.score += 100;
+                    t.pos += 1; 
+                    showFeedback("Correct! You move forward 1 space.", "success", finishTurn);
+                } else {
+                    t.score -= 50;
+                    t.pos -= 1;
+                    var fbMsg = (t.pos <= 0) ? "Incorrect! You are moved off the board." : "Incorrect! You fall back 1 space.";
+                    showFeedback(fbMsg, "error", finishTurn);
+                }
+                return;
+            }
+
+            if(sq.type === 'ladder') {
+                if(isCorrect) {
+                    t.score += 150;
+                    showFeedback("Correct! Spin the wheel to climb the ladder!", "success", null); 
+                    setupBonusSpinner(1);
+                } else {
+                    t.score -= 50;
+                    showFeedback("Incorrect! You miss the ladder and stay where you are.", "error", finishTurn);
+                }
+                return;
+            }
+            
+            if(sq.type === 'snake') {
+                if(isCorrect) {
+                    t.score += 150;
+                    showFeedback("Correct! You bravely avoided the snake pit and stay where you are.", "success", finishTurn);
+                } else {
+                    t.score -= 100;
+                    showFeedback("Incorrect! You fall into the snake pit. Spin the wheel to see how far you drop!", "error", null); 
+                    setupBonusSpinner(-1);
+                }
+                return;
+            }
+
+            if(sq.type === 'curveball') {
+                var msg = "";
+                if(isCorrect) { 
+                    t.score += 200; 
+                    msg = applyCurveballEffect(true); 
+                    t.pos += 1; 
+                } else { 
+                    t.score -= 100; 
+                    msg = applyCurveballEffect(false); 
+                    t.pos -= 1; 
+                }
+                showFeedback("<b>Curveball Result:</b><br>" + msg, isCorrect ? 'success' : 'error', finishTurn);
+            }
+        }
+
+        function setupBonusSpinner(direction) {
+            state.phase = 'resolving-bonus';
+            state.bonusDirection = direction;
+            
+            var bArea = document.getElementById('bonus-spinner-area');
+            var bHead = document.getElementById('bonus-header');
+            var bDice = document.getElementById('bonus-dice');
+            var bRes = document.getElementById('bonus-result');
+            var bCont = document.getElementById('btn-continue-bonus');
+            
+            if(bArea) bArea.style.display = 'block';
+            if(bCont) bCont.style.display = 'none';
+            if(bHead) bHead.innerText = direction > 0 ? ICON_LADDER + " Climb the Ladder!" : ICON_SNAKE + " Fall down the Snake!";
+            
+            if(bDice) {
+                bDice.innerText = ICON_WHEEL;
+                bDice.style.color = direction > 0 ? 'var(--ladder)' : 'var(--snake)';
+            }
+            if(bRes) bRes.innerText = "Click wheel to spin for 2, 4, 6, 8, or 10 spaces!";
+        }
+
+        var bonusAnimInterval;
+        function spinBonus() {
+            if(state.phase !== 'resolving-bonus') return;
+            state.phase = 'spinning-bonus';
+            var spinner = document.getElementById('bonus-dice');
+            var resText = document.getElementById('bonus-result');
+            if(!spinner || !resText) return;
+            
+            spinner.classList.add('rolling');
+            resText.innerText = "Spinning...";
+
+            var ticks = 0;
+            bonusAnimInterval = setInterval(function() {
+                spinner.innerText = BONUS_OPTIONS[ticks % 5];
+                ticks++;
+            }, 80);
+            
+            setTimeout(function() {
+                clearInterval(bonusAnimInterval);
+                spinner.classList.remove('rolling');
+                
+                var roll = BONUS_OPTIONS[Math.floor(Math.random() * BONUS_OPTIONS.length)];
+                
+                spinner.innerText = roll;
+                state.pendingBonusRoll = roll * state.bonusDirection;
+                
+                var dirWord = state.bonusDirection > 0 ? "FORWARD" : "BACKWARD";
+                resText.innerHTML = "You move <b>" + roll + " spaces " + dirWord + "</b>!";
+                
+                var btnCont = document.getElementById('btn-continue-bonus');
+                if(btnCont) btnCont.style.display = 'block';
+            }, 800);
+        }
+
+        function applyBonusAndFinish() {
+            var t = state.teams[state.currentTeamIdx];
+            t.pos += state.pendingBonusRoll;
+            var modal = document.getElementById('question-modal');
+            if(modal) modal.classList.remove('active');
+            finishTurn();
+        }
+
+        function applyCurveballEffect(isGood) {
+            var t = state.teams[state.currentTeamIdx];
+            var msg = "";
+            var rand = Math.random();
+            
+            if(isGood) {
+                if(rand < 0.4) { t.score += 500; msg = "JACKPOT! Gained 500 points!"; } 
+                else {
+                    var leader = null;
+                    for(var i=0; i<state.teams.length; i++) {
+                        if(!leader || state.teams[i].pos > leader.pos) leader = state.teams[i];
+                    }
+                    
+                    if(leader && leader.id !== t.id && leader.pos > t.pos) {
+                        var temp = t.pos; t.pos = leader.pos; leader.pos = temp;
+                        msg = "Swapped positions with the leader (" + leader.name + ")!";
+                    } else {
+                        t.score += 300; msg = "You're already leading! Have 300 bonus points instead.";
+                    }
+                }
+            } else {
+                if(rand < 0.5) { t.score -= 300; msg = "DISASTER! Lost 300 points!"; } 
+                else {
+                    var loser = null;
+                    for(var i=0; i<state.teams.length; i++) {
+                        if(!loser || state.teams[i].pos < loser.pos) loser = state.teams[i];
+                    }
+
+                    if(loser && loser.id !== t.id && loser.pos < t.pos) {
+                        var temp = t.pos; t.pos = loser.pos; loser.pos = temp;
+                        msg = "Swapped positions with last place (" + loser.name + ")!";
+                    } else {
+                        t.score -= 200; msg = "You're already last! Lost 200 points instead.";
+                    }
+                }
+            }
+            updateTeamsUI();
+            return msg;
+        }
+
+        function finishTurn() {
+            var t = state.teams[state.currentTeamIdx];
+            t.pos = Math.max(0, Math.min(state.boardSize, t.pos));
+            
+            updateTokens();
+            updateTeamsUI(); 
+            
+            state.currentTeamIdx = (state.currentTeamIdx + 1) % state.teams.length;
+            state.phase = 'idle';
+            
+            var dBtn = document.getElementById('dice-btn');
+            var dRes = document.getElementById('dice-result');
+            if(dBtn) dBtn.innerText = ICON_DICE;
+            if(dRes) dRes.innerText = "Click to roll!";
+            
+            updateTurnUI();
+        }
+
+        function endGame(finisher) {
+            var pointsSorted = state.teams.slice().sort(function(a,b) { return b.score - a.score; });
+            var raceSorted = state.teams.slice().sort(function(a,b) { return b.pos - a.pos; });
+            
+            var pointsWinner = pointsSorted[0];
+            var raceWinner = finisher || raceSorted[0]; 
+
+            var wRaceName = document.getElementById('winner-race-name');
+            if(wRaceName) {
+                wRaceName.innerText = raceWinner ? raceWinner.name : "None";
+                wRaceName.style.color = raceWinner ? raceWinner.color : "white";
+            }
+
+            var wPointsName = document.getElementById('winner-points-name');
+            if(wPointsName) {
+                wPointsName.innerText = pointsWinner ? pointsWinner.name : "None";
+                wPointsName.style.color = pointsWinner ? pointsWinner.color : "white";
+            }
+            
+            var wPointsScore = document.getElementById('winner-points-score');
+            if(wPointsScore) {
+                wPointsScore.innerText = pointsWinner ? pointsWinner.score + " pts" : "0 pts";
+            }
+
+            var scoresList = document.getElementById('all-scores-list');
+            if(scoresList) {
+                scoresList.innerHTML = '';
+                for(var i=0; i<pointsSorted.length; i++) {
+                    var t = pointsSorted[i];
+                    scoresList.innerHTML += 
+                        "<div>" +
+                            "<span style='color:" + t.color + "; font-weight:bold;'>" + t.name + "</span>" +
+                            "<span>" + t.score + " pts</span>" +
+                        "</div>";
+                }
+            }
+
+            showScreen('end');
+        }
+    </script>
+</body>
+</html>

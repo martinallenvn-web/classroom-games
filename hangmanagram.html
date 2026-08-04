@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HANGMANAGRAM - Classroom Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-colour: #121815;
+            --chalk-white: #f4f4f0;
+            --faint-grey: rgba(244, 244, 240, 0.2);
+            --chalk-green: #4ade80;
+            --chalk-yellow: #fde047;
+            --chalk-red: #f87171;
+            --chalk-blue: #60a5fa;
+            --border-thick: 4px solid var(--chalk-white);
+            --font-main: 'Montserrat', sans-serif;
+        }
+
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-colour);
+            background-image: radial-gradient(circle, #1a241f 0%, #0d120f 100%);
+            color: var(--chalk-white);
+            font-family: var(--font-main);
+            height: 100vh; width: 100vw;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* HEADER */
+        header {
+            display: flex; justify-content: center; align-items: center;
+            padding: 1vh 2vw; height: 8vh; border-bottom: var(--border-thick);
+            background: rgba(0,0,0,0.3); position: relative; flex-shrink: 0;
+        }
+        header h1 { font-weight: 900; font-size: 4vh; letter-spacing: 0.2vw; text-shadow: 2px 2px 0px rgba(0,0,0,0.5); margin: 0 auto; }
+        .controls { position: absolute; right: 2vw; display: flex; gap: 1vw; }
+        
+        button {
+            font-family: var(--font-main); font-weight: 700; background: transparent; color: var(--chalk-white);
+            border: 2px solid var(--chalk-white); border-radius: 8px; padding: 0.5vh 1vw; cursor: pointer; font-size: 2vh; transition: all 0.2s;
+        }
+        button:hover:not(:disabled) { background: var(--chalk-white); color: var(--bg-colour); }
+        button:disabled { opacity: 0.3; cursor: not-allowed; border-color: var(--faint-grey); color: var(--faint-grey); }
+        
+        .btn-green { border-color: var(--chalk-green); color: var(--chalk-green); }
+        .btn-green:hover:not(:disabled) { background: var(--chalk-green); color: var(--bg-colour); }
+        .btn-yellow { border-color: var(--chalk-yellow); color: var(--chalk-yellow); }
+        .btn-yellow:hover:not(:disabled) { background: var(--chalk-yellow); color: var(--bg-colour); }
+        .btn-red { border-color: var(--chalk-red); color: var(--chalk-red); }
+        .btn-red:hover:not(:disabled) { background: var(--chalk-red); color: var(--bg-colour); }
+        .btn-blue { border-color: var(--chalk-blue); color: var(--chalk-blue); }
+        .btn-blue:hover:not(:disabled) { background: var(--chalk-blue); color: var(--bg-colour); }
+
+        /* SCREENS */
+        .screen { display: none; height: 92vh; width: 100vw; flex-direction: column; }
+        .screen.active { display: flex; }
+        
+        #setup-page, #how-to-page { overflow-y: auto; padding: 2vh 4vw; gap: 2vh; }
+
+        /* FRONT PAGE */
+        #front-page { align-items: center; justify-content: center; gap: 3vh; text-align: center; }
+        #front-subtitle {
+            font-size: 3.5vh; font-weight: 700; color: var(--chalk-blue); border-bottom: 2px dashed var(--chalk-blue);
+            padding-bottom: 0.5vh; min-width: 40vw; outline: none; cursor: text;
+        }
+        #front-subtitle:focus { border-bottom: 2px solid var(--chalk-white); color: var(--chalk-white); }
+        .front-controls-box {
+            display: flex; align-items: center; gap: 2vw; background: rgba(255,255,255,0.05);
+            padding: 2vh 3vw; border-radius: 12px; border: 2px solid var(--chalk-white); margin-top: 2vh;
+        }
+
+        /* SETUP PAGE */
+        .setup-row { display: flex; gap: 4vw; flex: 1; flex-shrink: 0; }
+        .setup-col { flex: 1; display: flex; flex-direction: column; gap: 1vh; }
+        textarea {
+            width: 100%; flex: 1; background: rgba(255,255,255,0.05); color: var(--chalk-white);
+            border: 2px solid var(--chalk-white); border-radius: 8px; padding: 1vw;
+            font-family: monospace; font-size: 1.8vh; resize: none; min-height: 12vh;
+        }
+        .setup-controls { display: flex; gap: 1vw; margin-top: 1vh; flex-wrap: wrap; }
+        .footer-cr { font-size: 1.2vh; opacity: 0.6; text-align: center; margin-top: auto; padding: 2vh 1vh; }
+        .setup-hint { font-size: 1.5vh; opacity: 0.8; margin-bottom: 0.5vh; line-height: 1.4; color: var(--chalk-yellow); }
+
+        /* HOW TO PLAY PAGE */
+        .rules-container { background: rgba(255,255,255,0.05); border: 2px solid var(--chalk-white); border-radius: 12px; padding: 3vh 4vw; flex: 1; user-select: text; overflow-y: auto; }
+        .rules-container h2 { font-size: 4vh; color: var(--chalk-yellow); margin-bottom: 2vh; text-align: center; }
+        .rules-container h3 { font-size: 2.5vh; color: var(--chalk-blue); margin-top: 3vh; margin-bottom: 1vh; border-bottom: 2px dashed var(--faint-grey); padding-bottom: 0.5vh; }
+        .rules-container p, .rules-container li { font-size: 2vh; line-height: 1.6; margin-bottom: 1vh; }
+        .rules-container ul { margin-left: 3vw; margin-bottom: 2vh; }
+        .rule-highlight { color: var(--chalk-red); font-weight: 700; }
+
+        /* GAME PAGE LAYOUT */
+        #game-page { padding: 1vh 2vw; justify-content: space-between; }
+        
+        .game-top { display: flex; flex-direction: column; align-items: center; gap: 1vh; flex: 0 1 auto; max-height: 35vh; overflow-y: auto; }
+        
+        #universal-q-card {
+            display: flex; flex-direction: column; align-items: center; width: 100%;
+            background: rgba(255,255,255,0.05); padding: 1vh 2vw; border-radius: 12px; border: 2px solid var(--chalk-blue);
+        }
+        #q-teacher-prompt { font-size: 2.8vh; font-weight: 900; color: var(--chalk-yellow); margin-bottom: 0.5vh; letter-spacing: 0.1vw; }
+        #q-text-container { display: flex; align-items: center; justify-content: center; gap: 1vw; width: 100%; min-height: 4vh; }
+        #current-q { font-size: 2.5vh; font-weight: 700; text-align: center; }
+        #current-a { font-size: 2.5vh; font-weight: 900; color: var(--chalk-green); display: none; }
+        #phase1-q-controls { display: none; gap: 2vw; margin-top: 1vh; } 
+        
+        #clue-display {
+            display: none; font-size: 3vh; font-weight: 700; color: var(--chalk-yellow); text-align: center;
+            background: rgba(0,0,0,0.3); padding: 1vh 2vw; border-radius: 8px; border: 2px dashed var(--chalk-yellow); width: 100%; margin-top: 1vh;
+        }
+        #phrase-grid { display: none; flex-wrap: wrap; justify-content: center; gap: 1.5vw; margin-top: 1vh; }
+        
+        /* Phase 2 Sub-Mode Visibility Controls */
+        .p2-active #clue-display { display: block; }
+        .p2-active #phrase-grid { display: flex; }
+        .p2-active #universal-q-card { display: none; }
+        .p2-active.p2-question-mode #universal-q-card { display: flex; }
+        .p2-active.p2-letter-mode #universal-q-card { display: flex; }
+        .p2-active.p2-timer-mode #universal-q-card { display: flex; }
+        .p2-active .game-top { max-height: 45vh; } 
+
+        .word-group { display: flex; gap: 0.5vw; flex-wrap: wrap; justify-content: center; }
+        .letter-box {
+            width: 4.5vh; height: 6vh; border: 3px solid var(--chalk-white); border-radius: 6px;
+            display: flex; align-items: center; justify-content: center; font-size: 3.5vh; font-weight: 900; margin-bottom: 0.5vh;
+        }
+        .letter-box.filled { color: var(--chalk-white); border-color: var(--chalk-green); }
+        .letter-box.empty { background: rgba(255,255,255,0.05); }
+
+        /* MIDDLE SECTION */
+        .game-middle { display: flex; flex-direction: column; align-items: center; gap: 1vh; flex: 1; justify-content: center; overflow-y: auto; }
+        
+        #remaining-letters-display { font-size: 2.2vh; font-weight: 700; color: var(--chalk-yellow); margin-bottom: 0.5vh; display: none; }
+        .p2-active #remaining-letters-display { display: none !important; }
+
+        .pool-container {
+            width: 90%; min-height: 6vh; border: 2px dashed var(--chalk-blue); border-radius: 8px;
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1vw; font-size: 3vh; font-weight: 700;
+            color: var(--chalk-blue); background: rgba(96, 165, 250, 0.1); padding: 1vh 1vw; margin-bottom: 1vh; transition: all 0.3s;
+        }
+        
+        @keyframes pulse-pool {
+            0% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(96, 165, 250, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0); }
+        }
+        .p2-active.p2-letter-mode .pool-container { animation: pulse-pool 2s infinite; border-color: var(--chalk-white); background: rgba(96, 165, 250, 0.3); }
+        
+        .pool-letter-btn {
+            background: var(--chalk-blue); color: var(--bg-colour); border: none; border-radius: 6px;
+            width: 4vh; height: 4vh; font-size: 2.5vh; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .pool-letter-btn:hover { background: var(--chalk-white); }
+        
+        #alpha-boards-container { display: flex; width: 90%; justify-content: space-between; gap: 2vw; }
+        .p2-active #alpha-boards-container { display: none; }
+        .alpha-col-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .alpha-header { font-size: 1.8vh; font-weight: 700; margin-bottom: 1vh; opacity: 0.9; }
+        .alpha-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 1vh; }
+        
+        .alpha-btn {
+            width: 5vh; height: 5vh; font-size: 2.8vh; font-weight: 900; border-radius: 8px; border: 3px solid;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; opacity: 0.4; pointer-events: none;
+        }
+        .alpha-btn.unlocked { opacity: 1; pointer-events: auto; }
+        .alpha-btn:active { transform: scale(0.9); }
+        .alpha-btn.used { opacity: 0.1; pointer-events: none; }
+
+        /* PHASE 1.5 - MARKET */
+        #market-container {
+            display: none; width: 90%; align-items: center; background: rgba(0,0,0,0.6);
+            border: 3px solid var(--chalk-red); border-radius: 12px; padding: 2vh 4vw;
+        }
+        #market-container.active { display: flex; }
+        
+        .market-info-col { flex: 1; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+        .market-svg-col { flex: 0 0 18vh; display: flex; justify-content: flex-end; align-items: center; }
+        
+        #market-title { font-size: 3.5vh; color: var(--chalk-red); margin-bottom: 1vh; font-weight: 900; }
+        #market-status { font-size: 2.5vh; margin-bottom: 1.5vh; }
+        #market-controls { display: flex; gap: 2vw; align-items: center; margin-top: 1.5vh; }
+        #market-result { font-size: 2.2vh; font-weight: 700; min-height: 3vh; margin-top: 1.5vh; transition: all 0.2s; }
+
+        /* PHASE 2 CONTROLS */
+        #phase2-controls {
+            display: none; width: 100%; justify-content: center; gap: 2vw; align-items: center;
+            background: rgba(255,255,255,0.1); padding: 1vh; border-radius: 8px; margin-top: 1vh;
+        }
+        #timer-display { font-size: 5vh; font-weight: 900; color: var(--chalk-red); margin-right: 2vw; }
+        .p2-active.p2-timer-mode #phase2-controls { display: flex; }
+
+        /* BOTTOM TEAMS */
+        .game-bottom { display: flex; justify-content: space-around; align-items: flex-end; height: 30vh; width: 100%; border-top: 2px solid var(--faint-grey); padding-top: 1vh; flex-shrink: 0; }
+        .team-col { 
+            display: flex; flex-direction: column; align-items: center; width: 18%; position: relative;
+            opacity: 0.5; transform: scale(0.85); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent; padding: 1vh; border-radius: 12px;
+        }
+        .team-col.active-team { 
+            opacity: 1; transform: scale(1.05); background: rgba(255,255,255,0.08);
+            border: 2px solid var(--chalk-yellow); box-shadow: 0 10px 20px rgba(0,0,0,0.5), 0 0 15px rgba(253, 224, 71, 0.2); z-index: 10;
+        }
+        .team-col.eliminated { filter: grayscale(1) opacity(0.3); }
+        .gallows-container { width: 14vh; height: 14vh; margin-bottom: 0.5vh; }
+        .team-name { font-size: 2vh; font-weight: 700; border-bottom: 2px dashed var(--chalk-white); margin-bottom: 0.5vh; cursor: text; text-align: center; }
+        
+        .team-score-wrapper { display: flex; align-items: center; gap: 0.5vw; margin-bottom: 0.5vh; }
+        .team-score { font-size: 2.5vh; font-weight: 900; color: var(--chalk-yellow); min-width: 4vh; text-align: center; }
+        .score-btn { width: 2.5vh; height: 2.5vh; font-size: 1.8vh; padding: 0; line-height: 1; border-radius: 50%; }
+        
+        .team-life-wrapper { display: flex; align-items: center; gap: 0.5vw; margin-top: 0.5vh; }
+        .life-btn { width: 4vh; font-size: 1.2vh; padding: 0.2vh; border-color: var(--chalk-blue); color: var(--chalk-blue); border-radius: 4px; }
+        .life-btn:hover { background: var(--chalk-blue); color: var(--bg-colour); }
+
+        /* PODIUM (PHASE 3) */
+        #podium-container {
+            display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); position: absolute; top: 0; left: 0; z-index: 200; padding: 5vh; overflow: hidden;
+        }
+        #podium-container.active { display: flex; }
+        #podium-title { font-size: 6vh; color: var(--chalk-yellow); margin-bottom: 5vh; text-shadow: 0 0 20px rgba(253, 224, 71, 0.5); z-index: 201; }
+        .podium-row { display: flex; gap: 4vw; width: 100%; justify-content: center; z-index: 201; }
+        .podium-box {
+            background: rgba(255,255,255,0.1); border: 3px solid var(--chalk-white); border-radius: 12px;
+            padding: 3vh; width: 25vw; text-align: center; display: flex; flex-direction: column; align-items: center;
+        }
+        .podium-box.gold { border-color: var(--chalk-yellow); box-shadow: 0 0 30px rgba(253, 224, 71, 0.4); transform: scale(1.1); }
+        .podium-box.silver { border-color: var(--chalk-blue); }
+        .podium-box.bronze { border-color: var(--chalk-green); }
+        .podium-icon { font-size: 8vh; margin-bottom: 1vh; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
+        .podium-award { font-size: 2.5vh; margin-bottom: 2vh; font-weight: 700; }
+        .podium-team { font-size: 4vh; font-weight: 900; margin-bottom: 1vh; }
+        .podium-stat { font-size: 2vh; opacity: 0.8; }
+        
+        #btn-new-game { z-index: 201; }
+
+        /* MODALS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 300; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: var(--bg-colour); border: var(--border-thick); border-radius: 12px; padding: 4vh 4vw; text-align: center; max-width: 60vw; }
+        .modal-box h2 { font-size: 4vh; margin-bottom: 2vh; }
+        .modal-box p { font-size: 2.5vh; margin-bottom: 3vh; line-height: 1.5; }
+        .modal-actions { display: flex; justify-content: center; gap: 2vw; }
+
+        #guess-input {
+            width: 80%; padding: 1vh 2vw; font-size: 4vh; font-weight: 900; text-align: center; text-transform: uppercase;
+            background: rgba(255,255,255,0.1); color: var(--chalk-white); border: 3px solid var(--chalk-blue); border-radius: 8px; margin-bottom: 3vh;
+        }
+
+        /* SVG STICKMAN STYLES */
+        .gallows-svg { width: 100%; height: 100%; }
+        .svg-part { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; transition: all 0.3s ease-out; }
+        .svg-structure { stroke: var(--chalk-white); }
+        .part-locked { stroke: var(--faint-grey); }
+        .part-unlocked { stroke: var(--chalk-white); stroke-width: 5; }
+
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header id="main-header">
+        <h1>HANGMANAGRAM</h1>
+        <div class="controls">
+            <button id="btn-force-p2" class="btn-red" style="display:none;" title="Skip to Anagram">Skip to Anagram</button>
+            <button id="btn-sound">Sound: ON</button>
+            <button id="btn-fullscreen">Fullscreen</button>
+            <button id="btn-edit-setup" style="display:none;">Editor</button>
+        </div>
+    </header>
+
+    <!-- FRONT PAGE -->
+    <div id="front-page" class="screen active">
+        <!-- Main Graphic -->
+        <svg viewBox="0 0 100 100" style="width: 30vh; height: 30vh; margin-bottom: 2vh; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));">
+            <!-- Brightened Background Circle -->
+            <circle cx="50" cy="50" r="46" fill="rgba(255, 255, 255, 0.15)" />
+            
+            <path d="M 20 100 L 30 50 Q 50 45 70 50 L 80 100 Z" fill="#8B4513" /> 
+            <path d="M 23 85 Q 50 90 77 85 L 78 93 Q 50 98 22 93 Z" fill="#111827" />
+            <rect x="44" y="83" width="12" height="14" rx="2" fill="#eab308" />
+            <rect x="47" y="86" width="6" height="8" fill="#111827" />
+            <line x1="30" y1="50" x2="15" y2="85" stroke="#F4A460" stroke-width="14" stroke-linecap="round" />
+            <line x1="70" y1="50" x2="85" y2="40" stroke="#F4A460" stroke-width="14" stroke-linecap="round" />
+            <rect x="42" y="35" width="16" height="15" fill="#F4A460" />
+            <rect x="33" y="10" width="34" height="38" rx="8" fill="#111827" />
+            <rect x="36" y="18" width="28" height="26" rx="10" fill="#F4A460" />
+            <circle cx="43" cy="24" r="4" fill="white" />
+            <circle cx="43" cy="24" r="1.5" fill="black" />
+            <circle cx="57" cy="24" r="3" fill="white" />
+            <circle cx="57" cy="24" r="1.5" fill="black" />
+            <line x1="37" y1="20" x2="48" y2="24" stroke="#111827" stroke-width="3" stroke-linecap="round" />
+            <line x1="63" y1="20" x2="52" y2="24" stroke="#111827" stroke-width="3" stroke-linecap="round" />
+            
+            <!-- Menacing Frown -->
+            <path d="M 40 40 Q 50 33 60 40" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" />
+            <path d="M 44 38 L 46 33 L 48 37 Z" fill="white" stroke="black" stroke-width="1" stroke-linejoin="round" />
+            <path d="M 52 37 L 54 33 L 56 38 Z" fill="white" stroke="black" stroke-width="1" stroke-linejoin="round" />
+            
+            <!-- Hanging Noose -->
+            <line x1="85" y1="40" x2="85" y2="60" stroke="#C19A6B" stroke-width="4" />
+            <rect x="81" y="60" width="8" height="12" rx="2" fill="#A0785A" />
+            <line x1="81" y1="63" x2="89" y2="63" stroke="#5C4033" stroke-width="1" />
+            <line x1="81" y1="66" x2="89" y2="66" stroke="#5C4033" stroke-width="1" />
+            <line x1="81" y1="69" x2="89" y2="69" stroke="#5C4033" stroke-width="1" />
+            <path d="M 85 72 C 105 72, 105 98, 85 98 C 65 98, 65 72, 85 72" fill="none" stroke="#C19A6B" stroke-width="4" />
+            
+            <circle cx="15" cy="85" r="7" fill="#F4A460" />
+            <circle cx="85" cy="40" r="7" fill="#F4A460" />
+        </svg>
+
+        <div id="front-subtitle" contenteditable="true" spellcheck="false" title="Click to edit game subtitle">Classroom Trivia Challenge</div>
+        
+        <div class="front-controls-box">
+            <label style="font-size: 2.5vh; font-weight: 700; color: var(--chalk-yellow);">Number of Teams:</label>
+            <input type="number" id="front-input-teams" min="1" max="5" value="3" style="width: 8vh; padding: 0.5vh; font-size: 2.5vh; background: transparent; color: var(--chalk-white); border: 2px solid var(--chalk-yellow); border-radius: 6px; text-align: center;">
+        </div>
+
+        <div style="display: flex; gap: 2vw; margin-top: 3vh;">
+            <button id="btn-front-play" class="btn-green" style="font-size: 3vh; padding: 1.5vh 3vw;">PLAY GAME</button>
+            <button id="btn-front-load" class="btn-yellow" style="font-size: 2vh;" onclick="document.getElementById('file-upload-front').click()">Load Game File</button>
+            <input type="file" id="file-upload-front" accept=".json" style="display:none;">
+            <button id="btn-front-setup" class="btn-blue" style="font-size: 2vh;">Editor / Setup</button>
+        </div>
+    </div>
+
+    <!-- SETUP PAGE -->
+    <div id="setup-page" class="screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1vh;">
+            <h2 style="font-size: 3vh;">Game Editor</h2>
+            <div>
+                <button id="btn-how-to" class="btn-blue">How to Play</button>
+                <button id="btn-setup-back" class="btn-yellow">Back to Main Menu</button>
+            </div>
+        </div>
+        
+        <div class="setup-row">
+            <div class="setup-col" style="flex: 1.5;">
+                <label style="font-size: 2vh; font-weight: 700;">1. Clue & Mystery Phrase:</label>
+                <div class="setup-hint">
+                    Type your clue and mystery phrase exactly as shown in the example below.
+                </div>
+                <textarea id="setup-phrase-data">Clue: Family&#10;Mystery phrase: MUM AND DAD</textarea>
+                
+                <label style="font-size: 2vh; font-weight: 700; margin-top: 1vh;">2. Questions & Answers:</label>
+                <div class="setup-hint">
+                    Format each line exactly as <strong>Question | Answer</strong>.<br>
+                    Questions will loop automatically if exhausted during play.<br>
+                    <em>(Tip: 36 questions is a good number to ensure the bank isn't exhausted and avoids repetition. You can use an AI text generator to create a set of questions tailored to your class).</em>
+                </div>
+                <textarea id="setup-q-data">What is the opposite of hot? | cold&#10;What is the past tense of 'go'? | went&#10;Where do you buy food? | supermarket&#10;What is the plural of 'child'? | children&#10;What is the first month of the year? | January&#10;What is the opposite of big? | small&#10;How many days are in a week? | seven&#10;What colour is a ripe strawberry? | red&#10;What animal catches mice? | cat&#10;What is the opposite of good? | bad&#10;In which room do you sleep? | bedroom&#10;What do you use to cut paper? | scissors&#10;What is the day after Monday? | Tuesday&#10;What is the past tense of 'see'? | saw&#10;What do you wear on your feet? | shoes&#10;How many legs does a spider have? | eight&#10;What is the opposite of fast? | slow&#10;What is the past tense of 'make'? | made&#10;What is the plural of 'man'? | men&#10;What colour is a clear sky? | blue&#10;What is the opposite of up? | down&#10;Where do you go to borrow books? | library&#10;What is the past tense of 'eat'? | ate&#10;What is the opposite of tall? | short</textarea>
+            </div>
+
+            <div class="setup-col" style="justify-content: flex-start;">
+                <label style="font-size: 2vh; font-weight: 700; color: var(--chalk-yellow);">Number of Teams (1-5):</label>
+                <input type="number" id="input-teams" min="1" max="5" value="3" style="font-size: 2.5vh; padding: 0.5vh; width: 10vh; background: transparent; color: var(--chalk-white); border: 2px solid var(--chalk-yellow); border-radius: 4px; margin-bottom: 2vh;">
+                
+                <div class="setup-controls" style="flex-direction: column; gap: 2vh;">
+                    <button id="btn-start" class="btn-green" style="display:none;">Start</button>
+                    <button id="btn-demo" class="btn-blue">Load Default / Demo Data</button>
+                    <button id="btn-clear" class="btn-red">Clear All Data</button>
+                    <button id="btn-save" class="btn-yellow">Save Data (.json)</button>
+                    <button id="btn-export-html" class="btn-green" style="font-size: 2vh; padding: 2vh; font-weight: 900;">Export Playable Game (.html)</button>
+                    <button id="btn-load" class="btn-blue" onclick="document.getElementById('file-upload').click()">Load Game Data (.json)</button>
+                    <input type="file" id="file-upload" accept=".json" style="display:none;">
+                </div>
+                
+                <div class="ai-guide" style="margin-top: 2vh;">
+                    <h3>AI Prompt Generator</h3>
+                    <div class="inline-group">
+                        <label>Generate</label>
+                        <input type="number" id="input-num-qs" value="36" min="5" max="100" style="width: 6vh; padding: 0.5vh; margin: 0 0.5vw; text-align: center; border-radius: 4px; border: 1px solid var(--chalk-white); background: transparent; color: var(--chalk-white);">
+                        <label>Questions</label>
+                        <button id="btn-copy-prompt" class="btn-blue" style="margin-left: auto;">Copy Prompt</button>
+                    </div>
+                    <p style="font-size: 1.4vh; opacity: 0.8; margin-top: 1vh;">Copy separate AI requests for the Mystery Phrase and Questions. <br><strong id="ai-recs-display">Optimal Puzzle: 8-13 characters, 6-9 unique letters.</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-cr">© 2026 Martin Allen. All rights reserved. Free for classroom use; duplication or distribution of the source code is prohibited.</div>
+    </div>
+
+    <!-- HOW TO PLAY PAGE -->
+    <div id="how-to-page" class="screen">
+        <div class="rules-container">
+            <h2>How to Play HANGMANAGRAM</h2>
+            
+            <h3>Phase 1: Accumulation</h3>
+            <ul>
+                <li><strong>The Question Gate:</strong> Teams must correctly answer a question to unlock the board. <span class="rule-highlight">Correct = +10 pts</span>.</li>
+                <li><strong>Question Looping:</strong> If all questions have been exhausted, the same set of questions will automatically be used again to enable play to continue.</li>
+                <li><strong>Letter Selection:</strong> Pick a letter.
+                    <ul>
+                        <li><span style="color: var(--chalk-green);">High Freq (incl. S):</span> 5 pts per instance.</li>
+                        <li><span style="color: var(--chalk-yellow);">Mid Freq:</span> 20 pts per instance.</li>
+                        <li><span style="color: var(--chalk-red);">Low Freq:</span> 30 pts per instance.</li>
+                    </ul>
+                </li>
+                <li><strong>Penalties:</strong> The turn automatically passes to the next team after every guess. Missing a letter incurs a scaled life penalty depending on the number of teams playing.</li>
+                <li><strong>Skip Phase:</strong> A button is available in the top menu to end Phase 1 early and skip to the Anagram.</li>
+            </ul>
+
+            <h3>Pleading for Mercy (Phase 1)</h3>
+            <p>If a team loses their last life in Phase 1, they get an automatic spin to plead for mercy. They may only successfully save <strong>one life per turn</strong> this way, but if they survive and lose their life again on a later turn, they can plead again.</p>
+            <ul>
+                <li><strong>3 in 6 Chance:</strong> The executioner spares a limb (+1 life restored).</li>
+                <li><strong>2 in 6 Chance:</strong> The executioner is undecided. Spin again!</li>
+                <li><strong>1 in 6 Chance:</strong> No Mercy! The team is frozen.</li>
+            </ul>
+
+            <h3>The Corrupt Executioner's Market (Phase 1.5)</h3>
+            <p>The Market opens when <strong>all teams are frozen</strong> OR <strong>Phase 1 completes</strong>. Frozen teams can buy limbs back.</p>
+            <ul>
+                <li><strong>Base Cost:</strong> Starts at 5 points per team. Teams can only save <strong>one limb</strong> per market visit!</li>
+                <li>Similar odds to Pleading, but Greed (2/6 chance) means gold is pocketed and no life is restored!</li>
+                <li>If a team lacks the points to spin, their fate lies at the whim of the Host (Executioner), who may manually adjust scores or restore lives.</li>
+            </ul>
+
+            <h3>Phase 2: Positioning (The Endgame)</h3>
+            <p>Once all letters have been extracted, the Clue and Grid are revealed.</p>
+            <ul>
+                <li><strong>Phase 2 Questions:</strong> Answer correctly (+10 points) to pick a letter. If answered wrongly, you may pay a 10 pt penalty to Spin for Mercy or lose a limb.</li>
+                <li><strong>The Timer:</strong> After placing a letter, the 10-second countdown starts.</li>
+                <li><strong>Stopping the Clock:</strong> If the team shouts an answer, click "Stop the Clock" to verify it. If incorrect, the Mercy Spin penalty triggers again!</li>
+                <li><strong>Victory:</strong> A correct guess awards a <span style="color: var(--chalk-yellow); font-weight: bold;">30-point bonus</span> and reveals the final Podium!</li>
+            </ul>
+            
+            <div style="text-align: center; margin-top: 3vh;">
+                <button id="btn-back-setup-rules" class="btn-yellow" style="font-size: 2.5vh; padding: 1.5vh 3vw;">Back to Menu</button>
+            </div>
+        </div>
+        <div class="footer-cr">© 2026 Martin Allen. All rights reserved. Free for classroom use; duplication or distribution of the source code is prohibited.</div>
+    </div>
+
+    <!-- GAME PAGE -->
+    <div id="game-page" class="screen">
+        <div class="game-top">
+            <div id="universal-q-card">
+                <div id="q-teacher-prompt">Team 1</div>
+                <div id="q-text-container">
+                    <div id="current-q">Loading Question...</div>
+                    <button id="btn-reveal-answer" class="btn-yellow" style="font-size: 1.6vh; padding: 0.5vh 1vw;">Reveal Answer</button>
+                    <div id="current-a">Loading Answer...</div>
+                </div>
+            </div>
+
+            <div id="phase1-q-controls">
+                <button id="btn-q-correct" class="btn-green">Question Correct (+10 Pts)</button>
+                <button id="btn-q-wrong" class="btn-red">Incorrect/Pass</button>
+            </div>
+
+            <div id="clue-display">CLUE: ???</div>
+            <div id="phrase-grid"></div>
+        </div>
+
+        <div class="game-middle">
+            <div id="remaining-letters-display">Remaining Letters: 0</div>
+            <div class="pool-container" id="found-pool"></div>
+            
+            <div id="alpha-boards-container">
+                <div class="alpha-col-wrapper">
+                    <div class="alpha-header" style="color: var(--chalk-green);">High Freq (5pts)</div>
+                    <div id="alpha-col-green" class="alpha-grid"></div>
+                </div>
+                <div class="alpha-col-wrapper">
+                    <div class="alpha-header" style="color: var(--chalk-yellow);">Mid Freq (20pts)</div>
+                    <div id="alpha-col-yellow" class="alpha-grid"></div>
+                </div>
+                <div class="alpha-col-wrapper">
+                    <div class="alpha-header" style="color: var(--chalk-red);">Low Freq (30pts)</div>
+                    <div id="alpha-col-red" class="alpha-grid"></div>
+                </div>
+            </div>
+
+            <!-- MARKET PHASE 1.5 -->
+            <div id="market-container">
+                
+                <div class="market-info-col">
+                    <div id="market-title">The Corrupt Executioner's Market</div>
+                    <div id="market-status">Team 1, you have 3 limbs missing.</div>
+                    
+                    <div style="display: flex; gap: 1vw; align-items: center; margin-top: 1vh;">
+                        <label style="font-size: 2vh; color: var(--chalk-yellow);">Spin Price:</label>
+                        <input type="number" id="input-market-price" value="5" min="0" max="1000" style="width: 8vh; padding: 0.5vh; font-size: 2vh; background: transparent; color: var(--chalk-white); border: 2px solid var(--chalk-yellow); border-radius: 4px; text-align: center;">
+                    </div>
+
+                    <div id="market-controls">
+                        <button id="btn-market-spin" class="btn-red">Pay & Spin!</button>
+                        <button id="btn-market-pass" class="btn-blue">Pass / Done</button>
+                    </div>
+                    <div id="market-result"></div>
+                </div>
+
+                <div class="market-svg-col">
+                    <svg viewBox="0 0 100 100" style="width: 22vh; height: 22vh;">
+                        <!-- Brightened Background Circle -->
+                        <circle cx="50" cy="50" r="46" fill="rgba(255, 255, 255, 0.15)" />
+                        <path d="M 20 100 L 30 50 Q 50 45 70 50 L 80 100 Z" fill="#8B4513" /> 
+                        <path d="M 23 85 Q 50 90 77 85 L 78 93 Q 50 98 22 93 Z" fill="#111827" />
+                        <rect x="44" y="83" width="12" height="14" rx="2" fill="#eab308" />
+                        <rect x="47" y="86" width="6" height="8" fill="#111827" />
+                        <line x1="30" y1="50" x2="15" y2="85" stroke="#F4A460" stroke-width="14" stroke-linecap="round" />
+                        <line x1="70" y1="50" x2="85" y2="40" stroke="#F4A460" stroke-width="14" stroke-linecap="round" />
+                        <rect x="42" y="35" width="16" height="15" fill="#F4A460" />
+                        <rect x="33" y="10" width="34" height="38" rx="8" fill="#111827" />
+                        <rect x="36" y="18" width="28" height="26" rx="10" fill="#F4A460" />
+                        <circle cx="43" cy="24" r="4" fill="white" />
+                        <circle cx="43" cy="24" r="1.5" fill="black" />
+                        <circle cx="57" cy="24" r="3" fill="white" />
+                        <circle cx="57" cy="24" r="1.5" fill="black" />
+                        <line x1="37" y1="20" x2="48" y2="24" stroke="#111827" stroke-width="3" stroke-linecap="round" />
+                        <line x1="63" y1="20" x2="52" y2="24" stroke="#111827" stroke-width="3" stroke-linecap="round" />
+                        <path d="M 40 40 Q 50 33 60 40" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" />
+                        <path d="M 44 38 L 46 33 L 48 37 Z" fill="white" stroke="black" stroke-width="1" stroke-linejoin="round" />
+                        <path d="M 52 37 L 54 33 L 56 38 Z" fill="white" stroke="black" stroke-width="1" stroke-linejoin="round" />
+                        <line x1="85" y1="40" x2="85" y2="60" stroke="#C19A6B" stroke-width="4" />
+                        <rect x="81" y="60" width="8" height="12" rx="2" fill="#A0785A" />
+                        <line x1="81" y1="63" x2="89" y2="63" stroke="#5C4033" stroke-width="1" />
+                        <line x1="81" y1="66" x2="89" y2="66" stroke="#5C4033" stroke-width="1" />
+                        <line x1="81" y1="69" x2="89" y2="69" stroke="#5C4033" stroke-width="1" />
+                        <path d="M 85 72 C 105 72, 105 98, 85 98 C 65 98, 65 72, 85 72" fill="none" stroke="#C19A6B" stroke-width="4" />
+                        <circle cx="15" cy="85" r="7" fill="#F4A460" />
+                        <circle cx="85" cy="40" r="7" fill="#F4A460" />
+                    </svg>
+                </div>
+
+            </div>
+            
+            <!-- PHASE 2 CONTROLS -->
+            <div id="phase2-controls">
+                <div id="timer-display">10</div>
+                <button id="btn-p2-pass" class="btn-blue">Pass (Safe)</button>
+                <button id="btn-p2-stop" class="btn-yellow">Stop the Clock & Guess</button>
+            </div>
+        </div>
+
+        <div class="game-bottom" id="teams-container">
+            <!-- Teams injected here -->
+        </div>
+    </div>
+
+    <!-- MODAL: GUESS VERIFICATION -->
+    <div id="modal-guess" class="modal-overlay">
+        <div class="modal-box" style="border-color: var(--chalk-blue);">
+            <h2 style="color: var(--chalk-blue);">Verify Guess</h2>
+            <p>The clock is stopped. Type the team's guess to verify it.</p>
+            <input type="text" id="guess-input" placeholder="TYPE ANSWER HERE" autocomplete="off" spellcheck="false">
+            <div class="modal-actions">
+                <button id="btn-verify-guess" class="btn-green">Check Answer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PHASE 1 PLEAD FOR MERCY -->
+    <div id="modal-plead" class="modal-overlay">
+        <div class="modal-box" style="border-color: var(--chalk-red); max-width: 50vw;">
+            <h2 style="color: var(--chalk-red);">Plead for Mercy!</h2>
+            <p id="plead-status">Team X has lost their final life! You must plead with the Executioner.</p>
+            
+            <div style="display: flex; justify-content: center; margin-bottom: 2vh;">
+                <svg viewBox="0 0 100 100" style="width: 15vh; height: 15vh;">
+                    <circle cx="50" cy="50" r="46" fill="rgba(255, 255, 255, 0.15)" />
+                    <path d="M 20 100 L 30 50 Q 50 45 70 50 L 80 100 Z" fill="#8B4513" /> 
+                    <path d="M 23 85 Q 50 90 77 85 L 78 93 Q 50 98 22 93 Z" fill="#111827" />
+                    <rect x="44" y="83" width="12" height="14" rx="2" fill="#eab308" />
+                    <rect x="47" y="86" width="6" height="8" fill="#111827" />
+                    <line x1="30" y1="50" x2="15" y2="85" stroke="#F4A460" stroke-width="14" stroke-linecap="round" />
+                    <line x1="70" y1="50" x2="85" y2="40" stroke="#F4A460" stroke-width="14" stroke-linecap="round" />
+                    <rect x="42" y="35" width="16" height="15" fill="#F4A460" />
+                    <rect x="33" y="10" width="34" height="38" rx="8" fill="#111827" />
+                    <rect x="36" y="18" width="28" height="26" rx="10" fill="#F4A460" />
+                    <circle cx="43" cy="24" r="4" fill="white" />
+                    <circle cx="43" cy="24" r="1.5" fill="black" />
+                    <circle cx="57" cy="24" r="3" fill="white" />
+                    <circle cx="57" cy="24" r="1.5" fill="black" />
+                    <line x1="37" y1="20" x2="48" y2="24" stroke="#111827" stroke-width="3" stroke-linecap="round" />
+                    <line x1="63" y1="20" x2="52" y2="24" stroke="#111827" stroke-width="3" stroke-linecap="round" />
+                    <path d="M 40 40 Q 50 33 60 40" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" />
+                    <path d="M 44 38 L 46 33 L 48 37 Z" fill="white" stroke="black" stroke-width="1" stroke-linejoin="round" />
+                    <path d="M 52 37 L 54 33 L 56 38 Z" fill="white" stroke="black" stroke-width="1" stroke-linejoin="round" />
+                    <line x1="85" y1="40" x2="85" y2="60" stroke="#C19A6B" stroke-width="4" />
+                    <rect x="81" y="60" width="8" height="12" rx="2" fill="#A0785A" />
+                    <line x1="81" y1="63" x2="89" y2="63" stroke="#5C4033" stroke-width="1" />
+                    <line x1="81" y1="66" x2="89" y2="66" stroke="#5C4033" stroke-width="1" />
+                    <line x1="81" y1="69" x2="89" y2="69" stroke="#5C4033" stroke-width="1" />
+                    <path d="M 85 72 C 105 72, 105 98, 85 98 C 65 98, 65 72, 85 72" fill="none" stroke="#C19A6B" stroke-width="4" />
+                    <circle cx="15" cy="85" r="7" fill="#F4A460" />
+                    <circle cx="85" cy="40" r="7" fill="#F4A460" />
+                </svg>
+            </div>
+            
+            <div id="plead-result" style="font-size: 2.5vh; font-weight: 700; height: 4vh; margin-bottom: 2vh;"></div>
+            <div class="modal-actions">
+                <button id="btn-plead" class="btn-yellow">Spin for Mercy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PHASE 2 MERCY OPTION (SPIN) -->
+    <div id="modal-p2-bribe" class="modal-overlay">
+        <div class="modal-box" style="border-color: var(--chalk-yellow); max-width: 50vw;">
+            <h2 style="color: var(--chalk-yellow);">The Executioner Approaches...</h2>
+            <p>Incorrect! Pay a 10 point penalty to spin for mercy, or accept the loss of a limb.</p>
+            
+            <div style="display: flex; justify-content: center; margin-bottom: 1vh;">
+                <svg viewBox="0 0 100 100" style="width: 15vh; height: 15vh;">
+                    <circle cx="50" cy="50" r="46" fill="rgba(255, 255, 255, 0.15)" />
+                    <path d="M 20 100 L 30 50 Q 50 45 70 50 L 80 100 Z" fill="#8B4513" /> 
+                    <path d="M 23 85 Q 50 90 77 85 L 78 93 Q 50 98 22 93 Z" fill="#111827" />
+                    <rect x="44" y="83" width="12" height="14" rx="2" fill="#eab308" />
+                    <rect x="47" y="86" width="6" height="8" fill="#111827" />
+                    <line x1="30" y1="50" x2="15" y2="85" stroke="#F4A460" stroke-width="14" stroke-linecap="round" />
+                    <line x1="70" y1="50" x2="85" y2="40" stroke="#F4A460" stroke-width="14" stroke-linecap="round" />
+                    <rect x="42" y="35" width="16" height="15" fill="#F4A460" />
+                    <rect x="33" y="10" width="34" height="38" rx="8" fill="#111827" />
+                    <rect x="36" y="18" width="28" height="26" rx="10" fill="#F4A460" />
+                    <circle cx="43" cy="24" r="4" fill="white" />
+                    <circle cx="43" cy="24" r="1.5" fill="black" />
+                    <circle cx="57" cy="24" r="3" fill="white" />
+                    <circle cx="57" cy="24" r="1.5" fill="black" />
+                    <line x1="37" y1="20" x2="48" y2="24" stroke="#111827" stroke-width="3" stroke-linecap="round" />
+                    <line x1="63" y1="20" x2="52" y2="24" stroke="#111827" stroke-width="3" stroke-linecap="round" />
+                    <path d="M 40 40 Q 50 33 60 40" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" />
+                    <path d="M 44 38 L 46 33 L 48 37 Z" fill="white" stroke="black" stroke-width="1" stroke-linejoin="round" />
+                    <path d="M 52 37 L 54 33 L 56 38 Z" fill="white" stroke="black" stroke-width="1" stroke-linejoin="round" />
+                    <line x1="85" y1="40" x2="85" y2="60" stroke="#C19A6B" stroke-width="4" />
+                    <rect x="81" y="60" width="8" height="12" rx="2" fill="#A0785A" />
+                    <line x1="81" y1="63" x2="89" y2="63" stroke="#5C4033" stroke-width="1" />
+                    <line x1="81" y1="66" x2="89" y2="66" stroke="#5C4033" stroke-width="1" />
+                    <line x1="81" y1="69" x2="89" y2="69" stroke="#5C4033" stroke-width="1" />
+                    <path d="M 85 72 C 105 72, 105 98, 85 98 C 65 98, 65 72, 85 72" fill="none" stroke="#C19A6B" stroke-width="4" />
+                    <circle cx="15" cy="85" r="7" fill="#F4A460" />
+                    <circle cx="85" cy="40" r="7" fill="#F4A460" />
+                </svg>
+            </div>
+            
+            <div id="p2-bribe-result" style="font-size: 2.2vh; font-weight: 700; height: 3vh; margin-bottom: 2vh;"></div>
+
+            <div class="modal-actions">
+                <button id="btn-p2-pay" class="btn-green">Pay 10 Pts & Spin</button>
+                <button id="btn-p2-limb" class="btn-red">Lose a Limb</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PODIUM PHASE 3 -->
+    <div id="podium-container">
+        <div id="podium-title">ROUND COMPLETE!</div>
+        <div class="podium-row">
+            <div class="podium-box silver">
+                <div class="podium-icon">🥈</div>
+                <div class="podium-award" style="color: var(--chalk-blue);">Survival Champion</div>
+                <div class="podium-team" id="podium-survival-team">Team X</div>
+                <div class="podium-stat" id="podium-survival-stat">0 Lives Remaining</div>
+            </div>
+            <div class="podium-box gold">
+                <div class="podium-icon">🏆</div>
+                <div class="podium-award" style="color: var(--chalk-yellow);">Puzzle Solvers</div>
+                <div class="podium-team" id="podium-winner-team">Team Y</div>
+                <div class="podium-stat" id="podium-winner-stat">+30 Bonus Points</div>
+            </div>
+            <div class="podium-box bronze">
+                <div class="podium-icon">🥉</div>
+                <div class="podium-award" style="color: var(--chalk-green);">Points Champion</div>
+                <div class="podium-team" id="podium-points-team">Team Z</div>
+                <div class="podium-stat" id="podium-points-stat">1200 Points</div>
+            </div>
+        </div>
+        <button id="btn-new-game" class="btn-yellow" style="margin-top: 5vh; font-size: 3vh; padding: 2vh 4vw;" onclick="location.reload()">New Game</button>
+    </div>
+
+    <!-- UTILITY MODALS -->
+    <div id="modal-validation" class="modal-overlay">
+        <div class="modal-box">
+            <h2 style="color: var(--chalk-yellow);">Validation Warning</h2>
+            <p id="validation-msg"></p>
+            <div class="modal-actions">
+                <button id="btn-val-cancel">Cancel & Edit</button>
+                <button id="btn-val-proceed" class="btn-yellow">Proceed Anyway</button>
+            </div>
+        </div>
+    </div>
+    <div id="modal-alert" class="modal-overlay">
+        <div class="modal-box">
+            <h2 id="alert-title">Notice</h2>
+            <p id="alert-msg"></p>
+            <div class="modal-actions">
+                <button id="btn-alert-ok" class="btn-yellow">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /** =======================================================================
+         *  CORE ARCHITECTURE & STATE
+         *  ======================================================================= */
+        const AppState = {
+            soundOn: true,
+            audioCtx: null,
+            
+            game: {
+                phase: 1, 
+                turnState: 'question', 
+                numTeams: 3,
+                teams: [], 
+                activeTeamIdx: 0,
+                
+                questions: [],
+                currentQIdx: 0,
+                
+                puzzle: {
+                    clue: "", phraseStr: "", words: [], 
+                    alphaTotal: 0, foundPool: []
+                },
+                
+                timer: null, timeLeft: 10,
+                marketTeamIdx: 0, marketSpinCost: 5, marketTriggerReason: ''
+            }
+        };
+
+        const FREQ = {
+            GREEN: ['E','T','A','O','I','N','S'],
+            YELLOW: ['R','H','L','D','C','U','M','F','P','G','W','Y','B','V'],
+            RED: ['K','X','J','Q','Z']
+        };
+
+        const DEMO_PHRASE = `Clue: Family\nMystery phrase: MUM AND DAD`;
+        const DEMO_QS = `What is the opposite of hot? | cold\nWhat is the past tense of 'go'? | went\nWhere do you buy food? | supermarket\nWhat is the plural of 'child'? | children\nWhat is the first month of the year? | January\nWhat is the opposite of big? | small\nHow many days are in a week? | seven\nWhat colour is a ripe strawberry? | red\nWhat animal catches mice? | cat\nWhat is the opposite of good? | bad\nIn which room do you sleep? | bedroom\nWhat do you use to cut paper? | scissors\nWhat is the day after Monday? | Tuesday\nWhat is the past tense of 'see'? | saw\nWhat do you wear on your feet? | shoes\nHow many legs does a spider have? | eight\nWhat is the opposite of fast? | slow\nWhat is the past tense of 'make'? | made\nWhat is the plural of 'man'? | men\nWhat colour is a clear sky? | blue\nWhat is the opposite of up? | down\nWhere do you go to borrow books? | library\nWhat is the past tense of 'eat'? | ate\nWhat is the opposite of tall? | short`;
+
+        /** =======================================================================
+         *  UTILITY
+         *  ======================================================================= */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        /** =======================================================================
+         *  AUDIO SYNTHESIZER
+         *  ======================================================================= */
+        function initAudio() {
+            if (AppState.soundOn && !AppState.audioCtx) AppState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        function playTone(type, freq, duration, vol=0.1) {
+            if (!AppState.soundOn) return;
+            initAudio();
+            if(AppState.audioCtx.state === 'suspended') AppState.audioCtx.resume();
+            const osc = AppState.audioCtx.createOscillator();
+            const gain = AppState.audioCtx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, AppState.audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, AppState.audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, AppState.audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(AppState.audioCtx.destination);
+            osc.start(); osc.stop(AppState.audioCtx.currentTime + duration);
+        }
+        function playSuccess() { playTone('sine', 523.25, 0.2); setTimeout(()=>playTone('sine', 659.25, 0.4), 100); }
+        function playError() { playTone('sawtooth', 150, 0.4, 0.2); }
+        function playTick() { playTone('square', 800, 0.05, 0.05); }
+        function playAlert() { playTone('sine', 880, 0.3); setTimeout(()=>playTone('sine', 880, 0.3), 200); }
+
+        /** =======================================================================
+         *  DOM ELEMENTS
+         *  ======================================================================= */
+        const UI = {
+            screens: { front: document.getElementById('front-page'), setup: document.getElementById('setup-page'), game: document.getElementById('game-page'), howTo: document.getElementById('how-to-page') },
+            btns: {
+                sound: document.getElementById('btn-sound'), fullscreen: document.getElementById('btn-fullscreen'),
+                editSetup: document.getElementById('btn-edit-setup'), forceP2: document.getElementById('btn-force-p2'),
+                frontPlay: document.getElementById('btn-front-play'), frontSetup: document.getElementById('btn-front-setup'),
+                start: document.getElementById('btn-start'), clear: document.getElementById('btn-clear'), exportHtml: document.getElementById('btn-export-html'),
+                demo: document.getElementById('btn-demo'), save: document.getElementById('btn-save'),
+                howTo: document.getElementById('btn-how-to'), backSetupRules: document.getElementById('btn-back-setup-rules'), setupBack: document.getElementById('btn-setup-back'),
+                copyPrompt: document.getElementById('btn-copy-prompt')
+            },
+            front: { subtitle: document.getElementById('front-subtitle'), teams: document.getElementById('front-input-teams') },
+            setup: { phraseData: document.getElementById('setup-phrase-data'), qData: document.getElementById('setup-q-data'), teams: document.getElementById('input-teams'), numQs: document.getElementById('input-num-qs'), recsDisplay: document.getElementById('ai-recs-display') },
+            game: {
+                clue: document.getElementById('clue-display'), grid: document.getElementById('phrase-grid'), pool: document.getElementById('found-pool'),
+                teams: document.getElementById('teams-container'), timer: document.getElementById('timer-display'),
+                qPrompt: document.getElementById('q-teacher-prompt'), qTextCont: document.getElementById('q-text-container'), qText: document.getElementById('current-q'), aText: document.getElementById('current-a'),
+                btnReveal: document.getElementById('btn-reveal-answer'), qControls: document.getElementById('phase1-q-controls'),
+                btnQCorrect: document.getElementById('btn-q-correct'), btnQWrong: document.getElementById('btn-q-wrong'),
+                marketCont: document.getElementById('market-container')
+            },
+            modals: { val: document.getElementById('modal-validation'), alert: document.getElementById('modal-alert'), guess: document.getElementById('modal-guess'), plead: document.getElementById('modal-plead'), p2Bribe: document.getElementById('modal-p2-bribe') }
+        };
+
+        /** =======================================================================
+         *  LOCAL STORAGE SYNC & INITIALISATION
+         *  ======================================================================= */
+        function loadFromLocalStorage() {
+            const savedPhrase = localStorage.getItem('hmg_v9_phrase');
+            if (savedPhrase !== null && savedPhrase.trim() !== "") UI.setup.phraseData.value = savedPhrase;
+
+            const savedQs = localStorage.getItem('hmg_v9_qs');
+            if (savedQs !== null && savedQs.trim() !== "") UI.setup.qData.value = savedQs;
+
+            const savedTeams = localStorage.getItem('hmg_v9_teams');
+            if (savedTeams !== null) {
+                if(UI.front.teams) UI.front.teams.value = savedTeams;
+                if(UI.setup.teams) UI.setup.teams.value = savedTeams;
+            }
+
+            const savedSubtitle = localStorage.getItem('hmg_v9_subtitle');
+            if (savedSubtitle !== null) {
+                if(UI.front.subtitle) UI.front.subtitle.innerText = savedSubtitle;
+            }
+        }
+
+        function saveToLocalStorage() {
+            if(UI.setup.phraseData) localStorage.setItem('hmg_v9_phrase', UI.setup.phraseData.value);
+            if(UI.setup.qData) localStorage.setItem('hmg_v9_qs', UI.setup.qData.value);
+            if(UI.front.teams) localStorage.setItem('hmg_v9_teams', UI.front.teams.value);
+            if(UI.front.subtitle) localStorage.setItem('hmg_v9_subtitle', UI.front.subtitle.innerText);
+        }
+
+        if(UI.setup.phraseData) UI.setup.phraseData.addEventListener('input', saveToLocalStorage);
+        if(UI.setup.qData) UI.setup.qData.addEventListener('input', saveToLocalStorage);
+        if(UI.front.teams) UI.front.teams.addEventListener('input', () => { if(UI.setup.teams) UI.setup.teams.value = UI.front.teams.value; saveToLocalStorage(); });
+        if(UI.setup.teams) UI.setup.teams.addEventListener('input', () => { if(UI.front.teams) UI.front.teams.value = UI.setup.teams.value; saveToLocalStorage(); });
+        if(UI.front.subtitle) UI.front.subtitle.addEventListener('input', saveToLocalStorage);
+
+        window.onload = loadFromLocalStorage;
+
+        /** =======================================================================
+         *  EVENT LISTENERS & TOGGLES
+         *  ======================================================================= */
+        if(UI.btns.sound) UI.btns.sound.onclick = () => { AppState.soundOn = !AppState.soundOn; UI.btns.sound.innerText = `Sound: ${AppState.soundOn ? 'ON' : 'OFF'}`; initAudio(); };
+        if(UI.btns.fullscreen) UI.btns.fullscreen.onclick = () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else if (document.exitFullscreen) document.exitFullscreen(); };
+        
+        if(UI.btns.editSetup) UI.btns.editSetup.onclick = () => { 
+            UI.screens.game.classList.remove('active'); UI.screens.setup.classList.add('active'); UI.btns.editSetup.style.display = 'none'; 
+            if(UI.btns.forceP2) UI.btns.forceP2.style.display = 'none';
+        };
+        if(UI.btns.frontSetup) UI.btns.frontSetup.onclick = () => { UI.screens.front.classList.remove('active'); UI.screens.setup.classList.add('active'); };
+        if(UI.btns.setupBack) UI.btns.setupBack.onclick = () => { UI.screens.setup.classList.remove('active'); UI.screens.front.classList.add('active'); };
+
+        if(UI.btns.howTo) UI.btns.howTo.onclick = () => { UI.screens.setup.classList.remove('active'); UI.screens.howTo.classList.add('active'); };
+        if(UI.btns.backSetupRules) UI.btns.backSetupRules.onclick = () => { UI.screens.howTo.classList.remove('active'); UI.screens.front.classList.add('active'); };
+        
+        if(UI.btns.demo) UI.btns.demo.onclick = () => { 
+            if(UI.setup.phraseData) UI.setup.phraseData.value = DEMO_PHRASE; 
+            if(UI.setup.qData) UI.setup.qData.value = DEMO_QS; 
+            if(UI.front.subtitle) UI.front.subtitle.innerText = "Classroom Trivia Challenge";
+            saveToLocalStorage();
+        };
+
+        if(UI.btns.clear) UI.btns.clear.onclick = () => {
+            if(confirm("Are you sure you want to clear all questions and phrase data?")) {
+                if(UI.setup.phraseData) UI.setup.phraseData.value = "";
+                if(UI.setup.qData) UI.setup.qData.value = "";
+                saveToLocalStorage();
+            }
+        };
+
+        function updateAIPromptDisplay() {
+            if(!UI.setup.recsDisplay) return;
+            const t = parseInt(UI.front.teams.value) || 3;
+            let str = "";
+            if(t <= 2) str = "12-18 characters, 10-13 unique letters.";
+            else if(t === 3) str = "10-15 characters, 8-11 unique letters.";
+            else str = "8-13 characters, 6-9 unique letters.";
+            UI.setup.recsDisplay.innerText = `Optimal Puzzle (${t} Teams): ${str}`;
+        }
+        if(UI.front.teams) UI.front.teams.addEventListener('input', updateAIPromptDisplay);
+        if(UI.setup.teams) UI.setup.teams.addEventListener('input', updateAIPromptDisplay);
+
+        if(UI.btns.copyPrompt) UI.btns.copyPrompt.onclick = () => {
+            const num = UI.setup.numQs.value || 36;
+            const t = parseInt(UI.front.teams.value) || 3;
+            let puzReq = t <= 2 ? "12-18 total alphabetical characters, 10-13 unique letters" : (t === 3 ? "10-15 total characters, 8-11 unique letters" : "8-13 total characters, 6-9 unique letters");
+            const prompt = `Act as an expert English teacher. Please provide two separate sections:\n\n1. MYSTERY PHRASE: Generate a puzzle phrase (2-3 words, ${puzReq}, balanced across High Freq: E,T,A,O,I,N,S; Mid Freq: R,H,L,D,C,U,M,F,P,G,W,Y,B,V; and Low Freq: K,X,J,Q,Z) along with a general overarching Clue.\n\n2. QUESTIONS: Generate ${num} educational questions and answers (grammar, idioms, vocabulary) formatted strictly as 'Question | Answer'.`;
+            navigator.clipboard.writeText(prompt).then(() => { UI.btns.copyPrompt.innerText = "Copied!"; setTimeout(() => UI.btns.copyPrompt.innerText = "Copy Prompt", 2000); });
+        };
+
+        // File Save/Load functionality (JSON)
+        if(UI.btns.save) UI.btns.save.onclick = () => {
+            let filename = prompt("Enter a name for your save file:", "Hangmanagram_Data");
+            if (!filename) return;
+            if (!filename.endsWith('.json')) filename += '.json';
+            
+            const data = { teams: UI.front.teams.value, subtitle: UI.front.subtitle.innerText, phraseText: UI.setup.phraseData.value, qText: UI.setup.qData.value };
+            const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+            const url = URL.createObjectURL(blob); 
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url; a.download = filename; 
+            document.body.appendChild(a);
+            a.click(); 
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+        
+        // Export HTML feature
+        if(UI.btns.exportHtml) UI.btns.exportHtml.onclick = () => {
+            let filename = prompt("Enter a name for your playable game file:", "Hangmanagram_Game");
+            if (!filename) return;
+            if (!filename.endsWith('.html')) filename += '.html';
+
+            const currentActive = document.querySelector('.screen.active');
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            UI.screens.front.classList.add('active');
+
+            if(UI.setup.phraseData) UI.setup.phraseData.textContent = UI.setup.phraseData.value;
+            if(UI.setup.qData) UI.setup.qData.textContent = UI.setup.qData.value;
+            if(UI.front.teams) UI.front.teams.setAttribute('value', UI.front.teams.value);
+            if(UI.setup.teams) UI.setup.teams.setAttribute('value', UI.setup.teams.value);
+
+            if(UI.front.subtitle) UI.front.subtitle.textContent = UI.front.subtitle.innerText;
+
+            const htmlContent = "<!DOCTYPE html>\n<html lang=\"en-GB\">" + document.documentElement.innerHTML + "</html>";
+            const blob = new Blob([htmlContent], {type: "text/html"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url; 
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            if(currentActive) currentActive.classList.add('active');
+        };
+        
+        const fuFront = document.getElementById('file-upload-front');
+        if(fuFront) fuFront.onchange = (e) => loadFile(e, UI.screens.front);
+        
+        const fuSetup = document.getElementById('file-upload');
+        if(fuSetup) fuSetup.onchange = (e) => loadFile(e, UI.screens.setup);
+
+        function loadFile(e, currentScreen) {
+            const file = e.target.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try { 
+                    const data = JSON.parse(ev.target.result); 
+                    if(data.teams) { if(UI.front.teams) UI.front.teams.value = data.teams; if(UI.setup.teams) UI.setup.teams.value = data.teams; }
+                    if(data.subtitle) { if(UI.front.subtitle) UI.front.subtitle.innerText = data.subtitle; }
+                    if(data.phraseText) { if(UI.setup.phraseData) UI.setup.phraseData.value = data.phraseText; }
+                    if(data.qText) { if(UI.setup.qData) UI.setup.qData.value = data.qText; }
+                    saveToLocalStorage();
+                    
+                    if(currentScreen === UI.screens.front && UI.btns.frontPlay) {
+                        UI.btns.frontPlay.click(); 
+                    }
+                } catch(err) { alert("Invalid file format."); }
+            }; reader.readAsText(file);
+        }
+
+        /** =======================================================================
+         *  SETUP & VALIDATION
+         *  ======================================================================= */
+        if(UI.btns.frontPlay) UI.btns.frontPlay.onclick = () => startGameProcess();
+        if(UI.btns.start) UI.btns.start.onclick = () => startGameProcess();
+
+        if(UI.btns.forceP2) {
+            UI.btns.forceP2.onclick = () => {
+                if(confirm("Skip the rest of Phase 1 and move directly to the Anagram?")) {
+                    const phraseOnlyAlpha = AppState.game.puzzle.phraseStr.replace(/[^A-Z]/g, '').split('');
+                    const unguessed = phraseOnlyAlpha.filter(char => !AppState.game.puzzle.foundPool.includes(char));
+                    AppState.game.puzzle.foundPool.push(...unguessed);
+                    
+                    document.querySelectorAll('.alpha-btn').forEach(b => b.classList.add('used'));
+                    
+                    startExecutionerMarket("PHASE 1 ENDED EARLY!");
+                }
+            };
+        }
+
+        function startGameProcess() {
+            initAudio();
+            const phraseRaw = UI.setup.phraseData.value.trim(); const qRaw = UI.setup.qData.value.trim();
+            if(!phraseRaw || !qRaw) return showAlert("Error", "Please provide Mystery Phrase data and Questions in the Editor.");
+            const parsed = parseData(phraseRaw, qRaw);
+            if(!parsed) return showAlert("Syntax Error", "Could not parse Clue and Phrase properly.");
+            
+            const alphaOnly = parsed.phrase.replace(/[^A-Z]/g, '');
+            const len = alphaOnly.length; const unique = new Set(alphaOnly.split('')).size;
+            
+            const t = parseInt(UI.front.teams.value) || 3;
+            let minL=8, maxL=18, minU=6, maxU=13;
+            if(t <= 2) { minL=12; maxL=18; minU=10; maxU=13; }
+            else if(t === 3) { minL=10; maxL=15; minU=8; maxU=11; }
+            else { minL=8; maxL=13; minU=6; maxU=9; }
+
+            let warnings = [];
+            if(len < minL || len > maxL) warnings.push(`Phrase length is ${len} (Optimal for ${t} teams: ${minL}-${maxL}).`);
+            if(unique < minU || unique > maxU) warnings.push(`Unique letters: ${unique} (Optimal: ${minU}-${maxU}).`);
+            
+            if(warnings.length > 0) {
+                document.getElementById('validation-msg').innerHTML = warnings.join('<br>');
+                UI.modals.val.classList.add('active');
+                document.getElementById('btn-val-cancel').onclick = () => UI.modals.val.classList.remove('active');
+                document.getElementById('btn-val-proceed').onclick = () => { UI.modals.val.classList.remove('active'); initGame(parsed); };
+            } else initGame(parsed);
+        }
+
+        function parseData(phraseText, qText) {
+            let clue = "", phrase = "";
+            phraseText.split('\n').map(l => l.trim()).filter(l => l).forEach(line => {
+                if(line.toUpperCase().startsWith('CLUE:')) clue = line.substring(5).trim();
+                else if(line.toUpperCase().startsWith('MYSTERY PHRASE:')) phrase = line.substring(15).trim().toUpperCase();
+                else if(line.toUpperCase().startsWith('PHRASE:')) phrase = line.substring(7).trim().toUpperCase();
+            });
+            let qs = [];
+            qText.split('\n').map(l => l.trim()).filter(l => l).forEach(line => {
+                if(line.includes('|')) { const pts = line.split('|'); if(pts.length >= 2) qs.push({ q: pts[0].trim(), a: pts[1].trim() }); }
+            });
+            if(!clue || !phrase) return null;
+            if(qs.length === 0) qs.push({ q: "What is 2+2?", a: "4" });
+            return { clue, phrase, qs };
+        }
+
+        /** =======================================================================
+         *  GAME INITIALISATION
+         *  ======================================================================= */
+        function initGame(parsed) {
+            AppState.game.phase = 1; AppState.game.turnState = 'question';
+            AppState.game.numTeams = parseInt(UI.front.teams.value) || 3;
+            AppState.game.questions = [...parsed.qs]; 
+            shuffleArray(AppState.game.questions);
+            AppState.game.currentQIdx = 0;
+            
+            AppState.game.puzzle.clue = parsed.clue; AppState.game.puzzle.phraseStr = parsed.phrase;
+            AppState.game.puzzle.words = parsed.phrase.split(/\s+/);
+            AppState.game.puzzle.alphaTotal = parsed.phrase.replace(/[^A-Z]/g, '').length;
+            AppState.game.puzzle.foundPool = [];
+            
+            AppState.game.teams = [];
+            const isSingle = AppState.game.numTeams === 1;
+            const maxLives = isSingle ? 11 : 7;
+            
+            for(let i=0; i<AppState.game.numTeams; i++) {
+                AppState.game.teams.push({ name: `Team ${i+1}`, score: 0, livesLost: 0, maxLives: maxLives, eliminated: false });
+            }
+            AppState.game.activeTeamIdx = 0;
+
+            UI.screens.front.classList.remove('active');
+            UI.screens.setup.classList.remove('active');
+            UI.screens.game.classList.add('active');
+            if(UI.btns.editSetup) UI.btns.editSetup.style.display = 'block';
+            if(UI.btns.forceP2) UI.btns.forceP2.style.display = 'block';
+            
+            document.getElementById('game-page').classList.remove('p2-active', 'p2-question-mode', 'p2-letter-mode', 'p2-timer-mode');
+            document.getElementById('podium-container').classList.remove('active');
+
+            renderGameUI();
+            setTurnState('question');
+        }
+
+        function renderGameUI() {
+            UI.game.clue.innerText = `CLUE: ${AppState.game.puzzle.clue}`;
+            renderGrid(); renderPool(); renderAlphaBoards(); renderTeams(); highlightActiveTeam();
+        }
+
+        function renderGrid() {
+            UI.game.grid.innerHTML = '';
+            AppState.game.puzzle.words.forEach(word => {
+                const group = document.createElement('div'); group.className = 'word-group';
+                for(let char of word) {
+                    if(/[A-Z]/.test(char)) {
+                        const box = document.createElement('div'); box.className = 'letter-box empty'; box.dataset.char = char; group.appendChild(box);
+                    }
+                }
+                UI.game.grid.appendChild(group);
+            });
+        }
+
+        function renderPool() {
+            UI.game.pool.innerHTML = '';
+            const remainingEl = document.getElementById('remaining-letters-display');
+            if(AppState.game.phase === 1 || AppState.game.phase === 1.5) {
+                const sorted = [...AppState.game.puzzle.foundPool].sort();
+                UI.game.pool.innerText = sorted.join(', ');
+                if (remainingEl) {
+                    const remaining = AppState.game.puzzle.alphaTotal - AppState.game.puzzle.foundPool.length;
+                    remainingEl.innerText = `Remaining Letters to Find: ${remaining}`;
+                    remainingEl.style.display = 'block';
+                }
+            } else if (AppState.game.phase === 2) {
+                if (remainingEl) remainingEl.style.display = 'none';
+                const sorted = [...AppState.game.puzzle.foundPool].sort();
+                if(sorted.length === 0) { UI.game.pool.innerText = "All letters placed!"; return; }
+                const uniquePool = [...new Set(sorted)];
+                uniquePool.forEach(char => {
+                    const btn = document.createElement('button'); btn.className = 'pool-letter-btn'; btn.innerText = char;
+                    btn.onclick = () => handlePhase2LetterSelection(char);
+                    UI.game.pool.appendChild(btn);
+                });
+            }
+        }
+
+        function renderAlphaBoards() {
+            const buildCol = (letters, containerId, catClass) => {
+                const container = document.getElementById(containerId); container.innerHTML = '';
+                letters.forEach(letter => {
+                    const btn = document.createElement('div'); btn.className = `alpha-btn ${catClass}`; btn.innerText = letter; btn.dataset.letter = letter;
+                    btn.onclick = () => handleLetterClick(letter, btn, catClass); container.appendChild(btn);
+                });
+            };
+            buildCol(FREQ.GREEN, 'alpha-col-green', 'alpha-green');
+            buildCol(FREQ.YELLOW, 'alpha-col-yellow', 'alpha-yellow');
+            buildCol(FREQ.RED, 'alpha-col-red', 'alpha-red');
+        }
+
+        function getStickmanSVG(livesLost, maxLives) {
+            const parts = [
+                `<circle cx="50" cy="40" r="10" class="svg-part ${livesLost > 0 ? 'part-unlocked' : 'part-locked'}" />`,
+                `<line x1="50" y1="50" x2="50" y2="85" class="svg-part ${livesLost > 1 ? 'part-unlocked' : 'part-locked'}" />`,
+                `<line x1="50" y1="60" x2="30" y2="75" class="svg-part ${livesLost > 2 ? 'part-unlocked' : 'part-locked'}" />`,
+                `<line x1="50" y1="60" x2="70" y2="75" class="svg-part ${livesLost > 3 ? 'part-unlocked' : 'part-locked'}" />`,
+                `<line x1="50" y1="85" x2="35" y2="115" class="svg-part ${livesLost > 4 ? 'part-unlocked' : 'part-locked'}" />`,
+                `<line x1="50" y1="85" x2="65" y2="115" class="svg-part ${livesLost > 5 ? 'part-unlocked' : 'part-locked'}" />`,
+            ];
+            if (maxLives === 11) {
+                parts.push(`<line x1="30" y1="75" x2="20" y2="70" class="svg-part ${livesLost > 6 ? 'part-unlocked' : 'part-locked'}" />`);
+                parts.push(`<line x1="70" y1="75" x2="80" y2="70" class="svg-part ${livesLost > 7 ? 'part-unlocked' : 'part-locked'}" />`);
+                parts.push(`<line x1="35" y1="115" x2="25" y2="120" class="svg-part ${livesLost > 8 ? 'part-unlocked' : 'part-locked'}" />`);
+                parts.push(`<line x1="65" y1="115" x2="75" y2="120" class="svg-part ${livesLost > 9 ? 'part-unlocked' : 'part-locked'}" />`);
+                parts.push(`<line x1="50" y1="10" x2="50" y2="30" class="svg-part ${livesLost > 10 ? 'part-unlocked' : 'part-locked'}" />`);
+            } else {
+                parts.push(`<line x1="50" y1="10" x2="50" y2="30" class="svg-part ${livesLost > 6 ? 'part-unlocked' : 'part-locked'}" />`);
+            }
+            return `<svg class="gallows-svg" viewBox="0 0 100 130"><polyline points="10,125 10,10 50,10" fill="none" class="svg-part svg-structure" /><line x1="0" y1="125" x2="80" y2="125" class="svg-part svg-structure" />${parts.join('')}</svg>`;
+        }
+
+        function renderTeams() {
+            UI.game.teams.innerHTML = '';
+            AppState.game.teams.forEach((t, idx) => {
+                const col = document.createElement('div'); col.className = `team-col ${t.eliminated ? 'eliminated' : ''}`; col.dataset.idx = idx;
+                col.innerHTML = `
+                    <div class="gallows-container">${getStickmanSVG(t.livesLost, t.maxLives)}</div>
+                    <div class="team-name" contenteditable="true" spellcheck="false" onblur="updateTeamName(${idx}, this)">${t.name}</div>
+                    <div class="team-score-wrapper">
+                        <button class="score-btn" onclick="adjScore(${idx}, -5)">-</button>
+                        <div class="team-score">${t.score}</div>
+                        <button class="score-btn" onclick="adjScore(${idx}, 5)">+</button>
+                    </div>
+                    <div class="team-life-wrapper">
+                        <button class="life-btn" onclick="adjLife(${idx}, -1)" title="Restore a lost life">+ Life</button>
+                        <button class="life-btn" onclick="adjLife(${idx}, 1)" title="Deduct a life">- Life</button>
+                    </div>
+                `;
+                UI.game.teams.appendChild(col);
+            });
+            highlightActiveTeam();
+        }
+
+        window.updateTeamName = function(idx, el) { AppState.game.teams[idx].name = el.innerText.trim() || `Team ${idx+1}`; if(idx === AppState.game.activeTeamIdx) updateQuestionUI(); };
+        window.adjScore = function(idx, amt) { AppState.game.teams[idx].score += amt; if(AppState.game.teams[idx].score < 0) AppState.game.teams[idx].score = 0; renderTeams(); };
+        window.adjLife = function(idx, amt) { 
+            const t = AppState.game.teams[idx];
+            t.livesLost += amt;
+            if(t.livesLost < 0) t.livesLost = 0;
+            if(t.livesLost >= t.maxLives) { t.livesLost = t.maxLives; t.eliminated = true; }
+            else { t.eliminated = false; }
+            renderTeams();
+        };
+
+        function highlightActiveTeam() {
+            document.querySelectorAll('.team-col').forEach(el => el.classList.remove('active-team'));
+            const activeEl = document.querySelector(`.team-col[data-idx='${AppState.game.activeTeamIdx}']`);
+            if(activeEl && AppState.game.phase !== 1.5 && AppState.game.phase !== 3) activeEl.classList.add('active-team');
+        }
+
+        function getNextQuestion() {
+            AppState.game.currentQIdx++;
+            if (AppState.game.currentQIdx >= AppState.game.questions.length) {
+                shuffleArray(AppState.game.questions);
+                AppState.game.currentQIdx = 0;
+            }
+        }
+
+        function nextTurn() {
+            if(AppState.game.phase === 1.5 || AppState.game.phase === 3) return; 
+            
+            getNextQuestion();
+            let startIdx = AppState.game.activeTeamIdx; let loops = 0;
+            do {
+                AppState.game.activeTeamIdx = (AppState.game.activeTeamIdx + 1) % AppState.game.numTeams;
+                loops++;
+            } while (AppState.game.teams[AppState.game.activeTeamIdx].eliminated && loops < AppState.game.numTeams);
+            
+            highlightActiveTeam();
+            if(AppState.game.phase === 1) {
+                setTurnState('question');
+            } else if (AppState.game.phase === 2) {
+                setTurnState('p2-question');
+            }
+        }
+
+        /** =======================================================================
+         *  UNIVERSAL QUESTION UI & SCORING
+         *  ======================================================================= */
+        function updateQuestionUI() {
+            const teamName = AppState.game.teams[AppState.game.activeTeamIdx].name; UI.game.qPrompt.innerText = teamName;
+            const currentQData = AppState.game.questions[AppState.game.currentQIdx];
+            UI.game.qText.innerText = currentQData.q; UI.game.aText.innerText = currentQData.a;
+            
+            UI.game.btnReveal.style.display = 'block'; 
+            UI.game.aText.style.display = 'none';
+            UI.game.qControls.style.display = 'none'; 
+            
+            if(AppState.game.phase === 1) {
+                UI.game.btnQCorrect.innerText = "Question Correct (+10 Pts)";
+                UI.game.btnQWrong.innerText = "Incorrect/Pass (-1 Life)";
+            } else if (AppState.game.phase === 2) {
+                UI.game.btnQCorrect.innerText = "Question Correct (+10 Pts)";
+                UI.game.btnQWrong.innerText = "Incorrect/Pass (Mercy Spin Option)";
+            }
+        }
+
+        UI.game.btnReveal.onclick = () => { 
+            UI.game.btnReveal.style.display = 'none'; 
+            UI.game.aText.style.display = 'block'; 
+            UI.game.qControls.style.display = 'flex'; 
+        };
+
+        UI.game.btnQCorrect.onclick = () => {
+            playSuccess();
+            if(AppState.game.phase === 1) {
+                adjScore(AppState.game.activeTeamIdx, 10); setTurnState('letter');
+            } else if (AppState.game.phase === 2) {
+                adjScore(AppState.game.activeTeamIdx, 10); setTurnState('p2-letter');
+            }
+        };
+        
+        UI.game.btnQWrong.onclick = () => {
+            playError();
+            const t = AppState.game.teams[AppState.game.activeTeamIdx];
+            if(AppState.game.phase === 1) {
+                penalizeLife(t, true); 
+            } else if (AppState.game.phase === 2) {
+                showPhase2MercyOption(() => {
+                    nextTurn();
+                });
+            }
+        };
+
+        function setTurnState(state) {
+            AppState.game.turnState = state; 
+            
+            const buttons = document.querySelectorAll('.alpha-btn:not(.used)');
+            const gamePage = document.getElementById('game-page');
+            
+            gamePage.classList.remove('p2-question-mode', 'p2-letter-mode', 'p2-timer-mode');
+            
+            if(state === 'question') { 
+                UI.game.qTextCont.style.display = 'flex';
+                updateQuestionUI();
+                UI.game.btnQCorrect.disabled = false; UI.game.btnQWrong.disabled = false; 
+                buttons.forEach(b => b.classList.remove('unlocked')); 
+            }
+            else if(state === 'letter') { 
+                UI.game.btnQCorrect.disabled = true; UI.game.btnQWrong.disabled = true; 
+                buttons.forEach(b => b.classList.add('unlocked')); 
+            }
+            else if(state === 'p2-question') {
+                gamePage.classList.add('p2-question-mode');
+                UI.game.qTextCont.style.display = 'flex';
+                updateQuestionUI();
+                UI.game.btnQCorrect.disabled = false; UI.game.btnQWrong.disabled = false; 
+                UI.game.pool.style.opacity = '0.3'; 
+                UI.game.pool.style.pointerEvents = 'none';
+            }
+            else if(state === 'p2-letter') {
+                gamePage.classList.add('p2-letter-mode');
+                UI.game.qTextCont.style.display = 'none';
+                UI.game.qControls.style.display = 'none';
+                UI.game.btnQCorrect.disabled = true; UI.game.btnQWrong.disabled = true; 
+                UI.game.pool.style.opacity = '1'; 
+                UI.game.pool.style.pointerEvents = 'auto';
+                UI.game.qPrompt.innerText = `${AppState.game.teams[AppState.game.activeTeamIdx].name} (Phase 2): Choose a letter from the pool!`;
+            }
+            else if(state === 'p2-timer') {
+                gamePage.classList.add('p2-timer-mode');
+                UI.game.qTextCont.style.display = 'none';
+                UI.game.pool.style.opacity = '0.3'; 
+                UI.game.pool.style.pointerEvents = 'none';
+            }
+        }
+
+        /** =======================================================================
+         *  PHASE 1 LETTER SELECTION LOGIC
+         *  ======================================================================= */
+        function handleLetterClick(letter, btn, catClass) {
+            if(AppState.game.phase !== 1 || btn.classList.contains('used') || AppState.game.turnState !== 'letter') return;
+            const team = AppState.game.teams[AppState.game.activeTeamIdx];
+            if(team.eliminated) return showAlert("Eliminated", "This team cannot play.");
+
+            btn.classList.add('used'); btn.classList.remove('unlocked');
+            const phraseOnlyAlpha = AppState.game.puzzle.phraseStr.replace(/[^A-Z]/g, '');
+            let count = 0; for(let c of phraseOnlyAlpha) if(c === letter) count++;
+
+            if(count > 0) {
+                playSuccess(); for(let i=0; i<count; i++) AppState.game.puzzle.foundPool.push(letter);
+                let baseVal = 0; 
+                if(catClass === 'alpha-green') baseVal = 5; 
+                if(catClass === 'alpha-yellow') baseVal = 20; 
+                if(catClass === 'alpha-red') baseVal = 30;
+                
+                team.score += (baseVal * count); renderPool(); renderTeams();
+                checkGameTriggers(); 
+            } else {
+                playError(); penalizeLife(team, false); 
+            }
+        }
+
+        function penalizeLife(team, fixedSinglePenalty) {
+            let penalty = 1;
+            if(!fixedSinglePenalty) {
+                if(AppState.game.numTeams === 3) penalty = 2;
+                if(AppState.game.numTeams >= 4) penalty = 3;
+            }
+            team.livesLost += penalty;
+            if (team.livesLost > team.maxLives) team.livesLost = team.maxLives;
+            
+            if(team.livesLost >= team.maxLives) {
+                team.eliminated = true; renderTeams(); playError();
+                setTimeout(() => {
+                    if (AppState.game.phase === 1) {
+                        triggerPleadForMercy(team);
+                    } else {
+                        showAlert("Eliminated", `${team.name} has completed the gallows and is frozen!`);
+                        checkGameTriggers(); 
+                    }
+                }, 500);
+            } else {
+                renderTeams();
+                const word = penalty > 1 ? "parts" : "part";
+                showAlert("Miss!", `You lose ${penalty} stickman ${word} and your turn passes. (Host can restore if deemed unfair).`);
+                nextTurn();
+            }
+        }
+
+        function triggerPleadForMercy(team) {
+            UI.modals.plead.classList.add('active');
+            document.getElementById('plead-status').innerText = `${team.name} has lost their final life! You must plead with the Executioner.`;
+            const resultDisplay = document.getElementById('plead-result');
+            resultDisplay.innerText = "";
+            const btnPlead = document.getElementById('btn-plead');
+            btnPlead.style.display = 'inline-block';
+            
+            btnPlead.onclick = () => {
+                btnPlead.style.display = 'none';
+                playTick();
+                resultDisplay.innerText = "Executioner is deciding...";
+                
+                setTimeout(() => {
+                    const roll = Math.floor(Math.random() * 6) + 1;
+                    if(roll <= 3) {
+                        playSuccess();
+                        resultDisplay.innerHTML = `<span style="color: var(--chalk-green);">Mercy! A limb is spared.</span>`;
+                        team.livesLost--; 
+                        team.eliminated = false;
+                        renderTeams();
+                        setTimeout(() => {
+                            UI.modals.plead.classList.remove('active');
+                            checkGameTriggers();
+                        }, 2500);
+                    } else if (roll <= 5) {
+                        playAlert();
+                        resultDisplay.innerHTML = `<span style="color: var(--chalk-yellow);">Undecided... Plead again!</span>`;
+                        setTimeout(() => {
+                            btnPlead.style.display = 'inline-block';
+                        }, 1000);
+                    } else {
+                        playError();
+                        resultDisplay.innerHTML = `<span style="color: var(--chalk-red);">No Mercy! You are frozen.</span>`;
+                        renderTeams();
+                        setTimeout(() => {
+                            UI.modals.plead.classList.remove('active');
+                            checkGameTriggers();
+                        }, 2500);
+                    }
+                }, 1500);
+            };
+        }
+
+        function checkGameTriggers() {
+            const allDead = AppState.game.teams.every(t => t.eliminated);
+            const allLetters = AppState.game.puzzle.foundPool.length === AppState.game.puzzle.alphaTotal;
+            
+            if(allLetters) {
+                startExecutionerMarket("PHASE 1 COMPLETE!");
+                return;
+            }
+            if(allDead) {
+                startExecutionerMarket("ALL TEAMS ELIMINATED!");
+                return;
+            }
+            nextTurn();
+        }
+
+        /** =======================================================================
+         *  PHASE 1.5: THE CORRUPT EXECUTIONER'S MARKET
+         *  ======================================================================= */
+        function startExecutionerMarket(reasonMsg) {
+            AppState.game.phase = 1.5;
+            AppState.game.marketTriggerReason = reasonMsg;
+            if(UI.btns.forceP2) UI.btns.forceP2.style.display = 'none';
+            playAlert();
+            showAlert("Executioner's Market", `${reasonMsg} The Market is open. Teams may buy back missing limbs.`);
+            
+            document.getElementById('alpha-boards-container').style.display = 'none';
+            document.getElementById('phase1-q-controls').style.display = 'none';
+            UI.game.marketCont.classList.add('active');
+            
+            AppState.game.marketTeamIdx = -1;
+            
+            // Reset market flags
+            AppState.game.teams.forEach(t => t.marketLimbBought = false);
+            advanceMarketTeam();
+        }
+
+        function advanceMarketTeam() {
+            AppState.game.marketTeamIdx++;
+            if(AppState.game.marketTeamIdx >= AppState.game.numTeams) {
+                endExecutionerMarket(); return;
+            }
+            const t = AppState.game.teams[AppState.game.marketTeamIdx];
+            if(t.livesLost === 0) { advanceMarketTeam(); return; } 
+            
+            AppState.game.marketSpinCost = 5;
+            document.getElementById('input-market-price').value = 5;
+            
+            document.getElementById('market-result').innerHTML = ""; 
+            updateMarketUI();
+        }
+
+        function updateMarketUI() {
+            const t = AppState.game.teams[AppState.game.marketTeamIdx];
+            document.getElementById('market-status').innerText = `${t.name}, you have ${t.livesLost} limbs missing. Cost to spin: ${AppState.game.marketSpinCost} pts.`;
+            
+            const resultDisplay = document.getElementById('market-result');
+            const btnSpin = document.getElementById('btn-market-spin');
+            
+            if (t.marketLimbBought) {
+                // If they already bought a limb, force them to advance
+                resultDisplay.innerHTML = `<span style="color: var(--chalk-blue);">You have successfully saved a limb. Your market time is up!</span>`;
+                btnSpin.disabled = true;
+            } else if (t.score < AppState.game.marketSpinCost) {
+                if(!resultDisplay.innerHTML.includes("Wheel is spinning") && !resultDisplay.innerHTML.includes("Amused!") && !resultDisplay.innerHTML.includes("Greed!") && !resultDisplay.innerHTML.includes("Caprice!")) {
+                    resultDisplay.innerHTML = `<span style="color: var(--chalk-red);">Save a limb? The price is too high. Your fate lies at the whim of the executioner.</span>`;
+                } else {
+                    if(!resultDisplay.innerHTML.includes("price is too high")) {
+                        resultDisplay.innerHTML += `<br><span style="color: var(--chalk-red); font-size: 2vh;">Save a limb? The price is too high. Your fate lies at the whim of the executioner.</span>`;
+                    }
+                }
+                btnSpin.disabled = true;
+            } else {
+                if (resultDisplay.innerHTML.includes("price is too high")) {
+                    resultDisplay.innerHTML = resultDisplay.innerHTML.split('<br>')[0];
+                    if(resultDisplay.innerHTML.includes("price is too high")) resultDisplay.innerHTML = "";
+                }
+                btnSpin.disabled = (t.livesLost === 0);
+            }
+            
+            btnSpin.onclick = () => executeMarketSpin();
+            document.getElementById('btn-market-pass').onclick = () => { advanceMarketTeam(); };
+            
+            document.querySelectorAll('.team-col').forEach(el => el.classList.remove('active-team'));
+            const activeEl = document.querySelector(`.team-col[data-idx='${AppState.game.marketTeamIdx}']`);
+            if(activeEl) activeEl.classList.add('active-team');
+        }
+
+        document.getElementById('input-market-price').addEventListener('input', (e) => {
+            AppState.game.marketSpinCost = parseInt(e.target.value) || 0;
+            if(AppState.game.phase === 1.5 && AppState.game.marketTeamIdx >= 0) {
+                updateMarketUI();
+            }
+        });
+
+        function executeMarketSpin() {
+            const team = AppState.game.teams[AppState.game.marketTeamIdx];
+            if(team.score < AppState.game.marketSpinCost) return;
+            
+            team.score -= AppState.game.marketSpinCost; renderTeams();
+            playTick();
+            const resultDisplay = document.getElementById('market-result');
+            resultDisplay.innerText = "Wheel is spinning...";
+            
+            const btnSpin = document.getElementById('btn-market-spin');
+            const btnPass = document.getElementById('btn-market-pass');
+            btnSpin.disabled = true; btnPass.disabled = true;
+            
+            setTimeout(() => {
+                const roll = Math.floor(Math.random() * 6) + 1;
+                
+                if(roll <= 3) {
+                    playSuccess();
+                    team.livesLost--; 
+                    if(team.eliminated && team.livesLost < team.maxLives) team.eliminated = false;
+                    team.marketLimbBought = true; // Lock out further spins
+                    renderTeams();
+                    resultDisplay.innerHTML = `<span style="color: var(--chalk-green);">Amused! A limb is spared (+1 life). You have saved a life and must step down!</span>`;
+                    
+                    setTimeout(() => { advanceMarketTeam(); }, 2500); 
+                } else if(roll <= 5) {
+                    playError();
+                    resultDisplay.innerHTML = `<span style="color: var(--chalk-red);">Greed! Gold pocketed, no life restored.</span>`;
+                    AppState.game.marketSpinCost += 5;
+                    document.getElementById('input-market-price').value = AppState.game.marketSpinCost;
+                    setTimeout(() => { updateMarketUI(); btnPass.disabled = false; }, 500);
+                } else {
+                    playAlert();
+                    team.score += AppState.game.marketSpinCost; renderTeams(); 
+                    resultDisplay.innerHTML = `<span style="color: var(--chalk-yellow);">Caprice! Toll refunded. Free spin!</span>`;
+                    document.getElementById('input-market-price').value = AppState.game.marketSpinCost;
+                    setTimeout(() => { updateMarketUI(); btnPass.disabled = false; }, 500);
+                }
+                
+            }, 1000);
+        }
+
+        function endExecutionerMarket() {
+            UI.game.marketCont.classList.remove('active');
+            
+            const allLetters = AppState.game.puzzle.foundPool.length === AppState.game.puzzle.alphaTotal;
+            const allDead = AppState.game.teams.every(t => t.eliminated);
+            
+            if(allLetters) {
+                startPhase2();
+            } else if (allDead) {
+                showAlert("Game Over", "All teams remain eliminated. The Executioner has won.");
+            } else {
+                AppState.game.phase = 1;
+                document.getElementById('alpha-boards-container').style.display = 'flex';
+                if(UI.btns.forceP2) UI.btns.forceP2.style.display = 'block';
+                nextTurn(); 
+            }
+        }
+
+        /** =======================================================================
+         *  PHASE 2: POSITIONING (Endgame)
+         *  ======================================================================= */
+        function startPhase2() {
+            AppState.game.phase = 2;
+            if(UI.btns.forceP2) UI.btns.forceP2.style.display = 'none';
+            playAlert();
+            showAlert("PHASE 2: POSITIONING PHASE", "The Clue and Grid are revealed! Teams must answer a question correctly (+10 pts) to pick and place a letter.");
+            document.getElementById('game-page').classList.add('p2-active');
+            renderPool();
+            
+            let loops=0; while(AppState.game.teams[AppState.game.activeTeamIdx].eliminated && loops<AppState.game.numTeams) { AppState.game.activeTeamIdx = (AppState.game.activeTeamIdx+1)%AppState.game.numTeams; loops++; }
+            highlightActiveTeam();
+            setTurnState('p2-question');
+        }
+
+        function handlePhase2LetterSelection(char) {
+            if(AppState.game.turnState !== 'p2-letter') return;
+            AppState.game.puzzle.foundPool = AppState.game.puzzle.foundPool.filter(c => c !== char);
+            renderPool();
+            
+            const boxes = UI.game.grid.querySelectorAll('.letter-box.empty');
+            let placedAny = false;
+            boxes.forEach(box => { if(box.dataset.char === char) { box.innerText = char; box.classList.remove('empty'); box.classList.add('filled'); placedAny = true; } });
+            if(placedAny) playSuccess();
+            
+            setTurnState('p2-timer');
+            startP2Timer();
+        }
+
+        const p2Pass = document.getElementById('btn-p2-pass');
+        const p2Stop = document.getElementById('btn-p2-stop');
+        const p2GuessVerify = document.getElementById('btn-verify-guess');
+
+        function startP2Timer() {
+            p2Pass.disabled = false; p2Stop.disabled = false;
+            const teamName = AppState.game.teams[AppState.game.activeTeamIdx].name;
+            UI.game.qPrompt.innerText = `${teamName}: Guess the phrase or Pass!`;
+            
+            AppState.game.timeLeft = 10; updateTimerUI();
+            
+            AppState.game.timer = setInterval(() => {
+                AppState.game.timeLeft--; updateTimerUI(); playTick();
+                if(AppState.game.timeLeft <= 0) { clearInterval(AppState.game.timer); timeOutPenalty(); }
+            }, 1000);
+        }
+
+        function updateTimerUI() { UI.game.timer.innerText = AppState.game.timeLeft; }
+
+        function showPhase2MercyOption(callbackAvoidLimb) {
+            const t = AppState.game.teams[AppState.game.activeTeamIdx];
+            UI.modals.p2Bribe.classList.add('active');
+            
+            const btnPay = document.getElementById('btn-p2-pay');
+            const btnLimb = document.getElementById('btn-p2-limb');
+            const resultDisplay = document.getElementById('p2-bribe-result');
+            
+            btnPay.disabled = t.score < 10;
+            btnLimb.disabled = false;
+            resultDisplay.innerText = "";
+            
+            btnPay.onclick = () => {
+                btnPay.disabled = true;
+                btnLimb.disabled = true;
+                
+                t.score -= 10;
+                renderTeams();
+                playTick();
+                resultDisplay.innerText = "Wheel is spinning...";
+                
+                setTimeout(() => {
+                    const roll = Math.floor(Math.random() * 6) + 1;
+                    
+                    if(roll <= 3) {
+                        playSuccess();
+                        resultDisplay.innerHTML = `<span style="color: var(--chalk-green);">Mercy! Your limb is spared.</span>`;
+                        setTimeout(() => {
+                            UI.modals.p2Bribe.classList.remove('active');
+                            callbackAvoidLimb();
+                        }, 2000);
+                    } else if(roll <= 5) {
+                        playError();
+                        resultDisplay.innerHTML = `<span style="color: var(--chalk-red);">Greed! The 10 points are pocketed, but no mercy is shown!</span>`;
+                        setTimeout(() => {
+                            UI.modals.p2Bribe.classList.remove('active');
+                            penalizeLife(t, true); // fixed 1 penalty
+                        }, 2500);
+                    } else {
+                        playAlert();
+                        t.score += 10; // Refund
+                        renderTeams();
+                        resultDisplay.innerHTML = `<span style="color: var(--chalk-yellow);">Caprice! Toll refunded. Free spin!</span>`;
+                        setTimeout(() => {
+                            resultDisplay.innerText = "";
+                            btnPay.disabled = false;
+                            btnLimb.disabled = false;
+                        }, 2000);
+                    }
+                }, 1000);
+            };
+            
+            btnLimb.onclick = () => {
+                UI.modals.p2Bribe.classList.remove('active');
+                penalizeLife(t, true); 
+            };
+        }
+
+        function timeOutPenalty() {
+            playError();
+            showAlert("TIME OUT!", "Failed to act in time. The executioner approaches...");
+            setTimeout(() => {
+                showPhase2MercyOption(() => {
+                    nextTurn();
+                });
+            }, 1500);
+        }
+
+        p2Pass.onclick = () => { 
+            clearInterval(AppState.game.timer);
+            nextTurn(); 
+        };
+
+        p2Stop.onclick = () => {
+            clearInterval(AppState.game.timer);
+            document.getElementById('guess-input').value = ""; 
+            UI.modals.guess.classList.add('active');
+            document.getElementById('guess-input').focus();
+        };
+
+        p2GuessVerify.onclick = () => {
+            UI.modals.guess.classList.remove('active');
+            const typedGuess = document.getElementById('guess-input').value.toUpperCase().replace(/[^A-Z]/g, '');
+            const actualPhrase = AppState.game.puzzle.phraseStr.toUpperCase().replace(/[^A-Z]/g, '');
+            
+            if(typedGuess === actualPhrase) {
+                playSuccess();
+                const winningTeam = AppState.game.teams[AppState.game.activeTeamIdx];
+                winningTeam.score += 30; 
+                renderTeams();
+                
+                const boxes = UI.game.grid.querySelectorAll('.letter-box');
+                boxes.forEach(b => { b.innerText = b.dataset.char; b.classList.remove('empty'); b.classList.add('filled'); });
+                
+                setTimeout(() => { triggerPodium(winningTeam); }, 1500);
+            } else {
+                playError();
+                showAlert("Wrong Guess", "That is not the correct phrase! The executioner approaches...");
+                setTimeout(() => {
+                    showPhase2MercyOption(() => {
+                        nextTurn();
+                    });
+                }, 1500);
+            }
+        };
+
+        /** =======================================================================
+         *  PHASE 3: PODIUM + CONFETTI
+         *  ======================================================================= */
+        function triggerPodium(winningTeam) {
+            AppState.game.phase = 3;
+            if(UI.btns.forceP2) UI.btns.forceP2.style.display = 'none';
+            playSuccess(); playAlert();
+            
+            let pointChamp = AppState.game.teams[0];
+            let survivalChamp = AppState.game.teams[0];
+            
+            AppState.game.teams.forEach(t => {
+                if(t.score > pointChamp.score) pointChamp = t;
+                if(t.livesLost < survivalChamp.livesLost) survivalChamp = t;
+            });
+
+            const livesRemaining = survivalChamp.maxLives - survivalChamp.livesLost;
+            
+            document.getElementById('podium-winner-team').innerText = winningTeam.name;
+            document.getElementById('podium-points-team').innerText = pointChamp.name;
+            document.getElementById('podium-points-stat').innerText = `${pointChamp.score} Points`;
+            document.getElementById('podium-survival-team').innerText = survivalChamp.name;
+            document.getElementById('podium-survival-stat').innerText = `${livesRemaining} Lives Remaining`;
+
+            document.getElementById('game-page').style.display = 'none';
+            document.getElementById('podium-container').classList.add('active');
+
+            fireConfetti();
+            setTimeout(fireConfetti, 500);
+            setTimeout(fireConfetti, 1000);
+        }
+
+        function fireConfetti() {
+            const container = document.getElementById('podium-container');
+            const colours = ['#fde047', '#4ade80', '#60a5fa', '#f87171', '#f4f4f0'];
+            for(let i=0; i<100; i++) {
+                const conf = document.createElement('div');
+                conf.style.position = 'absolute';
+                conf.style.width = (Math.random() * 10 + 5) + 'px';
+                conf.style.height = (Math.random() * 20 + 10) + 'px';
+                conf.style.backgroundColor = colours[Math.floor(Math.random() * colours.length)];
+                conf.style.top = '50%'; conf.style.left = '50%';
+                conf.style.opacity = 1;
+                conf.style.pointerEvents = 'none';
+                conf.style.zIndex = 100;
+                
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = 15 + Math.random() * 25;
+                let vx = Math.cos(angle) * velocity;
+                let vy = Math.sin(angle) * velocity - 10;
+                let gravity = 0.5;
+                let rotation = Math.random() * 360;
+                let rotSpeed = Math.random() * 20 - 10;
+                let x = window.innerWidth / 2;
+                let y = window.innerHeight / 2;
+                
+                container.appendChild(conf);
+                
+                let frame = 0;
+                function animate() {
+                    if(frame > 150) { conf.remove(); return; }
+                    x += vx; y += vy; vy += gravity; rotation += rotSpeed;
+                    conf.style.left = x + 'px'; conf.style.top = y + 'px';
+                    conf.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+                    conf.style.opacity = 1 - (frame/150);
+                    frame++;
+                    requestAnimationFrame(animate);
+                }
+                requestAnimationFrame(animate);
+            }
+        }
+
+        function showAlert(title, msg) {
+            document.getElementById('alert-title').innerText = title; document.getElementById('alert-msg').innerText = msg;
+            UI.modals.alert.classList.add('active'); document.getElementById('btn-alert-ok').onclick = () => UI.modals.alert.classList.remove('active');
+        }
+
+    </script>
+</body>
+</html>
