@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Auction</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-gold: #fbbf24;
+            --accent-gold-hover: #f59e0b;
+            --accent-blue: #3b82f6;
+            --correct-green: #22c55e;
+            --incorrect-red: #ef4444;
+            --frozen-blue: #0ea5e9;
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            background-color: var(--bg-panel);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--accent-gold);
+        }
+        .nav-links button {
+            background: none; border: none; color: var(--text-main); font-size: 1.1rem;
+            font-weight: bold; margin-right: 1rem; cursor: pointer; padding: 0.5rem 1rem;
+            border-radius: 5px; transition: background 0.3s;
+        }
+        .nav-links button:hover, .nav-links button.active { background-color: var(--accent-blue); }
+        .nav-controls button {
+            background: var(--accent-gold); color: var(--bg-dark); border: none;
+            font-size: 1.1rem; font-weight: bold; padding: 0.5rem 1rem; margin-left: 0.5rem;
+            border-radius: 5px; cursor: pointer;
+        }
+
+        /* Pages */
+        .page { display: none; flex: 1; padding: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+        .page.active { display: block; }
+
+        /* Typography */
+        h1, h2, h3 { color: var(--accent-gold); margin-bottom: 1rem; }
+        h1 { font-size: 3.5rem; text-align: center; }
+        h2 { font-size: 2.5rem; }
+        p, li { font-size: 1.25rem; line-height: 1.6; margin-bottom: 1rem; }
+        
+        /* Inputs & Buttons */
+        input[type="text"], input[type="number"], input[type="password"], select, textarea {
+            width: 100%; padding: 0.75rem; margin-bottom: 1rem; border-radius: 5px;
+            border: 1px solid var(--text-muted); background: var(--bg-dark);
+            color: var(--text-main); font-size: 1.2rem;
+        }
+        .btn {
+            background-color: var(--accent-blue); color: white; border: none; padding: 1rem 2rem;
+            font-size: 1.25rem; font-weight: bold; border-radius: 8px; cursor: pointer;
+            transition: opacity 0.3s; margin-bottom: 1rem;
+        }
+        .btn:hover { opacity: 0.8; }
+        .btn-gold { background-color: var(--accent-gold); color: var(--bg-dark); }
+        .btn-green { background-color: var(--correct-green); }
+        .btn-red { background-color: var(--incorrect-red); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-small { padding: 0.4rem 0.8rem; font-size: 0.9rem; border-radius: 5px; margin-top: 0.5rem;}
+
+        /* Guess Toggle Buttons */
+        .guess-toggle { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .guess-toggle button {
+            flex: 1; padding: 0.75rem; font-size: 1.1rem; font-weight: bold; border: 2px solid var(--text-muted);
+            background: transparent; color: var(--text-muted); border-radius: 5px; cursor: pointer; transition: all 0.2s;
+        }
+        .guess-toggle button.active-true { background-color: var(--correct-green); border-color: var(--correct-green); color: white; }
+        .guess-toggle button.active-false { background-color: var(--incorrect-red); border-color: var(--incorrect-red); color: white; }
+
+        /* Home Page specific */
+        .home-container { text-align: center; margin-top: 5rem; }
+        .gavel-icon { font-size: 8rem; margin-bottom: 1rem; }
+        .editable-subheading {
+            font-size: 2rem; color: var(--text-muted); border: 1px dashed transparent;
+            padding: 0.5rem; display: inline-block;
+        }
+        .editable-subheading:hover, .editable-subheading:focus {
+            border-color: var(--text-muted); background: rgba(255,255,255,0.05); outline: none;
+        }
+
+        /* Setup Page Specific */
+        .setup-section { background: var(--bg-panel); padding: 2rem; border-radius: 10px; margin-bottom: 2rem; }
+        .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .play-game-bar { background: var(--bg-panel); padding: 2rem; border-radius: 10px; text-align: center; border: 2px solid var(--correct-green);}
+
+        /* Game Page Specific */
+        .sentence-display {
+            background: var(--bg-panel); padding: 3rem; border-radius: 10px; text-align: center;
+            margin-bottom: 2rem; min-height: 250px; display: flex; flex-direction: column; justify-content: center; position: relative;
+        }
+        .sentence-text { font-size: 3rem; font-weight: bold; margin-bottom: 1rem; }
+        .result-text { font-size: 2.5rem; font-weight: bold; margin-bottom: 1rem; display: none; }
+        .correction-text { font-size: 2rem; color: var(--accent-gold); display: none; }
+        .final-warning { color: var(--incorrect-red); font-weight: bold; font-size: 1.5rem; margin-bottom: 1rem; display: none; animation: pulse 1.5s infinite; }
+        
+        .teams-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+        .team-card {
+            background: var(--bg-panel); padding: 1.5rem; border-radius: 10px; text-align: center;
+            border: 2px solid transparent; transition: all 0.3s; position: relative;
+        }
+        .team-card.highlight-bonus { border-color: var(--correct-green); box-shadow: 0 0 15px var(--correct-green); }
+        .team-card.highlight-frozen { border-color: var(--frozen-blue); box-shadow: 0 0 15px var(--frozen-blue); }
+        
+        .team-name { font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem; background: transparent; border:none; color: var(--accent-gold); text-align: center; border-bottom: 1px dashed #555; width: 100%;}
+        .bet-input-group label { display: block; text-align: left; font-size: 1rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+        .bet-input-group { margin-bottom: 1rem; }
+
+        /* Podium Page Specific */
+        .podium-container { display: flex; justify-content: center; align-items: flex-end; height: 50vh; gap: 1rem; margin-top: 2rem; }
+        .podium-place { width: 30%; background: var(--bg-panel); text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; padding-top: 1rem; border-top: 5px solid var(--accent-gold); position: relative;}
+        .podium-1 { height: 100%; border-color: #fbbf24;}
+        .podium-2 { height: 75%; border-color: #94a3b8;}
+        .podium-3 { height: 50%; border-color: #b45309;}
+        .trophy { font-size: 4rem; position: absolute; top: -70px; left: 50%; transform: translateX(-50%); }
+        .podium-name { font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .podium-score { font-size: 1.5rem; color: var(--accent-gold); }
+
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--bg-panel); padding: 2rem; border-radius: 10px; width: 400px; text-align: center; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        footer { text-align: center; padding: 1rem; background-color: var(--bg-panel); color: var(--text-muted); font-size: 0.9rem; margin-top: auto; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-links">
+            <button onclick="navigate('page-home')" id="nav-home" class="active">Home</button>
+            <button onclick="navigate('page-setup')" id="nav-setup">Set-up</button>
+            <button onclick="navigate('page-how')" id="nav-how">How to Play</button>
+            <button onclick="navigate('page-game')" id="nav-game">Game</button>
+            <button onclick="navigate('page-podium')" id="nav-podium">Podium</button>
+        </div>
+        <div class="nav-controls">
+            <button onclick="toggleSound()" id="btn-sound">🔊 Sound On</button>
+            <button onclick="toggleFullscreen()">⛶ Full Screen</button>
+        </div>
+    </nav>
+
+    <!-- Home Page -->
+    <div id="page-home" class="page active">
+        <div class="home-container">
+            <div class="gavel-icon">👨‍⚖️</div>
+            <h1>Grammar Auction</h1>
+            <h2 class="editable-subheading" contenteditable="true">Place your bets: Is the sentence correct?</h2>
+        </div>
+    </div>
+
+    <!-- Set-up Page -->
+    <div id="page-setup" class="page">
+        <h2>Game Set-up</h2>
+        <div class="setup-grid">
+            <div class="setup-section">
+                <h3>Manual / Block Import</h3>
+                <p>Type or paste your sentences here. Use the format: <br><code>Sentence | Correct? (true/false) | Correction (if false)</code></p>
+                <textarea id="manual-input" rows="8" placeholder="E.g. She don't like apples. | false | She doesn't like apples.&#10;They are happy. | true |"></textarea>
+                <button class="btn" style="width: 100%; margin-bottom: 0;" onclick="showSaveModal()">💾 Save / Download Question Set</button>
+            </div>
+            
+            <div class="setup-section">
+                <h3>Demo Mode</h3>
+                <p>Load a pre-made set of A2-level questions to test the app instantly.</p>
+                <button class="btn btn-gold" onclick="loadDemoData()">Load A2 Demo Data</button>
+                <hr style="margin: 1.5rem 0; border-color: var(--text-muted);">
+                <h3>AI Auto-Generated Prompts</h3>
+                <p>Requires API Key. Populates the text box for your review.</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div><label>Level:</label><select id="ai-level"><option>A1</option><option selected>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></div>
+                    <div><label>Questions:</label><input type="number" id="ai-count" value="10" min="1" max="50"></div>
+                    <div style="grid-column: span 2;"><label>Topic:</label><input type="text" id="ai-topic" placeholder="Optional topic"></div>
+                    <div style="grid-column: span 2;"><label>AI Model:</label><input type="text" id="ai-model" value="gemini-3.5-flash"></div>
+                    <div style="grid-column: span 2;"><label>API Key:</label><input type="password" id="ai-api" placeholder="Enter API Key"></div>
+                </div>
+                <button class="btn" id="btn-generate-ai" onclick="generateAI()">Generate with AI</button>
+            </div>
+        </div>
+
+        <div class="play-game-bar">
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">Review your questions in the text box above, then click below when you're ready to start!</p>
+            <button class="btn btn-green" style="font-size: 2rem; padding: 1.5rem 3rem; width: 100%; max-width: 600px;" onclick="playGame()">▶ PLAY GAME</button>
+        </div>
+    </div>
+
+    <!-- How to Play Page -->
+    <div id="page-how" class="page">
+        <h2>How to Play Grammar Auction</h2>
+        <div class="setup-section">
+            <ul>
+                <li><strong>Objective:</strong> Teams start with a pot of cash ($1000). The goal is to finish with the most money.</li>
+                <li><strong>The Auction:</strong> A sentence is displayed on the board. Teams discuss whether it is <strong>Correct</strong> or <strong>Incorrect</strong>.</li>
+                <li><strong>Betting:</strong> Teams secretly write down their guess and bet amount. 
+                    <ul>
+                        <li>Minimum bet is $10.</li>
+                        <li>Maximum bet is $50 (until the final question, where limits are lifted!).</li>
+                    </ul>
+                </li>
+                <li><strong>The Reveal & Payouts:</strong>
+                    <ul>
+                        <li>If the sentence is <strong>Correct</strong>: Teams who guessed Correct win their bet. Teams who guessed Incorrect lose it.</li>
+                        <li>If the sentence is <strong>Incorrect</strong>:
+                            <ul>
+                                <li>Teams who guessed Incorrect <strong>win</strong> their stake instantly. They can <strong>double their winnings</strong> if they successfully write the correct sentence.</li>
+                                <li>Teams who guessed Correct have their stake <strong>deducted and frozen</strong>. If they successfully write the correct sentence, their money is rescued (returned). If they fail, it remains lost.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li><strong>Banker:</strong> The host can use the "+$50" button to bail out teams that hit $0.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Game Page -->
+    <div id="page-game" class="page">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>Game Board</h2>
+            <div>
+                <span id="question-counter" style="font-size: 1.5rem; margin: 0 1rem; font-weight: bold;">0 / 0</span>
+            </div>
+        </div>
+
+        <div class="sentence-display">
+            <div id="final-warning" class="final-warning">⚠ FINAL QUESTION! MAXIMUM BET LIMITS LIFTED! ⚠</div>
+            <div id="game-sentence" class="sentence-text">Please load questions in the Set-up tab.</div>
+            
+            <div id="game-result" class="result-text"></div>
+            <div id="game-correction" class="correction-text"></div>
+            
+            <div style="margin-top: 2rem;">
+                <button class="btn btn-gold" style="font-size: 1.5rem; width: 100%; max-width: 600px;" id="main-action-btn" onclick="handleMainAction()">Lock Bets & Reveal Answer</button>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3>Teams & Bets</h3>
+            <div>
+                <button class="btn" style="padding: 0.5rem 1rem; font-size: 1rem;" onclick="addTeam()">+ Add Team</button>
+                <button class="btn btn-red" style="padding: 0.5rem 1rem; font-size: 1rem;" onclick="removeTeam()">- Remove Team</button>
+            </div>
+        </div>
+        
+        <div class="teams-container" id="teams-container">
+            <!-- Teams injected here -->
+        </div>
+    </div>
+
+    <!-- Podium Page -->
+    <div id="page-podium" class="page">
+        <h2 id="podium-title" style="text-align: center; font-size: 3.5rem; margin-bottom: 2rem;">Calculating Results...</h2>
+        
+        <div class="podium-container" id="podium-display" style="display: none;">
+            <div class="podium-place podium-2">
+                <div class="podium-name" id="pod-2-name">Team 2</div>
+                <div class="podium-score" id="pod-2-score">$0</div>
+                <div style="font-size: 3rem; margin-top: 1rem;">2nd</div>
+            </div>
+            <div class="podium-place podium-1">
+                <div class="trophy">🏆</div>
+                <div class="podium-name" id="pod-1-name">Team 1</div>
+                <div class="podium-score" id="pod-1-score">$0</div>
+                <div style="font-size: 3rem; margin-top: 1rem;">1st</div>
+            </div>
+            <div class="podium-place podium-3">
+                <div class="podium-name" id="pod-3-name">Team 3</div>
+                <div class="podium-score" id="pod-3-score">$0</div>
+                <div style="font-size: 3rem; margin-top: 1rem;">3rd</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 3rem;">
+            <button class="btn btn-red" onclick="location.reload()">Finish Game (Start Over)</button>
+        </div>
+    </div>
+
+    <!-- Save Modal -->
+    <div class="modal" id="save-modal">
+        <div class="modal-content">
+            <h3>Save Game File</h3>
+            <p>Enter a name for your file:</p>
+            <input type="text" id="save-filename" value="grammar_auction_set">
+            <button class="btn btn-gold" onclick="downloadData()">Download .txt</button>
+            <button class="btn" onclick="closeSaveModal()">Cancel</button>
+        </div>
+    </div>
+
+    <footer>
+        © 2026 Martin Allen. All rights reserved. Free for classroom use; duplication or distribution of the source code is prohibited.
+    </footer>
+
+    <script>
+        // --- State Management ---
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let soundEnabled = true;
+        let audioCtx = null;
+        
+        let phase = 'betting'; 
+        
+        // Ensured default values so nothing fails on startup
+        let teams = [
+            { name: "Team 1", score: 1000, guess: null, betAmount: 0 },
+            { name: "Team 2", score: 1000, guess: null, betAmount: 0 },
+            { name: "Team 3", score: 1000, guess: null, betAmount: 0 }
+        ];
+
+        // --- Navigation Logic ---
+        function navigate(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.nav-links button').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active');
+            let navId = 'nav-' + pageId.split('-')[1];
+            if(document.getElementById(navId)) document.getElementById(navId).classList.add('active');
+
+            if (pageId === 'page-game' && questions.length > 0 && phase === 'betting') updateGameUI();
+        }
+
+        // --- Setup Logic ---
+        function loadDemoData() {
+            const demoText = `She don't like apples. | false | She doesn't like apples.
+I have visited London last year. | false | I visited London last year.
+They are playing football right now. | true | 
+He is taller than his brother. | true | 
+We goes to school by bus. | false | We go to school by bus.`;
+            document.getElementById('manual-input').value = demoText;
+        }
+
+        async function generateAI() {
+            const apiKey = document.getElementById('ai-api').value.trim();
+            const modelName = document.getElementById('ai-model').value || 'gemini-3.5-flash';
+            const level = document.getElementById('ai-level').value;
+            const count = document.getElementById('ai-count').value;
+            const topic = document.getElementById('ai-topic').value;
+
+            if (!apiKey) return alert("Please enter a valid API Key.");
+            
+            try { localStorage.setItem('grammar_ai_api', apiKey); } catch(e) {}
+
+            const prompt = `Generate exactly ${count} English sentences suitable for a CEFR ${level} language learner. ${topic ? 'Topic: ' + topic + '.' : ''}
+Some sentences MUST be grammatically correct, and some MUST contain exactly one grammatical error.
+Output ONLY in this exact pipe-separated format:
+Sentence | Correct? (true/false) | Correction (leave empty if true)`;
+
+            const btn = document.getElementById('btn-generate-ai');
+            btn.innerText = "Generating..."; btn.disabled = true;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error.message);
+                
+                let text = data.candidates[0].content.parts[0].text.replace(/```/g, '').trim();
+                document.getElementById('manual-input').value = text;
+            } catch (e) {
+                alert("AI Error: " + e.message);
+            } finally {
+                btn.innerText = "Generate with AI"; btn.disabled = false;
+            }
+        }
+
+        function playGame() {
+            const text = document.getElementById('manual-input').value;
+            if(!text.trim()) return alert("Please enter or generate some questions first.");
+            
+            questions = text.split('\n').filter(line => line.trim() !== '').map(line => {
+                const parts = line.split('|').map(p => p.trim());
+                return {
+                    sentence: parts[0] || "",
+                    isCorrect: parts[1] ? parts[1].toLowerCase() === 'true' : false,
+                    correction: parts[2] || ""
+                };
+            });
+            
+            currentQuestionIndex = 0;
+            phase = 'betting';
+            teams.forEach(t => { t.score = 1000; resetTeamRoundState(t); });
+            navigate('page-game');
+        }
+
+        // --- Sound Utilities (Safely initialized to prevent crashes) ---
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+            else document.exitFullscreen();
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('btn-sound').innerText = soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playBeep(frequency, type, duration, vol) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return; // Fail gracefully if browser blocks audio
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.type = type; oscillator.frequency.value = frequency;
+            gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
+            oscillator.start(); oscillator.stop(audioCtx.currentTime + duration);
+        }
+        
+        function playSound(type) {
+            if (type === 'correct') { playBeep(523.25, 'sine', 0.1, 0.5); setTimeout(() => playBeep(659.25, 'sine', 0.3, 0.5), 100); } 
+            else if (type === 'incorrect') { playBeep(200, 'sawtooth', 0.4, 0.5); setTimeout(() => playBeep(150, 'sawtooth', 0.4, 0.5), 150); }
+            else if (type === 'fanfare') { [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => setTimeout(() => playBeep(freq, 'square', 0.2, 0.3), i * 150)); setTimeout(() => playBeep(1046.50, 'square', 0.6, 0.3), 600); }
+        }
+
+        // --- Core Game Logic ---
+        function resetTeamRoundState(team) {
+            team.guess = null;
+            team.betAmount = 0; 
+            team.roundStatus = 'pending'; 
+        }
+
+        function saveCurrentBets() {
+            if (phase !== 'betting') return;
+            teams.forEach((t, i) => {
+                const betInput = document.getElementById(`bet-${i}`);
+                if (betInput && !isNaN(parseInt(betInput.value))) {
+                    t.betAmount = parseInt(betInput.value);
+                }
+            });
+        }
+
+        function updateGameUI() {
+            const q = questions[currentQuestionIndex];
+            const isFinal = currentQuestionIndex === questions.length - 1;
+
+            document.getElementById('game-sentence').innerText = q.sentence;
+            document.getElementById('game-result').style.display = 'none';
+            document.getElementById('game-correction').style.display = 'none';
+            document.getElementById('question-counter').innerText = `${currentQuestionIndex + 1} / ${questions.length}`;
+            document.getElementById('final-warning').style.display = isFinal ? 'block' : 'none';
+            
+            document.getElementById('main-action-btn').innerText = "Lock Bets & Reveal Answer";
+            
+            renderTeams();
+        }
+
+        function setGuess(teamIndex, guessVal) {
+            if(phase !== 'betting') return;
+            saveCurrentBets(); // Capture amounts typed BEFORE re-rendering
+            teams[teamIndex].guess = guessVal;
+            renderTeams();
+        }
+
+        function handleMainAction() {
+            const q = questions[currentQuestionIndex];
+            const isFinal = currentQuestionIndex === questions.length - 1;
+            const resEl = document.getElementById('game-result');
+            const corrEl = document.getElementById('game-correction');
+            const btn = document.getElementById('main-action-btn');
+
+            if (phase === 'betting') {
+                saveCurrentBets(); // Final save
+                
+                for (let i = 0; i < teams.length; i++) {
+                    const t = teams[i];
+                    const allowedMax = isFinal ? t.score : Math.min(50, t.score);
+                    const allowedMin = Math.min(10, t.score);
+                    
+                    if (t.guess === null) return alert(`${t.name} has not selected Correct or Incorrect!`);
+                    if (isNaN(t.betAmount) || t.betAmount < allowedMin || t.betAmount > allowedMax) {
+                        return alert(`${t.name} must place a bet between $${allowedMin} and $${allowedMax}.`);
+                    }
+                }
+
+                resEl.style.display = 'block';
+                
+                if (q.isCorrect) {
+                    resEl.innerText = "✅ The sentence is CORRECT!";
+                    resEl.style.color = "var(--correct-green)";
+                    playSound('correct');
+                    
+                    teams.forEach(t => {
+                        if (t.guess === true) {
+                            t.score += t.betAmount; t.roundStatus = 'won';
+                        } else {
+                            t.score -= t.betAmount; t.roundStatus = 'lost';
+                        }
+                    });
+                    
+                    phase = 'round_over';
+                    btn.innerText = isFinal ? "Go to Leaderboard" : "Next Question";
+                } else {
+                    resEl.innerText = "❌ The sentence is INCORRECT!";
+                    resEl.style.color = "var(--incorrect-red)";
+                    playSound('incorrect');
+                    
+                    teams.forEach(t => {
+                        if (t.guess === false) {
+                            t.score += t.betAmount; 
+                            t.roundStatus = 'bonus_eligible';
+                        } else {
+                            t.score -= t.betAmount; 
+                            t.roundStatus = 'frozen_eligible'; 
+                        }
+                    });
+
+                    phase = 'reveal_1';
+                    btn.innerText = "Reveal Correction & Award Bonuses";
+                }
+
+            } else if (phase === 'reveal_1') {
+                corrEl.innerText = "Correction: " + q.correction;
+                corrEl.style.display = 'block';
+                phase = 'reveal_2';
+                btn.innerText = "Finish Phase & Move On";
+            
+            } else if (phase === 'reveal_2') {
+                const unresolved = teams.find(t => t.roundStatus === 'bonus_eligible' || t.roundStatus === 'frozen_eligible');
+                if (unresolved) {
+                    if(!confirm("You haven't marked bonuses/rescues for all eligible teams. Unmarked teams will NOT receive bonuses/rescues. Continue?")) return;
+                    
+                    teams.forEach(t => {
+                        if (t.roundStatus === 'frozen_eligible') t.roundStatus = 'resolved_lost_rescue'; 
+                        else if (t.roundStatus === 'bonus_eligible') t.roundStatus = 'resolved_lost';
+                    });
+                }
+                
+                phase = 'round_over';
+                btn.innerText = isFinal ? "Go to Leaderboard" : "Next Question";
+
+            } else if (phase === 'round_over') {
+                if (isFinal) {
+                    navigate('page-podium');
+                    calculatePodium();
+                } else {
+                    currentQuestionIndex++;
+                    phase = 'betting';
+                    teams.forEach(resetTeamRoundState);
+                    updateGameUI();
+                    return;
+                }
+            }
+            renderTeams();
+        }
+
+        // --- In-Game Team UI & Banker Logic ---
+        function bankerAdjust(index, amount) {
+            saveCurrentBets(); 
+            teams[index].score += amount;
+            renderTeams();
+        }
+
+        function resolveBonus(index, didSucceed) {
+            const t = teams[index];
+            if (t.roundStatus === 'bonus_eligible') {
+                if (didSucceed) {
+                    t.score += t.betAmount; 
+                    t.roundStatus = 'resolved_won';
+                    playSound('correct');
+                } else {
+                    t.roundStatus = 'resolved_lost'; 
+                }
+            } else if (t.roundStatus === 'frozen_eligible') {
+                if (didSucceed) {
+                    t.score += t.betAmount; 
+                    t.roundStatus = 'resolved_won_rescue';
+                    playSound('correct');
+                } else {
+                    t.roundStatus = 'resolved_lost_rescue'; 
+                }
+            }
+            renderTeams();
+        }
+
+        function renderTeams() {
+            const container = document.getElementById('teams-container');
+            container.innerHTML = '';
+            
+            const isFinal = (currentQuestionIndex === questions.length - 1) && (questions.length > 0);
+
+            teams.forEach((team, index) => {
+                const maxBet = isFinal ? team.score : Math.min(50, team.score);
+                const minBet = Math.min(10, team.score);
+                let uiContent = '';
+                let cardClass = 'team-card';
+
+                if (phase === 'betting') {
+                    // Proper initialization check to prevent undefined
+                    const displayBet = (team.betAmount && team.betAmount > 0) ? team.betAmount : minBet;
+                    
+                    uiContent = `
+                        <div class="guess-toggle">
+                            <button class="${team.guess === true ? 'active-true' : ''}" onclick="setGuess(${index}, true)">Correct</button>
+                            <button class="${team.guess === false ? 'active-false' : ''}" onclick="setGuess(${index}, false)">Incorrect</button>
+                        </div>
+                        <div class="bet-input-group">
+                            <label>Bet ($${minBet} - $${maxBet}):</label>
+                            <input type="number" id="bet-${index}" min="${minBet}" max="${maxBet}" value="${displayBet}" oninput="teams[${index}].betAmount = parseInt(this.value) || 0">
+                        </div>
+                    `;
+                } else {
+                    if (team.roundStatus === 'won') uiContent = `<div style="font-size: 1.5rem; color: var(--correct-green); font-weight: bold; margin-top:1rem;">Won $${team.betAmount}</div>`;
+                    else if (team.roundStatus === 'lost') uiContent = `<div style="font-size: 1.5rem; color: var(--incorrect-red); font-weight: bold; margin-top:1rem;">Lost $${team.betAmount}</div>`;
+                    else if (team.roundStatus === 'bonus_eligible') {
+                        cardClass += ' highlight-bonus';
+                        uiContent = `<div style="font-size: 1.2rem; color: var(--correct-green); font-weight: bold; margin-top:0.5rem;">Won $${team.betAmount}!</div>`;
+                        if (phase === 'reveal_2') {
+                            uiContent += `
+                                <div style="margin-top: 1rem; border-top: 1px dashed #555; padding-top: 0.5rem;">
+                                    <p style="color: var(--accent-gold); font-size: 0.9rem; margin-bottom: 0.5rem;">Bonus Available: +$${team.betAmount}</p>
+                                    <button class="btn btn-green btn-small" style="width:100%; margin-bottom:0.3rem;" onclick="resolveBonus(${index}, true)">✅ Good Correction (+$${team.betAmount})</button>
+                                    <button class="btn btn-red btn-small" style="width:100%;" onclick="resolveBonus(${index}, false)">❌ Missed (+0)</button>
+                                </div>
+                            `;
+                        } else {
+                            uiContent += `<div style="margin-top:0.5rem; color:var(--accent-gold); font-size:0.9rem;">Write correction for Bonus!</div>`;
+                        }
+                    } else if (team.roundStatus === 'frozen_eligible') {
+                        cardClass += ' highlight-frozen';
+                        uiContent = `<div style="font-size: 1.2rem; color: var(--incorrect-red); font-weight: bold; margin-top:0.5rem;">Lost $${team.betAmount} (Frozen)</div>`;
+                        if (phase === 'reveal_2') {
+                            uiContent += `
+                                <div style="margin-top: 1rem; border-top: 1px dashed #555; padding-top: 0.5rem;">
+                                    <p style="color: var(--frozen-blue); font-size: 0.9rem; margin-bottom: 0.5rem;">Rescue Stake?</p>
+                                    <button class="btn btn-green btn-small" style="width:100%; margin-bottom:0.3rem;" onclick="resolveBonus(${index}, true)">✅ Good Correction (Get $${team.betAmount} back)</button>
+                                    <button class="btn btn-red btn-small" style="width:100%;" onclick="resolveBonus(${index}, false)">❌ Missed (Stay -$${team.betAmount})</button>
+                                </div>
+                            `;
+                        } else {
+                            uiContent += `<div style="margin-top:0.5rem; color:var(--frozen-blue); font-size:0.9rem;">Write correction to get stake back!</div>`;
+                        }
+                    } else if (team.roundStatus === 'resolved_won') {
+                        uiContent = `<div style="font-size: 1.2rem; color: var(--correct-green); font-weight: bold; margin-top:1rem;">Bonus Won! (+$${team.betAmount})</div>`;
+                    } else if (team.roundStatus === 'resolved_lost') {
+                        uiContent = `<div style="font-size: 1.2rem; color: var(--accent-gold); font-weight: bold; margin-top:1rem;">Correction Missed (No bonus)</div>`;
+                    } else if (team.roundStatus === 'resolved_won_rescue') {
+                        uiContent = `<div style="font-size: 1.2rem; color: var(--frozen-blue); font-weight: bold; margin-top:1rem;">Correction Accepted (+$${team.betAmount} back)</div>`;
+                    } else if (team.roundStatus === 'resolved_lost_rescue') {
+                        uiContent = `<div style="font-size: 1.2rem; color: var(--incorrect-red); font-weight: bold; margin-top:1rem;">Correction Missed (Lost $${team.betAmount})</div>`;
+                    }
+                }
+
+                const card = document.createElement('div');
+                card.className = cardClass;
+                card.innerHTML = `
+                    <input type="text" class="team-name" value="${team.name}" onchange="teams[${index}].name = this.value" ${phase !== 'betting' ? 'disabled' : ''}>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: white;">
+                        <span style="color: var(--correct-green);">$</span>${team.score}
+                    </div>
+                    <button class="btn-small btn-gold" style="position: absolute; top: 10px; right: 10px; border:none; cursor:pointer;" onclick="bankerAdjust(${index}, 50)" title="Banker Bailout">💰 +$50</button>
+                    ${uiContent}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addTeam() {
+            saveCurrentBets();
+            teams.push({ name: `Team ${teams.length + 1}`, score: 1000, guess: null, betAmount: 0 });
+            renderTeams();
+        }
+
+        function removeTeam() {
+            if (teams.length > 1) { 
+                saveCurrentBets();
+                teams.pop(); 
+                renderTeams(); 
+            }
+        }
+
+        // --- Save / Load / Podium Utils ---
+        function showSaveModal() { document.getElementById('save-modal').style.display = 'flex'; }
+        function closeSaveModal() { document.getElementById('save-modal').style.display = 'none'; }
+        function downloadData() {
+            const blob = new Blob([document.getElementById('manual-input').value], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (document.getElementById('save-filename').value || 'grammar_auction') + '.txt';
+            a.click(); closeSaveModal();
+        }
+
+        function calculatePodium() {
+            document.getElementById('podium-display').style.display = 'flex';
+            playSound('fanfare');
+            
+            const sorted = [...teams].sort((a, b) => b.score - a.score);
+            const p1 = sorted[0] || {name: '-', score: 0};
+            const p2 = sorted[1] || {name: '-', score: 0};
+            
+            const titleEl = document.getElementById('podium-title');
+            if (teams.length > 1 && p1.score === p2.score) {
+                titleEl.innerText = "It's a tie!";
+            } else {
+                titleEl.innerText = "We have a winner!";
+            }
+
+            [1, 2, 3].forEach(i => {
+                const t = sorted[i-1] || {name: '-', score: 0};
+                document.getElementById(`pod-${i}-name`).innerText = t.name;
+                document.getElementById(`pod-${i}-score`).innerText = `$${t.score}`;
+            });
+        }
+
+        window.onload = () => {
+            try {
+                if(localStorage.getItem('grammar_ai_api')) {
+                    document.getElementById('ai-api').value = localStorage.getItem('grammar_ai_api');
+                }
+            } catch(e) {
+                console.warn("Local storage access blocked by browser settings.");
+            }
+            renderTeams();
+        };
+    </script>
+</body>
+</html>
