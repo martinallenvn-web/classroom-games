@@ -170,12 +170,30 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
+        .grid-3-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
         .instructions-box {
             background: rgba(0,0,0,0.3);
             padding: 15px;
             border-left: 4px solid var(--hex-border);
             border-radius: 4px;
             font-size: 0.9rem;
+        }
+        .ai-box {
+            background: rgba(138, 43, 226, 0.1);
+            border: 1px solid var(--action-color, #8a2be2);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .ai-caveat {
+            font-size: 0.8rem;
+            color: #ffb74d;
+            margin-top: 10px;
+            font-style: italic;
         }
 
         /* --- Game Screen Specifics --- */
@@ -339,48 +357,35 @@
     <div id="landing-screen" class="app-screen active-screen">
         <div class="landing-graphic-container">
             <svg width="100%" style="max-width: 630px;" viewBox="0 0 630 200">
-                <!-- Row 1: BRIDGE (6 Hexagons) Perfectly mathematically centered (translate X = 48.5) -->
+                <!-- Row 1: BRIDGE (6 Hexagons) -->
                 <g transform="translate(48.5, 10)">
-                    <!-- B -->
                     <polygon points="50,0 93.3,25 93.3,75 50,100 6.7,75 6.7,25" fill="#ffca28" stroke="#ffffff" stroke-width="3"/>
                     <text x="50" y="50" class="landing-hex-text" fill="#000000">B</text>
-                    <!-- R -->
                     <polygon points="136.6,0 179.9,25 179.9,75 136.6,100 93.3,75 93.3,25" fill="#1a237e" stroke="#ffca28" stroke-width="3"/>
                     <text x="136.6" y="50" class="landing-hex-text" fill="#ffffff">R</text>
-                    <!-- I -->
                     <polygon points="223.2,0 266.5,25 266.5,75 223.2,100 179.9,75 179.9,25" fill="#f44336" stroke="#ffffff" stroke-width="3"/>
                     <text x="223.2" y="50" class="landing-hex-text" fill="#ffffff">I</text>
-                    <!-- D -->
                     <polygon points="309.8,0 353.1,25 353.1,75 309.8,100 266.5,75 266.5,25" fill="#4caf50" stroke="#ffca28" stroke-width="3"/>
                     <text x="309.8" y="50" class="landing-hex-text" fill="#ffffff">D</text>
-                    <!-- G -->
                     <polygon points="396.4,0 439.7,25 439.7,75 396.4,100 353.1,75 353.1,25" fill="#ffffff" stroke="#1a237e" stroke-width="3"/>
                     <text x="396.4" y="50" class="landing-hex-text" fill="#000000">G</text>
-                    <!-- E -->
                     <polygon points="483,0 526.3,25 526.3,75 483,100 439.7,75 439.7,25" fill="#ffca28" stroke="#ffffff" stroke-width="3"/>
                     <text x="483" y="50" class="landing-hex-text" fill="#000000">E</text>
                 </g>
-                <!-- Row 2: BUILDER (7 Hexagons) Perfectly mathematically centered (translate X = 5.2) -->
+                <!-- Row 2: BUILDER (7 Hexagons) -->
                 <g transform="translate(5.2, 85)">
-                    <!-- B -->
                     <polygon points="50,0 93.3,25 93.3,75 50,100 6.7,75 6.7,25" fill="#1a237e" stroke="#ffca28" stroke-width="3"/>
                     <text x="50" y="50" class="landing-hex-text" fill="#ffffff">B</text>
-                    <!-- U -->
                     <polygon points="136.6,0 179.9,25 179.9,75 136.6,100 93.3,75 93.3,25" fill="#f44336" stroke="#ffffff" stroke-width="3"/>
                     <text x="136.6" y="50" class="landing-hex-text" fill="#ffffff">U</text>
-                    <!-- I (Changed to Green) -->
                     <polygon points="223.2,0 266.5,25 266.5,75 223.2,100 179.9,75 179.9,25" fill="#4caf50" stroke="#ffca28" stroke-width="3"/>
                     <text x="223.2" y="50" class="landing-hex-text" fill="#ffffff">I</text>
-                    <!-- L (Changed to White) -->
                     <polygon points="309.8,0 353.1,25 353.1,75 309.8,100 266.5,75 266.5,25" fill="#ffffff" stroke="#1a237e" stroke-width="3"/>
                     <text x="309.8" y="50" class="landing-hex-text" fill="#000000">L</text>
-                    <!-- D -->
                     <polygon points="396.4,0 439.7,25 439.7,75 396.4,100 353.1,75 353.1,25" fill="#ffca28" stroke="#ffffff" stroke-width="3"/>
                     <text x="396.4" y="50" class="landing-hex-text" fill="#000000">D</text>
-                    <!-- E -->
                     <polygon points="483,0 526.3,25 526.3,75 483,100 439.7,75 439.7,25" fill="#1a237e" stroke="#ffca28" stroke-width="3"/>
                     <text x="483" y="50" class="landing-hex-text" fill="#ffffff">E</text>
-                    <!-- R -->
                     <polygon points="569.6,0 612.9,25 612.9,75 569.6,100 526.3,75 526.3,25" fill="#f44336" stroke="#ffffff" stroke-width="3"/>
                     <text x="569.6" y="50" class="landing-hex-text" fill="#ffffff">R</text>
                 </g>
@@ -420,8 +425,8 @@
 
                     <label>Board Display (Hexagons):</label>
                     <select id="setup-sel-display">
-                        <option value="letters" selected>Initial Letters (Provide Clue)</option>
-                        <option value="emojis">Random Emojis (Blind Choice)</option>
+                        <option value="letters" selected>Display Letters (Clue)</option>
+                        <option value="emojis">Display Emojis (Blind)</option>
                     </select>
 
                     <div id="setup-solo-settings" class="d-none" style="margin-top: 10px;">
@@ -439,18 +444,61 @@
                         Answer correctly to claim a hex. Incorrect answers pass the turn and reset the hex with a new question!
                     </div>
                     <div style="display: flex; gap: 10px; margin-top: 15px;">
-                        <button id="btn-setup-ai" class="action">AI Generation Instructions</button>
+                        <button id="btn-setup-ai" class="action">AI Generation Prompt Instructions</button>
                     </div>
                 </div>
             </div>
 
             <hr style="border-color: #30363d; margin: 20px 0;">
 
-            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <!-- Auto-Generate AI Questions Direct Generator Box -->
+            <div class="ai-box">
+                <h2 style="color: var(--hex-border); margin-bottom: 10px;">Auto-Generate Questions with AI API</h2>
+                <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 15px;">
+                    Generate questions automatically using Google Gemini! Enter your API key below. 
+                    Need a key? Get a free API key at <a href="https://aistudio.google.com/" target="_blank" style="color: var(--hex-border);">Google AI Studio (aistudio.google.com)</a>.
+                </p>
+
+                <div class="grid-3-col">
+                    <div>
+                        <label style="font-size: 0.85rem;">Target CEFR Level:</label>
+                        <select id="ai-gen-level">
+                            <option value="A1">A1 (Beginner)</option>
+                            <option value="A2">A2 (Elementary)</option>
+                            <option value="B1">B1 (Intermediate)</option>
+                            <option value="B2" selected>B2 (Upper-Intermediate)</option>
+                            <option value="C1">C1 (Advanced)</option>
+                            <option value="C2">C2 (Proficient)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.85rem;">Number of Questions:</label>
+                        <input type="number" id="ai-gen-count" value="75" min="10" max="100">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.85rem;">AI Model Input:</label>
+                        <input type="text" id="ai-gen-model" value="gemini-3.5-flash" placeholder="e.g. gemini-3.5-flash">
+                    </div>
+                </div>
+
+                <label style="font-size: 0.85rem; margin-top: 5px;">Language Focus / Topic (Optional):</label>
+                <input type="text" id="ai-gen-topic" placeholder="e.g., Phrasal Verbs, Business English, Environment, Travel...">
+
+                <label style="font-size: 0.85rem;">Gemini API Key:</label>
+                <input type="password" id="ai-gen-key" placeholder="Paste AI Studio API key here...">
+
+                <button id="btn-ai-direct-generate" class="action" style="font-size: 1.1rem; padding: 12px; margin-top: 5px;">Generate Question Set Now</button>
+                <p class="ai-caveat">Note: This AI option may not be available at times of heavy traffic.</p>
+            </div>
+
+            <hr style="border-color: #30363d; margin: 20px 0;">
+
+            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px;">
                 <div>
                     <h2 style="display: inline-block;">Question Set</h2>
                     <button id="btn-setup-clear" class="secondary" style="width: auto; padding: 4px 10px; margin-left: 10px; font-size: 0.8rem;">Clear All</button>
                     <button id="btn-setup-load-defaults" class="secondary" style="width: auto; padding: 4px 10px; margin-left: 5px; font-size: 0.8rem;">Load Default Questions</button>
+                    <button id="btn-setup-download-q" class="action" style="width: auto; padding: 4px 10px; margin-left: 5px; font-size: 0.8rem;">Download Question Set (.txt)</button>
                 </div>
                 <span style="font-size: 0.9rem; color: #aaa;">Format: <code>Symbol | Question | Answer</code></span>
             </div>
@@ -540,10 +588,10 @@
     <!-- AI INSTRUCTIONS MODAL -->
     <div id="modal-ai" class="modal-overlay">
         <div class="modal-content" style="text-align: left;">
-            <h2 style="color: var(--hex-border); margin-bottom: 20px; text-align: center;">Generate Questions with AI</h2>
+            <h2 style="color: var(--hex-border); margin-bottom: 20px; text-align: center;">Generate Questions with AI Prompt</h2>
             <p>You can easily generate custom question sets using ChatGPT, Gemini, or Claude. Copy the prompt below, paste it into your AI of choice, and then paste the resulting text directly into the "Question Set" box in Bridgebuilder.</p>
             
-            <textarea id="ai-prompt-text" class="code-font" rows="8" readonly>Act as an expert trivia game generator. I need a set of 75 trivia questions for a game called Bridgebuilder (this provides extra questions in case teams answer incorrectly).
+            <textarea id="ai-prompt-text" class="code-font" rows="10" readonly>Act as an expert trivia game generator. I need a set of 75 trivia questions for a game called Bridgebuilder (this provides extra questions in case teams answer incorrectly and a new question needs to be generated).
 
 Please output the questions using EXACTLY this format, one question per line, with no extra text, markdown formatting, or numbering:
 Symbol | Question | Answer
@@ -731,7 +779,7 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             mode: '2', 
             cols: 5,
             rows: 4,
-            displayMode: 'letters', // 'letters' or 'emojis'
+            displayMode: 'letters', 
             teams: [],
             currentTeamIndex: 0,
             questions: [], 
@@ -748,6 +796,12 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             let qInput = getEl('setup-question-input');
             if (qInput && qInput.value.trim() === '') {
                 qInput.value = defaultQuestions;
+            }
+            // Auto pickup API Key if saved previously
+            let keyInput = getEl('ai-gen-key');
+            let savedKey = localStorage.getItem('bridgebuilder_gemini_key');
+            if (keyInput && savedKey) {
+                keyInput.value = savedKey;
             }
         };
 
@@ -784,8 +838,14 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
                 if (qInput) qInput.value = defaultQuestions;
             });
 
+            let btnSDownloadQ = getEl('btn-setup-download-q');
+            if (btnSDownloadQ) btnSDownloadQ.addEventListener('click', downloadQuestionSet);
+
             let btnSAI = getEl('btn-setup-ai');
             if (btnSAI) btnSAI.addEventListener('click', () => openModal('modal-ai'));
+
+            let btnAIDirectGen = getEl('btn-ai-direct-generate');
+            if (btnAIDirectGen) btnAIDirectGen.addEventListener('click', generateQuestionsViaAPI);
 
             // Game Controls
             let btnGFull = getEl('btn-game-fullscreen');
@@ -896,6 +956,96 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             
             closeAllModals();
             showScreen('setup-screen');
+        }
+
+        /* --- DOWNLOAD QUESTION SET --- */
+        function downloadQuestionSet() {
+            let qInput = getEl('setup-question-input');
+            if (!qInput || qInput.value.trim() === '') {
+                alert("Question set is empty! Nothing to download.");
+                return;
+            }
+            let textContent = qInput.value;
+            let blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = "bridgebuilder-questions.txt";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        /* --- AUTO-GENERATE VIA GEMINI API --- */
+        async function generateQuestionsViaAPI() {
+            let keyEl = getEl('ai-gen-key');
+            let levelEl = getEl('ai-gen-level');
+            let countEl = getEl('ai-gen-count');
+            let topicEl = getEl('ai-gen-topic');
+            let modelEl = getEl('ai-gen-model');
+            let btnGen = getEl('btn-ai-direct-generate');
+            let qInput = getEl('setup-question-input');
+
+            if (!keyEl || keyEl.value.trim() === '') {
+                alert("Please enter a valid Gemini API Key to auto-generate questions.");
+                return;
+            }
+
+            let apiKey = keyEl.value.trim();
+            localStorage.setItem('bridgebuilder_gemini_key', apiKey); // Auto pickup for future
+
+            let level = levelEl ? levelEl.value : "B2";
+            let count = countEl ? (parseInt(countEl.value) || 75) : 75;
+            let topic = topicEl ? topicEl.value.trim() : "";
+            let modelName = modelEl && modelEl.value.trim() !== '' ? modelEl.value.trim() : "gemini-3.5-flash";
+
+            let promptText = `Act as an expert English language teacher creating a trivia question set for English learners at ${level} CEFR level. ${topic ? 'Topic/Focus: ' + topic : ''}.
+Generate ${count} distinct trivia questions suitable for ${level} level English students.
+
+CRITICAL SYMBOL RULE: The Symbol must be a single uppercase string created by taking the exact first letter of every individual word in the Answer, in order, with no spaces. For a one-word answer, the Symbol is just that single word's first letter (e.g., Answer: 'Volga' -> Symbol: V). For multi-word answers, concatenate the first letter of each word (e.g., Answer: 'Indian Ocean' -> Symbol: IO; Answer: 'South America' -> Symbol: SA). Do not substitute chemical symbols, abbreviations, or any other letters.
+
+OUTPUT FORMAT:
+Output EXACTLY ${count} lines. Each line must be in this format with no additional text, markdown, numbering, or quotes:
+Symbol | Question | Answer`;
+
+            if (btnGen) {
+                btnGen.disabled = true;
+                btnGen.innerText = "Generating questions... Please wait...";
+            }
+
+            try {
+                let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptText }] }]
+                    })
+                });
+
+                if (!response.ok) {
+                    let errData = await response.json();
+                    throw new Error(errData.error ? errData.error.message : `HTTP error ${response.status}`);
+                }
+
+                let data = await response.json();
+                let generatedText = data.candidates[0].content.parts[0].text.trim();
+                
+                // Strip markdown code fences if model outputted them
+                generatedText = generatedText.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
+
+                if (qInput) {
+                    qInput.value = generatedText;
+                }
+
+                alert(`Successfully generated ${count} questions! Review them in the Question Set box below.`);
+
+            } catch (err) {
+                alert("API Generation Failed:\n" + err.message + "\n\nNote: This AI option may not be available at times of heavy traffic or if the model name is restricted.");
+            } finally {
+                if (btnGen) {
+                    btnGen.disabled = false;
+                    btnGen.innerText = "Generate Question Set Now";
+                }
+            }
         }
 
         /* --- SAVE GAME FEATURE --- */
@@ -1192,6 +1342,11 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             let hostSel = getEl('host-sel-display');
             if (!hostSel) return;
             state.displayMode = hostSel.value;
+            
+            // Also sync setup dropdown
+            let setupSelDisplay = getEl('setup-sel-display');
+            if (setupSelDisplay) setupSelDisplay.value = state.displayMode;
+
             refreshAllHexText();
         }
 
@@ -1199,7 +1354,7 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             for (let r = 0; r < state.rows; r++) {
                 for (let c = 0; c < state.cols; c++) {
                     let hex = state.grid[r][c];
-                    if (hex.owner === 0) { // Only update display text if it's neutral
+                    if (hex.owner === 0) {
                         let displayText = state.displayMode === 'emojis' ? hex.blindSymbol : hex.clueSymbol;
                         hex.textElement.textContent = displayText;
                         
