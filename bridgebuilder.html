@@ -145,6 +145,13 @@
             color: var(--hex-border);
             margin-bottom: 25px;
         }
+        .landing-hex-text { 
+            font-family: 'Arial', sans-serif; 
+            font-size: 42px; 
+            font-weight: bold; 
+            text-anchor: middle; 
+            dominant-baseline: central; 
+        }
 
         /* --- Setup Screen Specifics --- */
         #setup-screen {
@@ -347,8 +354,6 @@
             z-index: 1000;
             pointer-events: none;
         }
-
-        .landing-hex-text { font-family: 'Arial', sans-serif; font-size: 42px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
     </style>
 </head>
 <body>
@@ -357,7 +362,7 @@
     <div id="landing-screen" class="app-screen active-screen">
         <div class="landing-graphic-container">
             <svg width="100%" style="max-width: 630px;" viewBox="0 0 630 200">
-                <!-- Row 1: BRIDGE (6 Hexagons) -->
+                <!-- Row 1: BRIDGE (6 Hexagons) Perfectly mathematically centered (translate X = 48.5) -->
                 <g transform="translate(48.5, 10)">
                     <polygon points="50,0 93.3,25 93.3,75 50,100 6.7,75 6.7,25" fill="#ffca28" stroke="#ffffff" stroke-width="3"/>
                     <text x="50" y="50" class="landing-hex-text" fill="#000000">B</text>
@@ -372,7 +377,7 @@
                     <polygon points="483,0 526.3,25 526.3,75 483,100 439.7,75 439.7,25" fill="#ffca28" stroke="#ffffff" stroke-width="3"/>
                     <text x="483" y="50" class="landing-hex-text" fill="#000000">E</text>
                 </g>
-                <!-- Row 2: BUILDER (7 Hexagons) -->
+                <!-- Row 2: BUILDER (7 Hexagons) Perfectly mathematically centered (translate X = 5.2) -->
                 <g transform="translate(5.2, 85)">
                     <polygon points="50,0 93.3,25 93.3,75 50,100 6.7,75 6.7,25" fill="#1a237e" stroke="#ffca28" stroke-width="3"/>
                     <text x="50" y="50" class="landing-hex-text" fill="#ffffff">B</text>
@@ -500,10 +505,12 @@
                     <button id="btn-setup-load-defaults" class="secondary" style="width: auto; padding: 4px 10px; margin-left: 5px; font-size: 0.8rem;">Load Default Questions</button>
                     <button id="btn-setup-download-q" class="action" style="width: auto; padding: 4px 10px; margin-left: 5px; font-size: 0.8rem;">Download Question Set (.txt)</button>
                 </div>
-                <span style="font-size: 0.9rem; color: #aaa;">Format: <code>Symbol | Question | Answer</code></span>
             </div>
             
-            <textarea id="setup-question-input" rows="8"></textarea>
+            <p style="font-size: 0.95rem; color: #e6edf3; margin-top: 10px; margin-bottom: 5px;">Type or block-paste your own custom questions into the box below. Ensure each question is on a new line.</p>
+            <p style="font-size: 0.9rem; color: #ffca28; margin-bottom: 10px;">Format: <code>Initial(s) | Question | Answer</code> (initials will be replaced by emojis in blind mode)</p>
+            
+            <textarea id="setup-question-input" rows="8" placeholder="SA | What 'SA' is the continent where the Amazon Rainforest is located? | South America"></textarea>
             
             <div style="display: flex; gap: 15px; margin-top: 15px;">
                 <button id="btn-setup-back" class="secondary" style="font-size: 1.2rem; padding: 15px; flex: 1;">Back</button>
@@ -797,7 +804,6 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             if (qInput && qInput.value.trim() === '') {
                 qInput.value = defaultQuestions;
             }
-            // Auto pickup API Key if saved previously
             let keyInput = getEl('ai-gen-key');
             let savedKey = localStorage.getItem('bridgebuilder_gemini_key');
             if (keyInput && savedKey) {
@@ -991,7 +997,7 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             }
 
             let apiKey = keyEl.value.trim();
-            localStorage.setItem('bridgebuilder_gemini_key', apiKey); // Auto pickup for future
+            localStorage.setItem('bridgebuilder_gemini_key', apiKey); 
 
             let level = levelEl ? levelEl.value : "B2";
             let count = countEl ? (parseInt(countEl.value) || 75) : 75;
@@ -1029,7 +1035,6 @@ Symbol | Question | Answer`;
                 let data = await response.json();
                 let generatedText = data.candidates[0].content.parts[0].text.trim();
                 
-                // Strip markdown code fences if model outputted them
                 generatedText = generatedText.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
 
                 if (qInput) {
@@ -1136,11 +1141,9 @@ Symbol | Question | Answer`;
                 alert("Warning: You have fewer unique questions than hexagons on the board.");
             }
 
-            // Sync Host Display Selector
             let hostSelDisplay = getEl('host-sel-display');
             if (hostSelDisplay) hostSelDisplay.value = state.displayMode;
 
-            // Setup Teams mapping
             if (state.mode === '2') {
                 state.teams = [
                     { id: 1, name: TEAM_COLORS[1].name, color: TEAM_COLORS[1] },
@@ -1172,7 +1175,6 @@ Symbol | Question | Answer`;
             buildHUD();
             updateTurnHUD();
             
-            // Allow DOM to apply flex layouts before generating board
             setTimeout(() => {
                 generateBoard();
                 let tBox = getEl('turn-box');
@@ -1343,7 +1345,6 @@ Symbol | Question | Answer`;
             if (!hostSel) return;
             state.displayMode = hostSel.value;
             
-            // Also sync setup dropdown
             let setupSelDisplay = getEl('setup-sel-display');
             if (setupSelDisplay) setupSelDisplay.value = state.displayMode;
 
