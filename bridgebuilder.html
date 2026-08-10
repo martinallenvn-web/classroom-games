@@ -109,6 +109,7 @@
 
         .d-none { display: none !important; }
         .d-block { display: block !important; }
+        .d-inline-block { display: inline-block !important; }
 
         /* --- Landing Screen Specifics --- */
         #landing-screen {
@@ -417,10 +418,10 @@
                         <option value="7x6">7x6 (Epic - 42 Hexagons)</option>
                     </select>
 
-                    <label>Content Type:</label>
-                    <select id="setup-sel-content">
-                        <option value="letters">Letters (e.g. A, B, C)</option>
-                        <option value="icons" selected>Icons (Emojis/Symbols)</option>
+                    <label>Board Display (Hexagons):</label>
+                    <select id="setup-sel-display">
+                        <option value="letters" selected>Initial Letters (Provide Clue)</option>
+                        <option value="emojis">Random Emojis (Blind Choice)</option>
                     </select>
 
                     <div id="setup-solo-settings" class="d-none" style="margin-top: 10px;">
@@ -449,6 +450,7 @@
                 <div>
                     <h2 style="display: inline-block;">Question Set</h2>
                     <button id="btn-setup-clear" class="secondary" style="width: auto; padding: 4px 10px; margin-left: 10px; font-size: 0.8rem;">Clear All</button>
+                    <button id="btn-setup-load-defaults" class="secondary" style="width: auto; padding: 4px 10px; margin-left: 5px; font-size: 0.8rem;">Load Default Questions</button>
                 </div>
                 <span style="font-size: 0.9rem; color: #aaa;">Format: <code>Symbol | Question | Answer</code></span>
             </div>
@@ -499,6 +501,11 @@
             <div class="sidebar-section" style="margin-top: auto;">
                 <h3 style="margin-bottom: 10px; color: #aaa; font-size: 0.9rem; text-transform: uppercase;">Host Controls</h3>
                 
+                <select id="host-sel-display" class="team-edit-input" style="font-size: 1rem; padding: 8px; margin-bottom: 15px; color:#fff;">
+                    <option value="letters">Display Letters (Clue)</option>
+                    <option value="emojis">Display Emojis (Blind)</option>
+                </select>
+
                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: #0d1117; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #30363d;">
                     <input type="checkbox" id="chk-override" style="width: auto; margin: 0;"> 
                     <strong style="font-size: 0.9rem;">Enable Manual Override</strong>
@@ -536,13 +543,12 @@
             <h2 style="color: var(--hex-border); margin-bottom: 20px; text-align: center;">Generate Questions with AI</h2>
             <p>You can easily generate custom question sets using ChatGPT, Gemini, or Claude. Copy the prompt below, paste it into your AI of choice, and then paste the resulting text directly into the "Question Set" box in Bridgebuilder.</p>
             
-            <textarea id="ai-prompt-text" class="code-font" rows="10" readonly>Act as an expert trivia game generator. I need a set of 75 trivia questions for a game called Bridgebuilder (this provides extra questions in case teams answer incorrectly and a new question needs to be generated).
+            <textarea id="ai-prompt-text" class="code-font" rows="8" readonly>Act as an expert trivia game generator. I need a set of 75 trivia questions for a game called Bridgebuilder (this provides extra questions in case teams answer incorrectly).
 
 Please output the questions using EXACTLY this format, one question per line, with no extra text, markdown formatting, or numbering:
 Symbol | Question | Answer
 
-If the category is letters, the Symbol should be the first letter of the Answer. If the answer is multiple words, use an initialism (e.g., South America should be SA).
-If the category is emojis/icons, the Symbol should be a relevant single emoji.</textarea>
+CRITICAL SYMBOL RULE: The Symbol must be a single uppercase string created by taking the exact first letter of every individual word in the Answer, in order, with no spaces. For a one-word answer, the Symbol is just that single word's first letter (e.g., Answer: 'Volga' -> Symbol: V). For multi-word answers, concatenate the first letter of each word (e.g., Answer: 'Indian Ocean' -> Symbol: IO; Answer: 'South America' -> Symbol: SA). Do not substitute chemical symbols, abbreviations, or any other letters.</textarea>
             
             <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
                 <button id="btn-modal-ai-copy" class="action" style="width: auto;">Copy Prompt</button>
@@ -632,8 +638,12 @@ If the category is emojis/icons, the Symbol should be a relevant single emoji.</
             state.activeHex = null;
         }
 
-        /* --- DEFAULT QUESTION SETS (Ascii/Unicode Safe) --- */
-        const defaultLetters = `SA | What 'SA' is the continent where the Amazon Rainforest is located? | South America
+        /* --- DATA ASSETS --- */
+        const EMOJI_POOL = [
+            "\uD83D\uDC36", "\uD83D\uDC31", "\uD83D\uDC2D", "\uD83D\uDC39", "\uD83D\uDC30", "\uD83E\uDD8A", "\uD83D\uDC3B", "\uD83D\uDC3C", "\uD83D\uDC2F", "\uD83E\uDD81", "\uD83D\uDC2E", "\uD83D\uDC37", "\uD83D\uDC38", "\uD83D\uDC35", "\uD83D\uDC14", "\uD83D\uDC27", "\uD83D\uDC26", "\uD83E\uDD86", "\uD83E\uDD89", "\uD83E\uDD87", "\uD83D\uDC3A", "\uD83D\uDC17", "\uD83D\uDC34", "\uD83E\uDD84", "\uD83D\uDC1D", "\uD83D\uDC1B", "\uD83E\uDD8B", "\uD83D\uDC0C", "\uD83D\uDC22", "\uD83D\uDC0D", "\uD83D\uDC19", "\uD83D\uDC1F", "\uD83D\uDC2C", "\uD83D\uDC33", "\uD83C\uDF4E", "\uD83C\uDF50", "\uD83C\uDF4A", "\uD83C\uDF4B", "\uD83C\uDF4C", "\uD83C\uDF49", "\uD83C\uDF47", "\uD83C\uDF53", "\uD83C\uDF52", "\uD83C\uDF51", "\uD83C\uDF4D", "\uD83E\uDD5D", "\uD83C\uDF45", "\uD83E\uDD55", "\uD83C\uDF3D", "\uD83E\uDD66"
+        ];
+
+        const defaultQuestions = `SA | What 'SA' is the continent where the Amazon Rainforest is located? | South America
 B | What 'B' is a flying mammal? | Bat
 C | What 'C' is the chemical element diamond is made of? | Carbon
 D | What 'D' is the currency of the United States? | Dollar
@@ -709,84 +719,6 @@ SO | What 'SO' is a water-soluble compound used for washing and cleaning? | Soap
 SW | What 'SW' is the fictional sci-fi franchise created by George Lucas? | Star Wars
 T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 1912? | Titanic`;
 
-        const defaultIcons = 
-"\uD83C\uDF4E | What fruit keeps the doctor away? | Apple\n" +
-"\uD83C\uDF4C | What yellow fruit do monkeys love? | Banana\n" +
-"\uD83D\uDC31 | What animal purrs and likes milk? | Cat\n" +
-"\uD83D\uDC36 | What animal is known as man's best friend? | Dog\n" +
-"\uD83E\uDD8A | What cunning woodland animal is typically red? | Fox\n" +
-"\uD83C\uDF47 | What fruit is used to make wine? | Grapes\n" +
-"\uD83E\uDD81 | What big cat is known as the king of the jungle? | Lion\n" +
-"\uD83D\uDC3C | What black and white bear eats bamboo? | Panda\n" +
-"\uD83D\uDC22 | What reptile carries its home on its back? | Turtle\n" +
-"\uD83D\uDC0D | What legless reptile slithers? | Snake\n" +
-"\uD83D\uDC18 | What is the largest land mammal? | Elephant\n" +
-"\uD83E\uDD92 | What animal has the longest neck? | Giraffe\n" +
-"\uD83D\uDC27 | What flightless bird lives in Antarctica? | Penguin\n" +
-"\uD83D\uDC38 | What amphibian starts as a tadpole? | Frog\n" +
-"\uD83E\uDD88 | What apex predator rules the ocean? | Shark\n" +
-"\uD83E\uDD8B | What beautiful insect starts as a caterpillar? | Butterfly\n" +
-"\uD83D\uDC1D | What insect makes honey? | Bee\n" +
-"\uD83D\uDD77\uFE0F | What creature spins a web? | Spider\n" +
-"\uD83E\uDD89 | What bird of prey is associated with wisdom? | Owl\n" +
-"\uD83D\uDC2C | What highly intelligent marine mammal loves to jump? | Dolphin\n" +
-"\uD83D\uDC05 | What is the largest living cat species, easily recognized by its dark vertical stripes? | Tiger\n" +
-"\uD83D\uDC06 | What large cat is known for its incredible running speed? | Cheetah\n" +
-"\uD83E\uDD93 | What African equine is characterized by distinctive black-and-white striped coats? | Zebra\n" +
-"\uD83E\uDD8F | What large herbivore has one or two upright horns on its snout? | Rhinoceros\n" +
-"\uD83E\uDD8D | What is the largest living primate? | Gorilla\n" +
-"\uD83E\uDDA7 | What great ape is native to the rainforests of Indonesia and Malaysia, known for its red hair? | Orangutan\n" +
-"\uD83D\uDC2A | What animal is known as the 'ship of the desert'? | Camel\n" +
-"\uD83E\uDD99 | What domesticated South American camelid is widely used as a meat and pack animal? | Llama\n" +
-"\uD83D\uDC11 | What domestic animal is commonly kept for its wool, meat, and milk? | Sheep\n" +
-"\uD83D\uDC10 | What hardy domesticated ruminant has backward-curving horns? | Goat\n" +
-"\uD83D\uDC0E | What solid-hoofed plant-eating domesticated mammal is used for riding and racing? | Horse\n" +
-"\uD83D\uDC16 | What omnivorous domesticated hoofed mammal is raised primarily for meat? | Pig\n" +
-"\uD83D\uDC04 | What fully grown female animal of a domesticated breed of ox is kept for milk or meat? | Cow\n" +
-"\uD83D\uDC13 | What is an adult male chicken called? | Rooster\n" +
-"\uD83E\uDD83 | What large bird is traditionally eaten at Thanksgiving? | Turkey\n" +
-"\uD83E\uDDAA | What large bird is known for the male's extravagant tail plumage? | Peacock\n" +
-"\uD83E\uDD9C | What bird is known for its ability to mimic human speech? | Parrot\n" +
-"\uD83E\uDDA2 | What large waterbird has a long flexible neck, short legs, and typically all-white plumage? | Swan\n" +
-"\uD83E\uDDA9 | What tall wading bird has mainly pink or scarlet plumage and long legs and neck? | Flamingo\n" +
-"\uD83E\uDD85 | What large bird of prey is the national bird of the United States? | Bald Eagle\n" +
-"\uD83E\uDD87 | What is the only mammal capable of true flight? | Bat\n" +
-"\uD83E\uDD94 | What small nocturnal Old World mammal has a spiny coat and can roll itself into a ball? | Hedgehog\n" +
-"\uD83D\uDC3F\uFE0F | What agile tree-dwelling rodent has a bushy tail? | Squirrel\n" +
-"\uD83E\uDDA1 | What heavily built, short-legged omnivore is known for its distinct facial stripes? | Badger\n" +
-"\uD83E\uDD98 | What large Australian marsupial moves by hopping? | Kangaroo\n" +
-"\uD83D\uDC28 | What arboreal herbivorous marsupial is native to Australia and eats eucalyptus leaves? | Koala\n" +
-"\uD83E\uDDA5 | What slow-moving tropical American mammal hangs upside down from the branches of trees? | Sloth\n" +
-"\uD83E\uDDA6 | What semiaquatic fish-eating mammal has an elongated body, dense fur, and webbed feet? | Otter\n" +
-"\uD83E\uDDAD | What fin-footed marine mammal is sometimes known as a pinniped? | Seal\n" +
-"\uD83D\uDC0B | What very large marine mammal has a streamlined body and horizontal tail fin? | Whale\n" +
-"\uD83D\uDC19 | What cephalopod mollusk has eight sucker-bearing arms? | Octopus\n" +
-"\uD83E\uDD91 | What elongated, fast-swimming cephalopod mollusk has ten arms? | Squid\n" +
-"\uD83E\uDD80 | What crustacean has a broad carapace, stalked eyes, and five pairs of legs? | Crab\n" +
-"\uD83E\uDD9E | What large marine crustacean has a cylindrical body, stalked eyes, and pincers? | Lobster\n" +
-"\uD83E\uDD90 | What small, free-swimming crustacean with an elongated body is used for food? | Shrimp\n" +
-"\uD83D\uDC0C | What mollusk has a single spirally coiled shell into which it can withdraw? | Snail\n" +
-"\uD83D\uDC1B | What is the larva of a butterfly or moth called? | Caterpillar\n" +
-"\uD83D\uDC1C | What small insect lives in a complex social colony with breeding queens? | Ant\n" +
-"\uD83D\uDC1E | What small flying insect is typically red with black spots? | Ladybug\n" +
-"\uD83E\uDD97 | What insect is known for the musical chirping sound the male makes? | Cricket\n" +
-"\uD83E\uDD9F | What slender long-legged fly takes blood from animals? | Mosquito\n" +
-"\uD83C\uDF0D | What is the third planet from the Sun? | Earth\n" +
-"\uD83C\uDF15 | What is Earth's only natural satellite? | Moon\n" +
-"\u2600\uFE0F | What is the star around which the Earth orbits? | Sun\n" +
-"\u2B50 | What is a fixed luminous point in the night sky? | Star\n" +
-"\u2601\uFE0F | What is a visible mass of condensed water vapor floating in the atmosphere? | Cloud\n" +
-"\uD83C\uDF27\uFE0F | What is moisture condensed from the atmosphere that falls visibly? | Rain\n" +
-"\u2744\uFE0F | What is atmospheric water vapor frozen into ice crystals? | Snow\n" +
-"\u26A1 | What is the occurrence of a natural electrical discharge in the sky? | Lightning\n" +
-"\uD83C\uDF08 | What is an arch of colors formed in the sky by rain and sun? | Rainbow\n" +
-"\uD83C\uDF0A | What is a long body of water curling into an arched form? | Wave\n" +
-"\uD83D\uDD25 | What is combustion or burning that gives out bright light and heat? | Fire\n" +
-"\uD83D\uDCA7 | What is a small round portion of liquid that falls or adheres to a surface? | Drop\n" +
-"\uD83C\uDF32 | What is an evergreen coniferous tree with needle-shaped leaves? | Fir Tree\n" +
-"\uD83C\uDF35 | What is a succulent plant with a thick, fleshy stem bearing spines? | Cactus";
-
-
         /* --- GAME STATE --- */
         const TEAM_COLORS = {
             1: { bg: '#ffffff', text: '#000000', border: '#ffffff', name: 'White Team' }, 
@@ -799,6 +731,7 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             mode: '2', 
             cols: 5,
             rows: 4,
+            displayMode: 'letters', // 'letters' or 'emojis'
             teams: [],
             currentTeamIndex: 0,
             questions: [], 
@@ -812,7 +745,10 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
         /* --- INITIALIZATION & UI BINDINGS --- */
         window.onload = function() {
             bindEvents();
-            loadDefaultQuestions();
+            let qInput = getEl('setup-question-input');
+            if (qInput && qInput.value.trim() === '') {
+                qInput.value = defaultQuestions;
+            }
         };
 
         function bindEvents() {
@@ -827,9 +763,6 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             let selMode = getEl('setup-sel-mode');
             if (selMode) selMode.addEventListener('change', updateModeSettings);
             
-            let selContent = getEl('setup-sel-content');
-            if (selContent) selContent.addEventListener('change', loadDefaultQuestions);
-
             let btnSBack = getEl('btn-setup-back');
             if (btnSBack) btnSBack.addEventListener('click', () => showScreen('landing-screen'));
 
@@ -845,6 +778,12 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
                 if (qInput) qInput.value = '';
             });
 
+            let btnSLoadDefaults = getEl('btn-setup-load-defaults');
+            if (btnSLoadDefaults) btnSLoadDefaults.addEventListener('click', () => {
+                let qInput = getEl('setup-question-input');
+                if (qInput) qInput.value = defaultQuestions;
+            });
+
             let btnSAI = getEl('btn-setup-ai');
             if (btnSAI) btnSAI.addEventListener('click', () => openModal('modal-ai'));
 
@@ -854,6 +793,9 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
 
             let btnGQuit = getEl('btn-game-quit');
             if (btnGQuit) btnGQuit.addEventListener('click', returnToSetup);
+
+            let selHostDisplay = getEl('host-sel-display');
+            if (selHostDisplay) selHostDisplay.addEventListener('change', updateBoardDisplayMode);
 
             // Modals
             let btnMSaveConfirm = getEl('btn-modal-save-confirm');
@@ -890,15 +832,6 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
                     resizeBoard();
                 }
             });
-        }
-
-        function loadDefaultQuestions() {
-            let selContent = getEl('setup-sel-content');
-            let qInput = getEl('setup-question-input');
-            if (selContent && qInput) {
-                let type = selContent.value;
-                qInput.value = (type === 'letters') ? defaultLetters : defaultIcons;
-            }
         }
 
         function syncSubtitle() {
@@ -967,7 +900,6 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
 
         /* --- SAVE GAME FEATURE --- */
         function saveGameFile() {
-            // Push values into attributes so they are captured by outerHTML
             let qInput = getEl('setup-question-input');
             if (qInput) qInput.innerHTML = qInput.value;
 
@@ -977,7 +909,7 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             let timerInput = getEl('setup-solo-timer');
             if (timerInput) timerInput.setAttribute('value', timerInput.value);
 
-            ['setup-sel-mode', 'setup-sel-size', 'setup-sel-content'].forEach(id => {
+            ['setup-sel-mode', 'setup-sel-size', 'setup-sel-display'].forEach(id => {
                 let sel = getEl(id);
                 if (sel) {
                     Array.from(sel.options).forEach(opt => {
@@ -987,7 +919,6 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
                 }
             });
 
-            // Get filename
             let fnInput = getEl('save-filename-input');
             let filename = "bridgebuilder-custom.html";
             if (fnInput && fnInput.value.trim() !== '') {
@@ -1027,14 +958,21 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             return state.questions.shift();
         }
 
+        function getRandomEmoji() {
+            return EMOJI_POOL[Math.floor(Math.random() * EMOJI_POOL.length)];
+        }
+
         function startGame() {
             let selMode = getEl('setup-sel-mode');
             let selSize = getEl('setup-sel-size');
+            let selDisplay = getEl('setup-sel-display');
             let qInput = getEl('setup-question-input');
 
-            if (!selMode || !selSize || !qInput) return;
+            if (!selMode || !selSize || !qInput || !selDisplay) return;
 
             state.mode = selMode.value;
+            state.displayMode = selDisplay.value;
+            
             const sizeStr = selSize.value;
             state.cols = parseInt(sizeStr.split('x')[0]);
             state.rows = parseInt(sizeStr.split('x')[1]);
@@ -1047,6 +985,10 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             if (state.questions.length < state.cols * state.rows) {
                 alert("Warning: You have fewer unique questions than hexagons on the board.");
             }
+
+            // Sync Host Display Selector
+            let hostSelDisplay = getEl('host-sel-display');
+            if (hostSelDisplay) hostSelDisplay.value = state.displayMode;
 
             // Setup Teams mapping
             if (state.mode === '2') {
@@ -1246,6 +1188,37 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             }
         }
 
+        function updateBoardDisplayMode() {
+            let hostSel = getEl('host-sel-display');
+            if (!hostSel) return;
+            state.displayMode = hostSel.value;
+            refreshAllHexText();
+        }
+
+        function refreshAllHexText() {
+            for (let r = 0; r < state.rows; r++) {
+                for (let c = 0; c < state.cols; c++) {
+                    let hex = state.grid[r][c];
+                    if (hex.owner === 0) { // Only update display text if it's neutral
+                        let displayText = state.displayMode === 'emojis' ? hex.blindSymbol : hex.clueSymbol;
+                        hex.textElement.textContent = displayText;
+                        
+                        if (state.displayMode === 'emojis') {
+                            hex.textElement.style.fontSize = "28px";
+                        } else {
+                            if(displayText.length > 2) {
+                                hex.textElement.style.fontSize = "16px";
+                            } else if(displayText.length > 1) {
+                                hex.textElement.style.fontSize = "22px";
+                            } else {
+                                hex.textElement.style.fontSize = "28px";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         function generateBoard() {
             applyBoardBorders();
             
@@ -1276,7 +1249,8 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
                     const hexData = {
                         r: r, c: c,
                         owner: 0, 
-                        symbol: qData.symbol,
+                        clueSymbol: qData.symbol,
+                        blindSymbol: getRandomEmoji(),
                         question: qData.q,
                         answer: qData.a,
                         id: `hex-${r}-${c}`,
@@ -1304,13 +1278,20 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
                     text.setAttribute('y', cy);
                     text.setAttribute('class', 'hex-text');
                     
-                    if(hexData.symbol.length > 2) {
-                        text.style.fontSize = "16px";
-                    } else if(hexData.symbol.length > 1) {
-                        text.style.fontSize = "22px";
+                    let displayText = state.displayMode === 'emojis' ? hexData.blindSymbol : hexData.clueSymbol;
+                    text.textContent = displayText;
+
+                    if (state.displayMode === 'emojis') {
+                        text.style.fontSize = "28px";
+                    } else {
+                        if(displayText.length > 2) {
+                            text.style.fontSize = "16px";
+                        } else if(displayText.length > 1) {
+                            text.style.fontSize = "22px";
+                        } else {
+                            text.style.fontSize = "28px";
+                        }
                     }
-                    
-                    text.textContent = hexData.symbol;
 
                     svg.appendChild(polygon);
                     svg.appendChild(text);
@@ -1362,7 +1343,7 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             let qEl = getEl('question-display');
             let aEl = getEl('answer-display');
             
-            if (sEl) sEl.textContent = hexData.symbol;
+            if (sEl) sEl.textContent = state.displayMode === 'emojis' ? hexData.blindSymbol : hexData.clueSymbol;
             if (qEl) qEl.textContent = hexData.question;
             if (aEl) aEl.textContent = hexData.answer;
             
@@ -1422,21 +1403,28 @@ T | What 'T' is the passenger liner that sank in the North Atlantic Ocean in 191
             if (!state.activeHex) return;
             
             const qData = getNextQuestion();
-            state.activeHex.symbol = qData.symbol;
+            state.activeHex.clueSymbol = qData.symbol;
+            state.activeHex.blindSymbol = getRandomEmoji();
             state.activeHex.question = qData.q;
             state.activeHex.answer = qData.a;
             state.activeHex.owner = 0; 
 
             state.activeHex.element.setAttribute('fill', 'var(--hex-neutral)');
-            state.activeHex.textElement.textContent = qData.symbol;
             state.activeHex.textElement.setAttribute('fill', '#ffffff');
             
-            if(qData.symbol.length > 2) {
-                state.activeHex.textElement.style.fontSize = "16px";
-            } else if(qData.symbol.length > 1) {
-                state.activeHex.textElement.style.fontSize = "22px";
-            } else {
+            let displayText = state.displayMode === 'emojis' ? state.activeHex.blindSymbol : state.activeHex.clueSymbol;
+            state.activeHex.textElement.textContent = displayText;
+
+            if (state.displayMode === 'emojis') {
                 state.activeHex.textElement.style.fontSize = "28px";
+            } else {
+                if(displayText.length > 2) {
+                    state.activeHex.textElement.style.fontSize = "16px";
+                } else if(displayText.length > 1) {
+                    state.activeHex.textElement.style.fontSize = "22px";
+                } else {
+                    state.activeHex.textElement.style.fontSize = "28px";
+                }
             }
         }
 
