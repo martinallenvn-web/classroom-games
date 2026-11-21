@@ -91,6 +91,14 @@
       display: none !important;
     }
 
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
     /* ==========================================================================
        Shared Typography, Cards & Buttons
        ========================================================================== */
@@ -170,26 +178,6 @@
 
     .btn-secondary:hover:not(:disabled) {
       background-color: var(--bg-subtle);
-    }
-
-    .btn-soft {
-      background-color: var(--indigo-50);
-      color: var(--indigo-700);
-      border-color: var(--indigo-200);
-    }
-
-    .btn-soft:hover:not(:disabled) {
-      background-color: var(--indigo-100);
-    }
-
-    .btn-danger {
-      background-color: var(--wrong-bg);
-      color: var(--wrong-text);
-      border-color: var(--wrong-border);
-    }
-
-    .btn-danger:hover:not(:disabled) {
-      background-color: #fee2e2;
     }
 
     .btn-sm {
@@ -274,101 +262,6 @@
       font-weight: 600;
     }
 
-    .pill-count {
-      font-size: 0.72rem;
-      font-weight: 700;
-      background-color: var(--bg-subtle);
-      color: var(--text-secondary);
-      padding: 0.08rem 0.45rem;
-      border-radius: var(--radius-pill);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .pill-btn.active .pill-count {
-      background-color: rgba(255, 255, 255, 0.2);
-      color: #ffffff;
-    }
-
-    /* Form Controls */
-    .field-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      margin-bottom: 1rem;
-    }
-
-    .field-label {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-
-    .field-hint {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-
-    .text-input, .select-input, .textarea-input {
-      width: 100%;
-      font-family: inherit;
-      font-size: 0.92rem;
-      color: var(--text-primary);
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-sm);
-      padding: 0.6rem 0.8rem;
-      outline: none;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .text-input:focus, .select-input:focus, .textarea-input:focus {
-      border-color: var(--indigo-600);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
-    }
-
-    .textarea-input {
-      min-height: 120px;
-      resize: vertical;
-      font-family: var(--font-mono);
-      font-size: 0.83rem;
-      line-height: 1.5;
-    }
-
-    .form-grid-2 {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.9rem;
-    }
-
-    /* Status / Alert Banners */
-    .status-banner {
-      padding: 0.8rem 1rem;
-      border-radius: var(--radius-sm);
-      font-size: 0.88rem;
-      margin-top: 0.85rem;
-      border: 1px solid var(--border-light);
-      background-color: var(--bg-subtle);
-      color: var(--text-primary);
-    }
-
-    .status-banner.success {
-      background-color: var(--correct-bg);
-      border-color: var(--correct-border);
-      color: var(--correct-text);
-    }
-
-    .status-banner.error {
-      background-color: var(--wrong-bg);
-      border-color: var(--wrong-border);
-      color: var(--wrong-text);
-    }
-
-    .status-banner.info {
-      background-color: var(--indigo-50);
-      border-color: var(--indigo-200);
-      color: var(--indigo-700);
-    }
-
     /* ==========================================================================
        Screen 1: Landing Page
        ========================================================================== */
@@ -412,47 +305,6 @@
       letter-spacing: 0.06em;
       color: var(--text-muted);
       margin-bottom: 0.55rem;
-    }
-
-    .tools-bar {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.9rem;
-      margin-top: 1.1rem;
-    }
-
-    .tool-card-btn {
-      appearance: none;
-      text-align: left;
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-md);
-      padding: 1.1rem 1.25rem;
-      cursor: pointer;
-      box-shadow: var(--shadow-sm);
-      transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.1s ease;
-      font-family: inherit;
-    }
-
-    .tool-card-btn:hover {
-      border-color: var(--indigo-600);
-      box-shadow: var(--shadow-md);
-      transform: translateY(-1px);
-    }
-
-    .tool-card-title {
-      display: block;
-      font-size: 0.98rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 0.25rem;
-    }
-
-    .tool-card-desc {
-      display: block;
-      font-size: 0.83rem;
-      color: var(--text-muted);
-      line-height: 1.45;
     }
 
     /* ==========================================================================
@@ -822,171 +674,15 @@
       margin: 0;
     }
 
-    /* ==========================================================================
-       Screen 4: AI Generator & Screen 5: Teacher Studio
-       ========================================================================== */
-    .password-row {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .password-row .text-input {
-      flex: 1;
-    }
-
-    .spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255, 255, 255, 0.35);
-      border-top-color: #ffffff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      display: inline-block;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .collapsible-box {
-      margin-top: 1.4rem;
-      border: 1px solid var(--border-light);
+    .empty-mistakes {
+      text-align: center;
+      padding: 1.25rem;
       border-radius: var(--radius-md);
-      background-color: var(--bg-page);
-      overflow: hidden;
-    }
-
-    .collapsible-box summary {
-      cursor: pointer;
-      padding: 0.85rem 1rem;
-      font-size: 0.88rem;
+      background-color: var(--correct-bg);
+      border: 1px solid var(--correct-border);
+      color: var(--correct-text);
       font-weight: 600;
-      color: var(--text-primary);
-      user-select: none;
-    }
-
-    .collapsible-inner {
-      padding: 0 1rem 1rem;
-      border-top: 1px solid var(--border-light);
-    }
-
-    /* Studio Tabs */
-    .tabs-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      border-bottom: 1px solid var(--border-light);
-      padding-bottom: 0.75rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .tab-btn {
-      appearance: none;
-      border: 1px solid transparent;
-      background-color: transparent;
-      color: var(--text-muted);
-      font-family: inherit;
-      font-size: 0.88rem;
-      font-weight: 600;
-      padding: 0.52rem 0.95rem;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .tab-btn:hover {
-      background-color: var(--bg-subtle);
-      color: var(--text-primary);
-    }
-
-    .tab-btn.active {
-      background-color: var(--indigo-50);
-      color: var(--indigo-700);
-      border-color: var(--indigo-200);
-    }
-
-    .bank-filter-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1.6fr;
-      gap: 0.6rem;
-      margin-bottom: 0.9rem;
-    }
-
-    .bank-list {
-      max-height: 360px;
-      overflow-y: auto;
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-md);
-      background-color: var(--bg-page);
-      padding: 0.65rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.55rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .bank-row {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-sm);
-      padding: 0.7rem 0.85rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 0.75rem;
-    }
-
-    .bank-row-content {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .bank-row-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-      margin-bottom: 0.3rem;
-    }
-
-    .bank-row-sentence {
-      font-size: 0.88rem;
-      color: var(--text-primary);
-      margin: 0;
-    }
-
-    .export-card {
-      background-color: var(--bg-page);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-md);
-      padding: 1.1rem 1.2rem;
-      margin-bottom: 1rem;
-    }
-
-    .export-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-      align-items: center;
-      margin-top: 0.65rem;
-    }
-
-    .export-row .text-input {
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .confirm-inline {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-      padding: 0.75rem;
-      border-radius: var(--radius-sm);
-      background-color: var(--wrong-bg);
-      border: 1px solid var(--wrong-border);
-      font-size: 0.85rem;
-      color: var(--wrong-text);
+      font-size: 0.94rem;
     }
 
     .app-footer {
@@ -1007,12 +703,6 @@
 
       .card {
         padding: 1.2rem 1.05rem;
-      }
-
-      .tools-bar,
-      .form-grid-2,
-      .bank-filter-row {
-        grid-template-columns: 1fr;
       }
 
       .stats-grid {
@@ -1048,34 +738,64 @@
     <!-- ====================================================================
          SCREEN 1: LANDING PAGE
          ==================================================================== -->
-    <section id="screen-landing">
+    <section id="screen-landing" class="screen active">
       <header class="landing-header">
         <div>
           <h1 class="brand-h1">Preposition <span class="brand-accent">Lab</span></h1>
-          <p class="brand-sub">Cambridge Use of English Part 2 · Open Cloze Dependent Prepositions (B1–C2)</p>
+          <p class="brand-sub">Cambridge Use of English Part 2 — Dependent Prepositions (B1–C2)</p>
         </div>
-        <span class="badge badge-indigo" id="master-count-badge">350 Master Items</span>
       </header>
 
       <div class="card">
         <h2 class="section-title">Practice Setup</h2>
-        <p class="section-desc">Choose your Cambridge level, focus area, and round length. Every item is strict open-input with post-answer spatial logic and Spanish L1 notes.</p>
+        <p class="section-desc">Choose your Cambridge level and round length. Every round draws a fresh, randomised mixture of dependent prepositions with post-answer directional logic and Spanish L1 notes.</p>
 
         <div class="setup-block">
           <span class="setup-label">1. CEFR Level</span>
           <div class="pill-group" id="level-pills" role="group" aria-label="CEFR Level">
-            <button type="button" class="pill-btn" data-level="B1">B1 Preliminary <span class="pill-count" data-count-level="B1">50</span></button>
-            <button type="button" class="pill-btn" data-level="B2">B2 First <span class="pill-count" data-count-level="B2">100</span></button>
-            <button type="button" class="pill-btn active" data-level="C1">C1 Advanced <span class="pill-count" data-count-level="C1">100</span></button>
-            <button type="button" class="pill-btn" data-level="C2">C2 Proficiency <span class="pill-count" data-count-level="C2">100</span></button>
-            <button type="button" class="pill-btn" data-level="ALL">All Levels <span class="pill-count" data-count-level="ALL">350</span></button>
+            <button type="button" class="pill-btn" data-level="B1">B1 Preliminary</button>
+            <button type="button" class="pill-btn" data-level="B2">B2 First</button>
+            <button type="button" class="pill-btn active" data-level="C1">C1 Advanced</button>
+            <button type="button" class="pill-btn" data-level="C2">C2 Proficiency</button>
+          </div>
+        </div>
+
+        <div class="setup-block">
+          <span class="setup-label">2. Round Length</span>
+          <div class="pill-group" id="length-pills" role="group" aria-label="Round Length">
+            <button type="button" class="pill-btn active" data-length="8">8 Items</button>
+            <button type="button" class="pill-btn" data-length="10">10 Items</button>
+            <button type="button" class="pill-btn" data-length="15">15 Items</button>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-lg" id="btn-start-practice">
+          Start Practice
+        </button>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SCREEN 2: STRICT OPEN-CLOZE PRACTICE
+         ==================================================================== -->
+    <section id="screen-practice" class="screen" aria-live="polite">
+      <div class="top-nav-bar">
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-practice-back">← Back to Start</button>
+        <span class="badge badge-indigo" id="practice-session-badge">C1 Advanced</span>
+      </div>
+
+      <div class="stats-strip">
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-label">Progress</span>
+            <span class="stat-val" id="stat-progress">Question 1 of 8</span>
           </div>
         </div>
 
         <div class="setup-block">
           <span class="setup-label">2. Focus Category</span>
           <div class="pill-group" id="category-pills" role="group" aria-label="Category Filter">
-            <button type="button" class="pill-btn active" data-category="ALL">All Items</button>
+            <button type="button" class="pill-btn active" data-category="ALL">All Categories</button>
             <button type="button" class="pill-btn" data-category="minimal-pairs">Minimal Pairs / Meaning Shifts</button>
             <button type="button" class="pill-btn" data-category="spanish-traps">Spanish L1 Traps</button>
             <button type="button" class="pill-btn" data-category="fixed-phrases">Fixed Exam Phrases</button>
@@ -1096,26 +816,15 @@
           Start Practice (15 of 100 matching items)
         </button>
       </div>
-
-      <div class="tools-bar">
-        <button type="button" class="tool-card-btn" id="btn-open-ai">
-          <span class="tool-card-title">✨ AI Question Generator</span>
-          <span class="tool-card-desc">Optionally generate fresh B1–C2 items with your own Gemini API key or copy a ready-made prompt — without altering the master bank.</span>
-        </button>
-        <button type="button" class="tool-card-btn" id="btn-open-studio">
-          <span class="tool-card-title">🛠️ Teacher Studio &amp; Custom Sets</span>
-          <span class="tool-card-desc">Browse or edit the master bank, import custom JSON or pipe-delimited sets, and download an updated standalone HTML file.</span>
-        </button>
-      </div>
     </section>
 
     <!-- ====================================================================
          SCREEN 2: STRICT OPEN-CLOZE PRACTICE
          ==================================================================== -->
-    <section id="screen-practice" class="hidden" aria-live="polite">
+    <section id="screen-practice" class="screen" aria-live="polite">
       <div class="top-nav-bar">
-        <button type="button" class="btn btn-secondary btn-sm" id="btn-practice-back">← Back to Menu</button>
-        <span class="badge badge-indigo" id="practice-session-badge">C1 · Master Bank</span>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-practice-back">← Home</button>
+        <span class="badge badge-indigo" id="practice-session-badge">C1 · All Categories</span>
       </div>
 
       <div class="stats-strip">
@@ -1145,13 +854,18 @@
       <div class="card">
         <p class="instruction-text">Type the single missing preposition in the gap. No hints are shown before submission.</p>
 
-        <div class="sentence-box" id="sentence-container"></div>
-        <div class="validation-msg" id="practice-validation" role="alert"></div>
+        <form id="practice-form" novalidate autocomplete="off">
+          <div class="sentence-box" id="sentence-container"></div>
+          <div class="validation-msg" id="practice-validation" role="alert"></div>
 
-        <div class="action-row">
-          <button type="button" class="btn btn-primary" id="btn-practice-action">Check Answer</button>
-          <span class="key-hint" id="practice-key-hint">Press <kbd>Enter</kbd> to submit</span>
-        </div>
+          <div class="action-row">
+            <div>
+              <button type="submit" class="btn btn-primary" id="btn-check-answer">Check Answer</button>
+              <button type="button" class="btn btn-primary hidden" id="btn-next-question">Next Question →</button>
+            </div>
+            <span class="key-hint" id="practice-key-hint">Press <kbd>Enter</kbd> to submit</span>
+          </div>
+        </form>
 
         <!-- Post-Answer Feedback Panel -->
         <div class="feedback-panel hidden" id="feedback-panel">
@@ -1166,7 +880,7 @@
           </div>
 
           <div class="spanish-box hidden" id="feedback-spanish-box">
-            <h3 class="spanish-heading">Spanish L1 Interference Note</h3>
+            <h3 class="spanish-heading">Spanish L1 Note</h3>
             <p class="spanish-text" id="feedback-spanish"></p>
           </div>
         </div>
@@ -1176,7 +890,7 @@
     <!-- ====================================================================
          SCREEN 3: END-OF-ROUND SUMMARY
          ==================================================================== -->
-    <section id="screen-summary" class="hidden">
+    <section id="screen-summary" class="screen">
       <div class="card">
         <div class="summary-hero">
           <h2 class="section-title" id="summary-heading">Round Complete</h2>
@@ -1201,271 +915,13 @@
 
           <div class="summary-actions">
             <button type="button" class="btn btn-dark hidden" id="btn-review-mistakes">Review Mistakes</button>
-            <button type="button" class="btn btn-primary" id="btn-new-round">New Randomised Round</button>
-            <button type="button" class="btn btn-secondary" id="btn-summary-home">Return to Landing Page</button>
+            <button type="button" class="btn btn-primary" id="btn-new-round">Play Another Round</button>
+            <button type="button" class="btn btn-secondary" id="btn-summary-home">Change Settings</button>
           </div>
         </div>
 
-        <h3 class="section-title" style="font-size: 1rem; margin-bottom: 0.75rem;">Item-by-Item Review</h3>
+        <h3 class="section-title" style="font-size: 1rem; margin-bottom: 0.75rem;" id="summary-review-title">Mistakes to Review</h3>
         <div class="review-scroll" id="summary-review-list"></div>
-      </div>
-    </section>
-
-    <!-- ====================================================================
-         SCREEN 4: OPTIONAL GEMINI API QUESTION GENERATOR
-         ==================================================================== -->
-    <section id="screen-ai" class="hidden">
-      <div class="top-nav-bar">
-        <button type="button" class="btn btn-secondary btn-sm" id="btn-ai-back">← Back to Menu</button>
-        <span class="badge badge-slate">Optional · Runs Directly in Browser</span>
-      </div>
-
-      <div class="card">
-        <h2 class="section-title">✨ AI Question Generator</h2>
-        <p class="section-desc">
-          Optionally generate fresh Cambridge Use of English Part 2 sentences using your own Gemini API key.
-          Your key is kept only in this browser tab's memory/session and is <strong>never</strong> saved into exported HTML files.
-          Playing a generated set runs locally without altering the built-in Master Bank.
-        </p>
-
-        <div class="form-grid-2">
-          <div class="field-group">
-            <label class="field-label" for="ai-api-key">Gemini API Key</label>
-            <div class="password-row">
-              <input type="password" id="ai-api-key" class="text-input" placeholder="Paste your Gemini API key..." autocomplete="off">
-              <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-key">Show</button>
-            </div>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label" for="ai-model">Model Name</label>
-            <input type="text" id="ai-model" class="text-input" value="gemini-3.5-flash">
-          </div>
-        </div>
-
-        <div class="form-grid-2">
-          <div class="field-group">
-            <label class="field-label" for="ai-level">Target CEFR Level</label>
-            <select id="ai-level" class="select-input">
-              <option value="B1">B1 Preliminary</option>
-              <option value="B2">B2 First</option>
-              <option value="C1" selected>C1 Advanced</option>
-              <option value="C2">C2 Proficiency</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label" for="ai-category">Category Focus</label>
-            <select id="ai-category" class="select-input">
-              <option value="Mixed">Mixed (All Three Categories)</option>
-              <option value="minimal-pairs">Minimal Pairs / Meaning Shifts</option>
-              <option value="spanish-traps">Spanish L1 Traps</option>
-              <option value="fixed-phrases">Fixed Exam Phrases</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-grid-2">
-          <div class="field-group">
-            <label class="field-label" for="ai-topic">Optional Topic / Context</label>
-            <input type="text" id="ai-topic" class="text-input" placeholder="e.g. urban architecture, climate policy, workplace ethics">
-          </div>
-
-          <div class="field-group">
-            <label class="field-label" for="ai-quantity">Quantity</label>
-            <select id="ai-quantity" class="select-input">
-              <option value="5">5 Items</option>
-              <option value="10" selected>10 Items</option>
-              <option value="15">15 Items</option>
-              <option value="20">20 Items</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 0.4rem;">
-          <button type="button" class="btn btn-primary" id="btn-ai-play">Generate &amp; Play Now</button>
-          <button type="button" class="btn btn-soft" id="btn-ai-add">Generate &amp; Add to Master Bank</button>
-        </div>
-
-        <div id="ai-status" class="status-banner hidden" role="status"></div>
-
-        <!-- External AI Copy-Prompt Fallback -->
-        <details class="collapsible-box" id="ai-prompt-details">
-          <summary>No API key? Use the External AI Copy-Prompt Fallback</summary>
-          <div class="collapsible-inner">
-            <p class="field-hint" style="margin: 0.75rem 0 0.5rem;">
-              Copy this dynamically built prompt into any external AI chat, then paste the resulting JSON into <strong>Teacher Studio → Bulk Import</strong>.
-            </p>
-            <textarea id="ai-fallback-prompt" class="textarea-input" readonly></textarea>
-            <div style="margin-top: 0.6rem; display: flex; align-items: center; gap: 0.75rem;">
-              <button type="button" class="btn btn-secondary btn-sm" id="btn-copy-prompt">Copy Prompt</button>
-              <span class="field-hint" id="copy-prompt-status"></span>
-            </div>
-          </div>
-        </details>
-      </div>
-    </section>
-
-    <!-- ====================================================================
-         SCREEN 5: TEACHER STUDIO & CUSTOM SETS
-         ==================================================================== -->
-    <section id="screen-studio" class="hidden">
-      <div class="top-nav-bar">
-        <button type="button" class="btn btn-secondary btn-sm" id="btn-studio-back">← Back to Menu</button>
-        <span class="badge badge-indigo" id="studio-count-badge">350 Master Items</span>
-      </div>
-
-      <div class="card">
-        <h2 class="section-title">🛠️ Teacher Studio &amp; Custom Sets</h2>
-        <p class="section-desc">Manage the built-in Master Bank, import temporary or permanent sets, and export a fresh standalone HTML file to share with students.</p>
-
-        <div class="tabs-bar" role="tablist">
-          <button type="button" class="tab-btn active" data-tab="tab-master" role="tab">1. Master Bank &amp; Quick Add</button>
-          <button type="button" class="tab-btn" data-tab="tab-import" role="tab">2. Bulk Import</button>
-          <button type="button" class="tab-btn" data-tab="tab-export" role="tab">3. Export &amp; Share</button>
-        </div>
-
-        <!-- TAB 1: MASTER BANK & QUICK ADD -->
-        <div id="tab-master" class="studio-tab-panel">
-          <div class="bank-filter-row">
-            <select id="studio-filter-level" class="select-input" aria-label="Filter by level">
-              <option value="ALL">All Levels</option>
-              <option value="B1">B1 Preliminary</option>
-              <option value="B2">B2 First</option>
-              <option value="C1">C1 Advanced</option>
-              <option value="C2">C2 Proficiency</option>
-            </select>
-            <select id="studio-filter-cat" class="select-input" aria-label="Filter by category">
-              <option value="ALL">All Categories</option>
-              <option value="minimal-pairs">Minimal Pairs</option>
-              <option value="spanish-traps">Spanish L1 Traps</option>
-              <option value="fixed-phrases">Fixed Exam Phrases</option>
-            </select>
-            <input type="text" id="studio-filter-search" class="text-input" placeholder="Search phrase, sentence, or answer...">
-          </div>
-
-          <div class="bank-list" id="studio-bank-list"></div>
-
-          <h3 class="section-title" style="font-size: 1.02rem; margin-bottom: 0.75rem;">Add Single Item to Master Bank</h3>
-          <form id="add-item-form">
-            <div class="form-grid-2">
-              <div class="field-group">
-                <label class="field-label" for="add-level">Level</label>
-                <select id="add-level" class="select-input">
-                  <option value="B1">B1</option>
-                  <option value="B2">B2</option>
-                  <option value="C1" selected>C1</option>
-                  <option value="C2">C2</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label class="field-label" for="add-category">Category</label>
-                <select id="add-category" class="select-input">
-                  <option value="minimal-pairs">Minimal Pairs / Meaning Shifts</option>
-                  <option value="spanish-traps">Spanish L1 Traps</option>
-                  <option value="fixed-phrases">Fixed Exam Phrases</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="field-group">
-              <label class="field-label" for="add-sentence">Sentence (use <code>___</code> for the single preposition gap)</label>
-              <input type="text" id="add-sentence" class="text-input" placeholder="e.g. The new guidelines apply ___ all postgraduate researchers." required>
-            </div>
-
-            <div class="form-grid-2">
-              <div class="field-group">
-                <label class="field-label" for="add-answers">Answer(s) (comma-separated if alternatives exist)</label>
-                <input type="text" id="add-answers" class="text-input" placeholder="e.g. to" required>
-              </div>
-              <div class="field-group">
-                <label class="field-label" for="add-target">Target Phrase</label>
-                <input type="text" id="add-target" class="text-input" placeholder="e.g. apply to" required>
-              </div>
-            </div>
-
-            <div class="field-group">
-              <label class="field-label" for="add-logic">Directional Logic / Spatial Metaphor</label>
-              <input type="text" id="add-logic" class="text-input" placeholder="e.g. TO marks the target group to which a rule is directed." required>
-            </div>
-
-            <div class="field-group">
-              <label class="field-label" for="add-spanish">Spanish L1 Interference Note (optional)</label>
-              <input type="text" id="add-spanish" class="text-input" placeholder="e.g. Contrast with 'apply for' (requesting a job or grant).">
-            </div>
-
-            <button type="submit" class="btn btn-primary">Add Item to Master Bank</button>
-          </form>
-          <div id="add-item-status" class="status-banner hidden"></div>
-        </div>
-
-        <!-- TAB 2: BULK IMPORT -->
-        <div id="tab-import" class="studio-tab-panel hidden">
-          <p class="field-hint" style="margin: 0 0 0.75rem;">
-            Paste either a <strong>JSON array</strong> of question objects or <strong>pipe-delimited lines</strong>
-            (<code>Level | Category | Sentence with ___ | Answer | Directional Logic | Spanish Note</code>), or upload a <code>.json</code> file.
-          </p>
-
-          <div style="display: flex; flex-wrap: wrap; gap: 0.55rem; margin-bottom: 0.75rem;">
-            <label class="btn btn-secondary btn-sm" for="import-file-input" style="cursor: pointer;">Upload .json File</label>
-            <input type="file" id="import-file-input" accept=".json,application/json" class="hidden">
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-load-example">Load Example Format</button>
-          </div>
-
-          <div class="field-group">
-            <textarea id="import-textarea" class="textarea-input" placeholder="Paste JSON array or pipe-delimited lines here..."></textarea>
-          </div>
-
-          <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
-            <button type="button" class="btn btn-primary" id="btn-import-play">Play as Temporary Set</button>
-            <button type="button" class="btn btn-soft" id="btn-import-master">Add to Master Bank</button>
-          </div>
-
-          <div id="import-status" class="status-banner hidden"></div>
-        </div>
-
-        <!-- TAB 3: EXPORT & SHARE -->
-        <div id="tab-export" class="studio-tab-panel hidden">
-          <div class="export-card">
-            <h3 class="section-title" style="font-size: 1rem;">Download Updated Standalone HTML</h3>
-            <p class="field-hint" style="margin: 0;">
-              Bakes your current Master Bank directly into a clean, self-contained <code>.html</code> file ready to share with students.
-              All temporary sessions and API keys are stripped automatically.
-            </p>
-            <div class="export-row">
-              <input type="text" id="export-html-name" class="text-input" value="preposition-lab-master.html" aria-label="HTML filename">
-              <button type="button" class="btn btn-primary" id="btn-export-html">Download Standalone HTML</button>
-            </div>
-          </div>
-
-          <div class="export-card">
-            <h3 class="section-title" style="font-size: 1rem;">Export Master Bank (.json)</h3>
-            <p class="field-hint" style="margin: 0;">
-              Save a backup of your current Master Bank as JSON so you can edit it externally or import it later.
-            </p>
-            <div class="export-row">
-              <input type="text" id="export-json-name" class="text-input" value="preposition-lab-bank.json" aria-label="JSON filename">
-              <button type="button" class="btn btn-secondary" id="btn-export-json">Export Master Bank (.json)</button>
-            </div>
-          </div>
-
-          <div class="export-card">
-            <h3 class="section-title" style="font-size: 1rem;">Reset to Original Built-in Bank</h3>
-            <p class="field-hint" style="margin: 0;">
-              Restore the original built-in 350-item Master Bank loaded when this file was opened, discarding any unsaved additions or deletions made during this session.
-            </p>
-            <div style="margin-top: 0.7rem;">
-              <button type="button" class="btn btn-danger btn-sm" id="btn-reset-request">Reset Master Bank</button>
-            </div>
-            <div id="reset-confirm-box" class="confirm-inline hidden">
-              <span>Restore the original built-in bank? Unsaved edits in this session will be lost.</span>
-              <button type="button" class="btn btn-danger btn-sm" id="btn-reset-confirm">Yes, Restore</button>
-              <button type="button" class="btn btn-secondary btn-sm" id="btn-reset-cancel">Cancel</button>
-            </div>
-          </div>
-
-          <div id="export-status" class="status-banner hidden"></div>
-        </div>
       </div>
     </section>
 
@@ -5331,14 +4787,14 @@
   </script>
 
   <!-- ======================================================================
-       APPLICATION LOGIC
+       APPLICATION LOGIC (100% Offline, Zero External Calls)
        ====================================================================== -->
   <script>
     (function () {
       'use strict';
 
       /* ----------------------------------------------------------------------
-         1. Constants & Initial Master Bank Load
+         1. Constants & Built-in Question Bank Load
          ---------------------------------------------------------------------- */
       const CATEGORY_LABELS = {
         'minimal-pairs': 'Minimal Pairs / Meaning Shifts',
@@ -5350,11 +4806,16 @@
         B1: 'B1 Preliminary',
         B2: 'B2 First',
         C1: 'C1 Advanced',
-        C2: 'C2 Proficiency',
-        ALL: 'All Levels'
+        C2: 'C2 Proficiency'
       };
 
-      function loadMasterBankFromDom() {
+      const SCREEN_IDS = [
+        'screen-landing',
+        'screen-practice',
+        'screen-summary'
+      ];
+
+      function loadQuestionBank() {
         const scriptEl = document.getElementById('master-bank-data');
         if (!scriptEl) return [];
         try {
@@ -5365,23 +4826,16 @@
         }
       }
 
-      // masterBank is the editable master set; originalBankSnapshot supports Reset
-      let masterBank = loadMasterBankFromDom();
-      const originalBankSnapshot = JSON.parse(JSON.stringify(masterBank));
+      const QUESTION_BANK = loadQuestionBank();
 
       /* ----------------------------------------------------------------------
          2. Application State
          ---------------------------------------------------------------------- */
       const state = {
-        screen: 'landing',
-        // Landing filters
+        screen: 'screen-landing',
         selectedLevel: 'C1',
-        selectedCategory: 'ALL',
-        selectedLength: '15',
-        // Active practice session (completely separate from masterBank)
-        sessionLabel: 'C1 · Master Bank',
-        sessionSource: 'master', // 'master' | 'ai' | 'custom' | 'review'
-        sessionPool: [],
+        selectedLength: '8',
+        isReviewMode: false,
         queue: [],
         currentIndex: 0,
         phase: 'answering', // 'answering' | 'feedback' | 'summary'
@@ -5389,11 +4843,11 @@
         answeredCount: 0,
         currentStreak: 0,
         bestStreak: 0,
-        results: [] // { item, userAnswer, isCorrect }
+        results: []
       };
 
       /* ----------------------------------------------------------------------
-         3. Safe DOM Helpers
+         3. Helpers
          ---------------------------------------------------------------------- */
       function $(id) {
         return document.getElementById(id);
@@ -5428,125 +4882,40 @@
         return item.before === '' ? capitaliseFirst(primary) : primary;
       }
 
-      function normaliseCategory(raw) {
-        const s = String(raw || '').toLowerCase().trim();
-        if (s.includes('minimal') || s.includes('pair') || s.includes('shift')) return 'minimal-pairs';
-        if (s.includes('spanish') || s.includes('l1') || s.includes('trap')) return 'spanish-traps';
-        if (s.includes('fixed') || s.includes('phrase') || s.includes('idiom')) return 'fixed-phrases';
-        return 'minimal-pairs';
-      }
-
-      function normaliseLevel(raw, fallback) {
-        const s = String(raw || '').toUpperCase().trim();
-        if (s === 'B1' || s === 'B2' || s === 'C1' || s === 'C2') return s;
-        return fallback || 'C1';
-      }
-
-      function showStatus(el, msg, type) {
-        if (!el) return;
-        el.textContent = msg;
-        el.className = 'status-banner ' + (type || 'info');
-        el.classList.remove('hidden');
-      }
-
-      function hideStatus(el) {
-        if (!el) return;
-        el.classList.add('hidden');
-        el.textContent = '';
-      }
-
       /* ----------------------------------------------------------------------
-         4. Strict Single-Screen Navigation
+         4. Strict Single-Screen Toggle
          ---------------------------------------------------------------------- */
-      const SCREEN_IDS = [
-        'screen-landing',
-        'screen-practice',
-        'screen-summary',
-        'screen-ai',
-        'screen-studio'
-      ];
-
       function showScreen(targetId) {
         state.screen = targetId;
         SCREEN_IDS.forEach(function (id) {
           const el = $(id);
           if (!el) return;
           if (id === targetId) {
-            el.classList.remove('hidden');
+            el.classList.add('active');
           } else {
-            el.classList.add('hidden');
+            el.classList.remove('active');
           }
         });
-
-        if (targetId === 'screen-landing') {
-          refreshLandingCounts();
-        } else if (targetId === 'screen-ai') {
-          updateFallbackPrompt();
-        } else if (targetId === 'screen-studio') {
-          renderStudioBank();
-        }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
       /* ----------------------------------------------------------------------
-         5. Landing Page Logic & Live Counts
+         5. Level Filtering (Always Mixes All Categories)
          ---------------------------------------------------------------------- */
-      function getMatchingMasterItems() {
-        return masterBank.filter(function (item) {
-          const levelMatch = state.selectedLevel === 'ALL' || item.level === state.selectedLevel;
-          const catMatch = state.selectedCategory === 'ALL' || item.category === state.selectedCategory;
-          return levelMatch && catMatch;
+      function getMatchingItems() {
+        return QUESTION_BANK.filter(function (item) {
+          return item.level === state.selectedLevel;
         });
-      }
-
-      function refreshLandingCounts() {
-        const total = masterBank.length;
-        const badge = $('master-count-badge');
-        if (badge) badge.textContent = total + ' Master Items';
-        const studioBadge = $('studio-count-badge');
-        if (studioBadge) studioBadge.textContent = total + ' Master Items';
-
-        const levelCounts = { B1: 0, B2: 0, C1: 0, C2: 0, ALL: total };
-        masterBank.forEach(function (item) {
-          if (levelCounts[item.level] !== undefined) {
-            levelCounts[item.level] += 1;
-          }
-        });
-
-        document.querySelectorAll('[data-count-level]').forEach(function (span) {
-          const lvl = span.getAttribute('data-count-level');
-          if (levelCounts[lvl] !== undefined) {
-            span.textContent = String(levelCounts[lvl]);
-          }
-        });
-
-        const matching = getMatchingMasterItems();
-        const startBtn = $('btn-start-practice');
-        if (startBtn) {
-          if (matching.length === 0) {
-            startBtn.disabled = true;
-            startBtn.textContent = 'No matching items available';
-          } else {
-            startBtn.disabled = false;
-            const roundSize = state.selectedLength === 'ALL'
-              ? matching.length
-              : Math.min(parseInt(state.selectedLength, 10), matching.length);
-            startBtn.textContent = 'Start Practice (' + roundSize + ' of ' + matching.length + ' matching items)';
-          }
-        }
       }
 
       /* ----------------------------------------------------------------------
-         6. Practice Engine (Strict Open-Cloze, Zero Pre-Answer Spoilers)
+         6. Practice Engine (Hardened Form & Input Handling)
          ---------------------------------------------------------------------- */
-      function startPracticeSession(pool, label, source, maxLength) {
+      function startPracticeSession(pool, label, isReview, maxLength) {
         if (!Array.isArray(pool) || pool.length === 0) return;
 
-        state.sessionPool = pool.slice();
-        state.sessionLabel = label;
-        state.sessionSource = source;
-
+        state.isReviewMode = Boolean(isReview);
         const shuffled = shuffleArray(pool);
         if (maxLength && maxLength !== 'ALL') {
           const limit = parseInt(maxLength, 10);
@@ -5582,6 +4951,14 @@
         const valMsg = $('practice-validation');
         if (valMsg) valMsg.textContent = '';
 
+        const checkBtn = $('btn-check-answer');
+        const nextBtn = $('btn-next-question');
+        if (checkBtn) checkBtn.classList.remove('hidden');
+        if (nextBtn) nextBtn.classList.add('hidden');
+
+        const keyHint = $('practice-key-hint');
+        if (keyHint) keyHint.innerHTML = 'Press <kbd>Enter</kbd> to submit';
+
         const container = $('sentence-container');
         if (container) {
           container.innerHTML = '';
@@ -5592,12 +4969,14 @@
           const input = document.createElement('input');
           input.type = 'text';
           input.id = 'gap-input';
+          input.name = 'preposition';
           input.className = 'gap-input';
           input.setAttribute('aria-label', 'Missing preposition');
           input.setAttribute('autocomplete', 'off');
           input.setAttribute('autocorrect', 'off');
-          input.setAttribute('autocapitalize', 'off');
+          input.setAttribute('autocapitalize', 'none');
           input.setAttribute('spellcheck', 'false');
+          input.setAttribute('enterkeyhint', 'done');
           container.appendChild(input);
 
           if (item.after) {
@@ -5606,13 +4985,8 @@
 
           setTimeout(function () {
             input.focus();
-          }, 15);
+          }, 25);
         }
-
-        const actionBtn = $('btn-practice-action');
-        if (actionBtn) actionBtn.textContent = 'Check Answer';
-        const keyHint = $('practice-key-hint');
-        if (keyHint) keyHint.innerHTML = 'Press <kbd>Enter</kbd> to submit';
       }
 
       function updatePracticeStats() {
@@ -5626,15 +5000,13 @@
         const elFill = $('progress-fill');
         const elWrap = $('progress-bar-wrap');
 
-        if (elProg) elProg.textContent = shownIdx + ' / ' + total;
+        if (elProg) elProg.textContent = 'Question ' + shownIdx + ' of ' + total;
         if (elScore) elScore.textContent = state.correctCount + ' / ' + state.answeredCount;
 
         if (elAcc) {
-          if (state.answeredCount === 0) {
-            elAcc.textContent = '—';
-          } else {
-            elAcc.textContent = Math.round((state.correctCount / state.answeredCount) * 100) + '%';
-          }
+          elAcc.textContent = state.answeredCount === 0
+            ? '—'
+            : Math.round((state.correctCount / state.answeredCount) * 100) + '%';
         }
 
         if (elStreak) {
@@ -5674,7 +5046,10 @@
 
         state.phase = 'feedback';
         state.answeredCount += 1;
+
+        // Lock input after submission so it cannot be edited
         input.readOnly = true;
+        input.disabled = true;
 
         if (isCorrect) {
           state.correctCount += 1;
@@ -5696,7 +5071,7 @@
           isCorrect: isCorrect
         });
 
-        // Populate Post-Answer Feedback Panel (Level & Category revealed only now)
+        // Reveal Post-Answer Feedback Panel
         const verdictBox = $('verdict-box');
         const verdictText = $('verdict-text');
         const tagsEl = $('feedback-tags');
@@ -5736,9 +5111,19 @@
 
         if (feedbackPanel) feedbackPanel.classList.remove('hidden');
 
+        // Swap Check button for Next button and focus Next cleanly after submit completes
         const isLast = state.currentIndex >= state.queue.length - 1;
-        const actionBtn = $('btn-practice-action');
-        if (actionBtn) actionBtn.textContent = isLast ? 'View Results →' : 'Next Question →';
+        const checkBtn = $('btn-check-answer');
+        const nextBtn = $('btn-next-question');
+        if (checkBtn) checkBtn.classList.add('hidden');
+        if (nextBtn) {
+          nextBtn.textContent = isLast ? 'View Results →' : 'Next Question →';
+          nextBtn.classList.remove('hidden');
+          setTimeout(function () {
+            nextBtn.focus();
+          }, 30);
+        }
+
         const keyHint = $('practice-key-hint');
         if (keyHint) {
           keyHint.innerHTML = isLast
@@ -5774,11 +5159,12 @@
         const sumAcc = $('sum-accuracy');
         const sumStreak = $('sum-streak');
         const breakdownEl = $('summary-cat-breakdown');
+        const reviewTitle = $('summary-review-title');
         const reviewList = $('summary-review-list');
         const reviewBtn = $('btn-review-mistakes');
 
         if (heading) {
-          heading.textContent = state.sessionSource === 'review' ? 'Mistake Review Complete' : 'Round Complete';
+          heading.textContent = state.isReviewMode ? 'Mistake Review Complete' : 'Round Complete';
         }
         if (subtext) {
           if (accuracy === 100) {
@@ -5796,7 +5182,7 @@
         if (sumAcc) sumAcc.textContent = accuracy + '%';
         if (sumStreak) sumStreak.textContent = String(state.bestStreak);
 
-        // Category accuracy breakdown
+        // Category-by-category accuracy breakdown
         const catStats = {};
         state.results.forEach(function (res) {
           const cat = res.item.category || 'minimal-pairs';
@@ -5815,428 +5201,53 @@
           }).join('');
         }
 
-        // Mistakes button
-        const missedItems = state.results.filter(function (r) { return !r.isCorrect; });
+        // Mistakes Review List & Retry Button
+        const missedResults = state.results.filter(function (r) { return !r.isCorrect; });
         if (reviewBtn) {
-          if (missedItems.length > 0) {
+          if (missedResults.length > 0) {
             reviewBtn.classList.remove('hidden');
-            reviewBtn.textContent = 'Review Mistakes (' + missedItems.length + ')';
+            reviewBtn.textContent = 'Review Mistakes (' + missedResults.length + ')';
           } else {
             reviewBtn.classList.add('hidden');
           }
         }
 
-        // Item-by-item review list
-        if (reviewList) {
-          reviewList.innerHTML = state.results.map(function (res) {
-            const item = res.item;
-            const correctAns = formatDisplayAnswer(item);
-            const missedClass = res.isCorrect ? '' : ' is-missed';
-            const userTag = res.isCorrect
-              ? '<span class="badge badge-green">Your answer: ' + escapeHtml(res.userAnswer) + ' ✓</span>'
-              : '<span class="badge badge-amber" style="background:var(--wrong-bg);color:var(--wrong-text);border-color:var(--wrong-border);">Your answer: ' + escapeHtml(res.userAnswer) + ' ✗</span>';
+        if (reviewTitle) {
+          reviewTitle.textContent = missedResults.length > 0
+            ? 'Mistakes to Review (' + missedResults.length + ')'
+            : 'Mistakes Review';
+        }
 
-            return '<article class="review-item' + missedClass + '">' +
-              '<p class="review-sentence">' +
-                escapeHtml(item.before) +
-                '<span class="ans-highlight">' + escapeHtml(correctAns) + '</span>' +
-                escapeHtml(item.after) +
-              '</p>' +
-              '<div class="review-meta">' +
-                userTag +
-                '<span class="badge badge-indigo">' + escapeHtml(item.level) + ' · ' + escapeHtml(item.targetPhrase || correctAns) + '</span>' +
-              '</div>' +
-              '<p class="review-note"><strong>Logic:</strong> ' + escapeHtml(item.logic || '') + '</p>' +
-              (item.spanishNote ? '<p class="review-note" style="color:var(--amber-text);margin-top:0.25rem;"><strong>Spanish L1:</strong> ' + escapeHtml(item.spanishNote) + '</p>' : '') +
-            '</article>';
-          }).join('');
+        if (reviewList) {
+          if (missedResults.length === 0) {
+            reviewList.innerHTML = '<div class="empty-mistakes">No mistakes made in this round — outstanding work!</div>';
+          } else {
+            reviewList.innerHTML = missedResults.map(function (res) {
+              const item = res.item;
+              const correctAns = formatDisplayAnswer(item);
+              return '<article class="review-item is-missed">' +
+                '<p class="review-sentence">' +
+                  escapeHtml(item.before) +
+                  '<span class="ans-highlight">' + escapeHtml(correctAns) + '</span>' +
+                  escapeHtml(item.after) +
+                '</p>' +
+                '<div class="review-meta">' +
+                  '<span class="badge badge-amber" style="background:var(--wrong-bg);color:var(--wrong-text);border-color:var(--wrong-border);">Your answer: ' + escapeHtml(res.userAnswer) + ' ✗</span>' +
+                  '<span class="badge badge-green">Correct: ' + escapeHtml(correctAns) + ' ✓</span>' +
+                  '<span class="badge badge-indigo">' + escapeHtml(item.level) + ' · ' + escapeHtml(item.targetPhrase || correctAns) + '</span>' +
+                '</div>' +
+                '<p class="review-note"><strong>Logic:</strong> ' + escapeHtml(item.logic || '') + '</p>' +
+                (item.spanishNote ? '<p class="review-note" style="color:var(--amber-text);margin-top:0.25rem;"><strong>Spanish L1:</strong> ' + escapeHtml(item.spanishNote) + '</p>' : '') +
+              '</article>';
+            }).join('');
+          }
         }
 
         showScreen('screen-summary');
       }
 
       /* ----------------------------------------------------------------------
-         8. Question Validation & Normalisation (Shared by AI & Import)
-         ---------------------------------------------------------------------- */
-      function sanitiseImportedItems(rawList, fallbackLevel) {
-        if (!Array.isArray(rawList)) return [];
-        const valid = [];
-        rawList.forEach(function (entry, idx) {
-          if (!entry || typeof entry !== 'object') return;
-
-          let before = typeof entry.before === 'string' ? entry.before : null;
-          let after = typeof entry.after === 'string' ? entry.after : null;
-
-          // Support items provided with a single `sentence` containing `___`
-          if ((before === null || after === null) && typeof entry.sentence === 'string' && entry.sentence.includes('___')) {
-            const parts = entry.sentence.split('___');
-            before = parts[0];
-            after = parts.slice(1).join('___');
-          }
-
-          if (before === null || after === null) return;
-
-          let answers = [];
-          if (Array.isArray(entry.answers)) {
-            answers = entry.answers.map(function (a) { return String(a).trim().toLowerCase(); }).filter(Boolean);
-          } else if (typeof entry.answer === 'string') {
-            answers = entry.answer.split(',').map(function (a) { return a.trim().toLowerCase(); }).filter(Boolean);
-          }
-          if (Array.isArray(entry.accept)) {
-            entry.accept.forEach(function (a) {
-              const cleaned = String(a).trim().toLowerCase();
-              if (cleaned && answers.indexOf(cleaned) === -1) answers.push(cleaned);
-            });
-          }
-          if (answers.length === 0) return;
-
-          valid.push({
-            id: entry.id ? String(entry.id) : 'custom-' + Date.now() + '-' + idx,
-            level: normaliseLevel(entry.level, fallbackLevel),
-            category: normaliseCategory(entry.category),
-            before: before,
-            after: after,
-            answers: answers,
-            targetPhrase: entry.targetPhrase ? String(entry.targetPhrase).trim() : answers[0],
-            logic: entry.logic ? String(entry.logic).trim() : 'Standard dependent preposition usage.',
-            spanishNote: entry.spanishNote ? String(entry.spanishNote).trim() : ''
-          });
-        });
-        return valid;
-      }
-
-      function parsePipeDelimited(text) {
-        const lines = text.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
-        const items = [];
-        lines.forEach(function (line, idx) {
-          if (!line.includes('|')) return;
-          const cols = line.split('|').map(function (c) { return c.trim(); });
-          if (cols.length < 4) return;
-          const level = normaliseLevel(cols[0], 'C1');
-          const category = normaliseCategory(cols[1]);
-          const sentence = cols[2];
-          if (!sentence.includes('___')) return;
-          const parts = sentence.split('___');
-          const answers = cols[3].split(',').map(function (a) { return a.trim().toLowerCase(); }).filter(Boolean);
-          if (answers.length === 0) return;
-          const logic = cols[4] || 'Standard Cambridge dependent preposition usage.';
-          const spanishNote = cols[5] || '';
-          items.push({
-            id: 'imp-' + Date.now() + '-' + idx,
-            level: level,
-            category: category,
-            before: parts[0],
-            after: parts.slice(1).join('___'),
-            answers: answers,
-            targetPhrase: answers[0],
-            logic: logic,
-            spanishNote: spanishNote
-          });
-        });
-        return items;
-      }
-
-      /* ----------------------------------------------------------------------
-         9. Optional Gemini API Generator & Copy-Prompt Fallback
-         ---------------------------------------------------------------------- */
-      function buildGenerationPrompt() {
-        const level = ($('ai-level') && $('ai-level').value) || 'C1';
-        const cat = ($('ai-category') && $('ai-category').value) || 'Mixed';
-        const topic = ($('ai-topic') && $('ai-topic').value.trim()) || '';
-        const qty = ($('ai-quantity') && $('ai-quantity').value) || '10';
-
-        const catInstruction = cat === 'Mixed'
-          ? 'Distribute items evenly across "minimal-pairs", "spanish-traps", and "fixed-phrases".'
-          : 'Set every item\'s category to "' + cat + '".';
-
-        const topicLine = topic ? 'Context / topic theme: ' + topic + '.\n' : '';
-
-        return 'Generate exactly ' + qty + ' unique Cambridge Use of English Part 2 (Open Cloze) dependent preposition questions in British English at CEFR level ' + level + '.\n' +
-          catInstruction + '\n' +
-          topicLine +
-          'Return ONLY a valid JSON array (no markdown fences, no commentary) where each object has this exact schema:\n' +
-          '{\n' +
-          '  "id": "ai-1",\n' +
-          '  "level": "' + level + '",\n' +
-          '  "category": "minimal-pairs" | "spanish-traps" | "fixed-phrases",\n' +
-          '  "before": "Sentence text immediately before the single missing preposition (include trailing space if not at start)",\n' +
-          '  "after": "Sentence text immediately after the single missing preposition (include leading space)",\n' +
-          '  "answers": ["single_lowercase_preposition"],\n' +
-          '  "targetPhrase": "e.g. averse to",\n' +
-          '  "logic": "Concise explanation of the directional logic or spatial metaphor.",\n' +
-          '  "spanishNote": "Targeted Spanish-to-English L1 interference note where relevant (or empty string)."\n' +
-          '}\n' +
-          'Ensure each gap has one unambiguous preposition answer and natural British English spelling.';
-      }
-
-      function updateFallbackPrompt() {
-        const box = $('ai-fallback-prompt');
-        if (box) box.value = buildGenerationPrompt();
-      }
-
-      function extractJsonArray(rawText) {
-        let cleaned = String(rawText || '').trim();
-        // Strip markdown code fences if present
-        cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-        try {
-          return JSON.parse(cleaned);
-        } catch (e) {
-          const start = cleaned.indexOf('[');
-          const end = cleaned.lastIndexOf(']');
-          if (start !== -1 && end !== -1 && end > start) {
-            return JSON.parse(cleaned.slice(start, end + 1));
-          }
-          throw new Error('Could not parse valid JSON array from the model response.');
-        }
-      }
-
-      async function runGeminiGeneration(addToMaster) {
-        const keyInput = $('ai-api-key');
-        const modelInput = $('ai-model');
-        const statusEl = $('ai-status');
-        const btnPlay = $('btn-ai-play');
-        const btnAdd = $('btn-ai-add');
-
-        const apiKey = keyInput ? keyInput.value.trim() : '';
-        const model = (modelInput && modelInput.value.trim()) || 'gemini-3.5-flash';
-        const level = ($('ai-level') && $('ai-level').value) || 'C1';
-
-        if (!apiKey) {
-          showStatus(statusEl, 'Please enter your Gemini API key first, or expand the Copy-Prompt Fallback below.', 'error');
-          if (keyInput) keyInput.focus();
-          return;
-        }
-
-        // Keep API key in sessionStorage only (never written to exported HTML)
-        try {
-          sessionStorage.setItem('preposition_lab_gemini_key', apiKey);
-        } catch (e) {
-          // Ignore storage restrictions
-        }
-
-        if (btnPlay) btnPlay.disabled = true;
-        if (btnAdd) btnAdd.disabled = true;
-        if (btnPlay && !addToMaster) btnPlay.innerHTML = '<span class="spinner"></span> Generating...';
-        if (btnAdd && addToMaster) btnAdd.innerHTML = '<span class="spinner"></span> Generating...';
-        showStatus(statusEl, 'Contacting Gemini (' + model + ') to generate ' + level + ' items...', 'info');
-
-        try {
-          const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' +
-            encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey);
-
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: buildGenerationPrompt() }] }],
-              generationConfig: {
-                temperature: 0.7,
-                responseMimeType: 'application/json'
-              }
-            })
-          });
-
-          if (!response.ok) {
-            let errDetail = 'HTTP ' + response.status;
-            try {
-              const errJson = await response.json();
-              if (errJson && errJson.error && errJson.error.message) {
-                errDetail = errJson.error.message;
-              }
-            } catch (e) { /* ignore */ }
-            throw new Error(errDetail);
-          }
-
-          const data = await response.json();
-          const candidateText = data && data.candidates && data.candidates[0] &&
-            data.candidates[0].content && data.candidates[0].content.parts &&
-            data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
-
-          if (!candidateText) {
-            throw new Error('The API returned an empty response.');
-          }
-
-          const parsed = extractJsonArray(candidateText);
-          const validItems = sanitiseImportedItems(parsed, level);
-
-          if (validItems.length === 0) {
-            throw new Error('No valid question items were found in the API response.');
-          }
-
-          if (addToMaster) {
-            masterBank = masterBank.concat(validItems);
-            refreshLandingCounts();
-            showStatus(
-              statusEl,
-              'Added ' + validItems.length + ' generated ' + level + ' items to the Master Bank (now ' + masterBank.length + ' total). Visit Teacher Studio → Export & Share to download your updated standalone HTML.',
-              'success'
-            );
-          } else {
-            hideStatus(statusEl);
-            startPracticeSession(validItems, level + ' · AI Session', 'ai', 'ALL');
-          }
-        } catch (err) {
-          showStatus(statusEl, 'Generation failed: ' + (err && err.message ? err.message : 'Unknown error'), 'error');
-        } finally {
-          if (btnPlay) {
-            btnPlay.disabled = false;
-            btnPlay.textContent = 'Generate & Play Now';
-          }
-          if (btnAdd) {
-            btnAdd.disabled = false;
-            btnAdd.textContent = 'Generate & Add to Master Bank';
-          }
-        }
-      }
-
-      /* ----------------------------------------------------------------------
-         10. Teacher Studio: Master Bank Browser, Bulk Import & Standalone Export
-         ---------------------------------------------------------------------- */
-      function renderStudioBank() {
-        const listEl = $('studio-bank-list');
-        if (!listEl) return;
-
-        const lvlFilter = ($('studio-filter-level') && $('studio-filter-level').value) || 'ALL';
-        const catFilter = ($('studio-filter-cat') && $('studio-filter-cat').value) || 'ALL';
-        const query = (($('studio-filter-search') && $('studio-filter-search').value) || '').trim().toLowerCase();
-
-        const filtered = masterBank.filter(function (item) {
-          if (lvlFilter !== 'ALL' && item.level !== lvlFilter) return false;
-          if (catFilter !== 'ALL' && item.category !== catFilter) return false;
-          if (query) {
-            const hay = (item.before + ' ' + (item.answers || []).join(' ') + ' ' + item.after + ' ' + (item.targetPhrase || '')).toLowerCase();
-            if (!hay.includes(query)) return false;
-          }
-          return true;
-        });
-
-        const studioBadge = $('studio-count-badge');
-        if (studioBadge) studioBadge.textContent = masterBank.length + ' Master Items';
-
-        if (filtered.length === 0) {
-          listEl.innerHTML = '<p class="field-hint" style="text-align:center;padding:1rem;">No items match your current filter.</p>';
-          return;
-        }
-
-        listEl.innerHTML = filtered.map(function (item) {
-          const ans = formatDisplayAnswer(item);
-          return '<div class="bank-row">' +
-            '<div class="bank-row-content">' +
-              '<div class="bank-row-meta">' +
-                '<span class="badge badge-indigo">' + escapeHtml(item.level) + '</span>' +
-                '<span class="badge badge-slate">' + escapeHtml(CATEGORY_LABELS[item.category] || item.category) + '</span>' +
-                '<span class="badge badge-green">' + escapeHtml(item.targetPhrase || ans) + '</span>' +
-              '</div>' +
-              '<p class="bank-row-sentence">' +
-                escapeHtml(item.before) + '<strong>[' + escapeHtml(ans) + ']</strong>' + escapeHtml(item.after) +
-              '</p>' +
-            '</div>' +
-            '<button type="button" class="btn btn-danger btn-sm" data-delete-id="' + escapeHtml(item.id) + '">Delete</button>' +
-          '</div>';
-        }).join('');
-      }
-
-      function parseBulkImportInput() {
-        const raw = ($('import-textarea') && $('import-textarea').value.trim()) || '';
-        if (!raw) return { items: [], error: 'Please paste JSON or pipe-delimited lines first.' };
-
-        if (raw.startsWith('[') || raw.startsWith('{')) {
-          try {
-            const parsed = JSON.parse(raw);
-            const arr = Array.isArray(parsed) ? parsed : [parsed];
-            const valid = sanitiseImportedItems(arr, 'C1');
-            if (valid.length === 0) {
-              return { items: [], error: 'JSON parsed, but no valid question items matched the required schema.' };
-            }
-            return { items: valid, error: null };
-          } catch (e) {
-            return { items: [], error: 'Invalid JSON syntax: ' + e.message };
-          }
-        }
-
-        const piped = parsePipeDelimited(raw);
-        if (piped.length === 0) {
-          return { items: [], error: 'Could not parse pipe-delimited lines. Ensure each line has: Level | Category | Sentence with ___ | Answer | Directional Logic | Spanish Note' };
-        }
-        return { items: piped, error: null };
-      }
-
-      function triggerDownload(filename, content, mimeType) {
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-      }
-
-      function exportStandaloneHtml() {
-        const nameInput = $('export-html-name');
-        let filename = (nameInput && nameInput.value.trim()) || 'preposition-lab-master.html';
-        if (!filename.toLowerCase().endsWith('.html')) filename += '.html';
-
-        // Clone entire document cleanly
-        const clone = document.documentElement.cloneNode(true);
-
-        // 1. Reset screens so exported file always opens on #screen-landing
-        SCREEN_IDS.forEach(function (id) {
-          const el = clone.querySelector('#' + id);
-          if (!el) return;
-          if (id === 'screen-landing') {
-            el.classList.remove('hidden');
-          } else {
-            el.classList.add('hidden');
-          }
-        });
-
-        // 2. Strictly scrub ALL sensitive inputs, temporary state & status banners
-        const keyField = clone.querySelector('#ai-api-key');
-        if (keyField) {
-          keyField.value = '';
-          keyField.removeAttribute('value');
-          keyField.setAttribute('type', 'password');
-        }
-        const toggleKeyBtn = clone.querySelector('#btn-toggle-key');
-        if (toggleKeyBtn) toggleKeyBtn.textContent = 'Show';
-
-        ['#ai-topic', '#studio-filter-search', '#add-sentence', '#add-answers', '#add-target', '#add-logic', '#add-spanish', '#import-textarea', '#ai-fallback-prompt'].forEach(function (sel) {
-          const el = clone.querySelector(sel);
-          if (el) {
-            el.value = '';
-            el.removeAttribute('value');
-            if (el.tagName === 'TEXTAREA') el.textContent = '';
-          }
-        });
-
-        ['#sentence-container', '#summary-review-list', '#summary-cat-breakdown', '#studio-bank-list'].forEach(function (sel) {
-          const el = clone.querySelector(sel);
-          if (el) el.innerHTML = '';
-        });
-
-        ['#ai-status', '#add-item-status', '#import-status', '#export-status', '#feedback-panel', '#reset-confirm-box'].forEach(function (sel) {
-          const el = clone.querySelector(sel);
-          if (el) {
-            el.classList.add('hidden');
-            if (el.classList.contains('status-banner')) el.textContent = '';
-          }
-        });
-
-        // 3. Serialise current masterBank safely into #master-bank-data (escaping </)
-        const bankScript = clone.querySelector('#master-bank-data');
-        if (bankScript) {
-          bankScript.textContent = '\n' + JSON.stringify(masterBank, null, 2).replace(/<\//g, '<\\/') + '\n';
-        }
-
-        const htmlOutput = '<!DOCTYPE html>\n' + clone.outerHTML;
-        triggerDownload(filename, htmlOutput, 'text/html;charset=utf-8');
-        showStatus($('export-status'), 'Downloaded "' + filename + '" with ' + masterBank.length + ' Master Bank items (no API keys included).', 'success');
-      }
-
-      /* ----------------------------------------------------------------------
-         11. Event Listeners
+         8. Event Listeners
          ---------------------------------------------------------------------- */
       // Landing Level Pills
       document.querySelectorAll('#level-pills .pill-btn').forEach(function (btn) {
@@ -6244,317 +5255,82 @@
           state.selectedLevel = btn.getAttribute('data-level') || 'C1';
           document.querySelectorAll('#level-pills .pill-btn').forEach(function (b) { b.classList.remove('active'); });
           btn.classList.add('active');
-          refreshLandingCounts();
-        });
-      });
-
-      // Landing Category Pills
-      document.querySelectorAll('#category-pills .pill-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          state.selectedCategory = btn.getAttribute('data-category') || 'ALL';
-          document.querySelectorAll('#category-pills .pill-btn').forEach(function (b) { b.classList.remove('active'); });
-          btn.classList.add('active');
-          refreshLandingCounts();
         });
       });
 
       // Landing Length Pills
       document.querySelectorAll('#length-pills .pill-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
-          state.selectedLength = btn.getAttribute('data-length') || '15';
+          state.selectedLength = btn.getAttribute('data-length') || '8';
           document.querySelectorAll('#length-pills .pill-btn').forEach(function (b) { b.classList.remove('active'); });
           btn.classList.add('active');
-          refreshLandingCounts();
         });
       });
 
-      // Landing Actions
-      const btnStart = $('btn-start-practice');
-      if (btnStart) {
-        btnStart.addEventListener('click', function () {
-          const matching = getMatchingMasterItems();
-          const lvlLabel = state.selectedLevel === 'ALL' ? 'B1–C2' : state.selectedLevel;
-          startPracticeSession(matching, lvlLabel + ' · Master Bank', 'master', state.selectedLength);
+      function launchConfiguredRound() {
+        const matching = getMatchingItems();
+        const lvlLabel = LEVEL_LABELS[state.selectedLevel] || state.selectedLevel;
+        startPracticeSession(matching, lvlLabel, false, state.selectedLength);
+      }
+
+      if ($('btn-start-practice')) {
+        $('btn-start-practice').addEventListener('click', launchConfiguredRound);
+      }
+
+      if ($('btn-practice-back')) {
+        $('btn-practice-back').addEventListener('click', function () {
+          showScreen('screen-landing');
         });
       }
 
-      if ($('btn-open-ai')) $('btn-open-ai').addEventListener('click', function () { showScreen('screen-ai'); });
-      if ($('btn-open-studio')) $('btn-open-studio').addEventListener('click', function () { showScreen('screen-studio'); });
+      if ($('btn-summary-home')) {
+        $('btn-summary-home').addEventListener('click', function () {
+          showScreen('screen-landing');
+        });
+      }
 
-      // Back Navigation Buttons
-      if ($('btn-practice-back')) $('btn-practice-back').addEventListener('click', function () { showScreen('screen-landing'); });
-      if ($('btn-ai-back')) $('btn-ai-back').addEventListener('click', function () { showScreen('screen-landing'); });
-      if ($('btn-studio-back')) $('btn-studio-back').addEventListener('click', function () { showScreen('screen-landing'); });
-      if ($('btn-summary-home')) $('btn-summary-home').addEventListener('click', function () { showScreen('screen-landing'); });
-
-      // Practice Action Button & Enter Key Workflow
-      if ($('btn-practice-action')) {
-        $('btn-practice-action').addEventListener('click', function () {
+      // Standard Form Submit for Checking Answers (never hijacks typing)
+      if ($('practice-form')) {
+        $('practice-form').addEventListener('submit', function (event) {
+          event.preventDefault();
           if (state.phase === 'answering') {
             submitAnswer();
-          } else if (state.phase === 'feedback') {
-            nextQuestionOrSummary();
           }
         });
       }
 
-      document.addEventListener('keydown', function (event) {
-        if (event.key !== 'Enter' || state.screen !== 'screen-practice') return;
-        const activeTag = document.activeElement ? document.activeElement.tagName : '';
+      // Dedicated Next Question Button
+      if ($('btn-next-question')) {
+        $('btn-next-question').addEventListener('click', function () {
+          nextQuestionOrSummary();
+        });
+      }
 
-        if (state.phase === 'answering') {
-          if (activeTag === 'INPUT' || document.activeElement === $('btn-practice-action') || activeTag === 'BODY') {
-            event.preventDefault();
-            submitAnswer();
-          }
-        } else if (state.phase === 'feedback') {
-          if (activeTag !== 'BUTTON' || document.activeElement === $('btn-practice-action')) {
-            event.preventDefault();
-            nextQuestionOrSummary();
-          }
-        }
+      // Guarded Enter Handler ONLY during Feedback phase (when Next button isn't already focused)
+      document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter' || event.repeat) return;
+        if (state.screen !== 'screen-practice' || state.phase !== 'feedback') return;
+        const activeTag = document.activeElement ? document.activeElement.tagName : '';
+        if (activeTag === 'BUTTON' || activeTag === 'A') return;
+        event.preventDefault();
+        nextQuestionOrSummary();
       });
 
-      // Summary Actions
+      // Summary Screen Actions
       if ($('btn-review-mistakes')) {
         $('btn-review-mistakes').addEventListener('click', function () {
-          const missed = state.results.filter(function (r) { return !r.isCorrect; }).map(function (r) { return r.item; });
+          const missed = state.results
+            .filter(function (r) { return !r.isCorrect; })
+            .map(function (r) { return r.item; });
           if (missed.length > 0) {
-            startPracticeSession(missed, 'Mistake Review (' + missed.length + ')', 'review', 'ALL');
+            startPracticeSession(missed, 'Mistake Review (' + missed.length + ')', true, 'ALL');
           }
         });
       }
 
       if ($('btn-new-round')) {
-        $('btn-new-round').addEventListener('click', function () {
-          if (state.sessionSource === 'master' || state.sessionSource === 'review') {
-            const matching = getMatchingMasterItems();
-            const lvlLabel = state.selectedLevel === 'ALL' ? 'B1–C2' : state.selectedLevel;
-            startPracticeSession(matching, lvlLabel + ' · Master Bank', 'master', state.selectedLength);
-          } else {
-            startPracticeSession(state.sessionPool, state.sessionLabel, state.sessionSource, 'ALL');
-          }
-        });
+        $('btn-new-round').addEventListener('click', launchConfiguredRound);
       }
-
-      // AI Screen Controls
-      if ($('btn-toggle-key')) {
-        $('btn-toggle-key').addEventListener('click', function () {
-          const inp = $('ai-api-key');
-          if (!inp) return;
-          if (inp.type === 'password') {
-            inp.type = 'text';
-            $('btn-toggle-key').textContent = 'Hide';
-          } else {
-            inp.type = 'password';
-            $('btn-toggle-key').textContent = 'Show';
-          }
-        });
-      }
-
-      ['ai-level', 'ai-category', 'ai-topic', 'ai-quantity'].forEach(function (id) {
-        const el = $(id);
-        if (el) el.addEventListener('input', updateFallbackPrompt);
-        if (el) el.addEventListener('change', updateFallbackPrompt);
-      });
-
-      if ($('btn-ai-play')) $('btn-ai-play').addEventListener('click', function () { runGeminiGeneration(false); });
-      if ($('btn-ai-add')) $('btn-ai-add').addEventListener('click', function () { runGeminiGeneration(true); });
-
-      if ($('btn-copy-prompt')) {
-        $('btn-copy-prompt').addEventListener('click', function () {
-          const ta = $('ai-fallback-prompt');
-          const status = $('copy-prompt-status');
-          if (!ta) return;
-          ta.select();
-          ta.setSelectionRange(0, 99999);
-          try {
-            document.execCommand('copy');
-            if (status) status.textContent = 'Prompt copied to clipboard!';
-          } catch (e) {
-            if (status) status.textContent = 'Select the text above and press Ctrl+C / Cmd+C to copy.';
-          }
-          setTimeout(function () { if (status) status.textContent = ''; }, 3000);
-        });
-      }
-
-      // Teacher Studio Tabs
-      document.querySelectorAll('.tab-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          const targetTab = btn.getAttribute('data-tab');
-          document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
-          btn.classList.add('active');
-          document.querySelectorAll('.studio-tab-panel').forEach(function (panel) {
-            if (panel.id === targetTab) {
-              panel.classList.remove('hidden');
-            } else {
-              panel.classList.add('hidden');
-            }
-          });
-        });
-      });
-
-      // Studio Bank Filtering & Deletion
-      ['studio-filter-level', 'studio-filter-cat', 'studio-filter-search'].forEach(function (id) {
-        const el = $(id);
-        if (el) el.addEventListener('input', renderStudioBank);
-        if (el) el.addEventListener('change', renderStudioBank);
-      });
-
-      if ($('studio-bank-list')) {
-        $('studio-bank-list').addEventListener('click', function (event) {
-          const btn = event.target.closest('[data-delete-id]');
-          if (!btn) return;
-          const delId = btn.getAttribute('data-delete-id');
-          masterBank = masterBank.filter(function (item) { return item.id !== delId; });
-          renderStudioBank();
-          refreshLandingCounts();
-        });
-      }
-
-      // Studio Single Item Form
-      if ($('add-item-form')) {
-        $('add-item-form').addEventListener('submit', function (event) {
-          event.preventDefault();
-          const sentence = ($('add-sentence') && $('add-sentence').value.trim()) || '';
-          const statusEl = $('add-item-status');
-
-          if (!sentence.includes('___')) {
-            showStatus(statusEl, 'Please include ___ (three underscores) in the sentence to mark the preposition gap.', 'error');
-            return;
-          }
-
-          const parts = sentence.split('___');
-          const answersRaw = ($('add-answers') && $('add-answers').value) || '';
-          const answers = answersRaw.split(',').map(function (a) { return a.trim().toLowerCase(); }).filter(Boolean);
-          if (answers.length === 0) {
-            showStatus(statusEl, 'Please enter at least one preposition answer.', 'error');
-            return;
-          }
-
-          const newItem = {
-            id: 'teacher-' + Date.now(),
-            level: normaliseLevel($('add-level').value, 'C1'),
-            category: normaliseCategory($('add-category').value),
-            before: parts[0],
-            after: parts.slice(1).join('___'),
-            answers: answers,
-            targetPhrase: ($('add-target').value || answers[0]).trim(),
-            logic: ($('add-logic').value || '').trim(),
-            spanishNote: ($('add-spanish').value || '').trim()
-          };
-
-          masterBank.unshift(newItem);
-          $('add-item-form').reset();
-          renderStudioBank();
-          refreshLandingCounts();
-          showStatus(statusEl, 'Added "' + newItem.targetPhrase + '" (' + newItem.level + ') to the Master Bank.', 'success');
-        });
-      }
-
-      // Studio Bulk Import
-      if ($('btn-load-example')) {
-        $('btn-load-example').addEventListener('click', function () {
-          const ta = $('import-textarea');
-          if (!ta) return;
-          ta.value =
-            'C1 | minimal-pairs | The new ethics policy applies ___ all visiting fellows. | to | TO marks the target group covered by a rule. | Contrast with "apply for" (a position).\n' +
-            'B2 | spanish-traps | It is difficult to concentrate ___ detailed graphs in a noisy room. | on | ON places mental focus onto a single point. | Spanish "concentrarse en" often causes "concentrate in".';
-          hideStatus($('import-status'));
-        });
-      }
-
-      if ($('import-file-input')) {
-        $('import-file-input').addEventListener('change', function (event) {
-          const file = event.target.files && event.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            const ta = $('import-textarea');
-            if (ta) ta.value = String(e.target.result || '');
-            showStatus($('import-status'), 'Loaded "' + file.name + '". Choose "Play as Temporary Set" or "Add to Master Bank".', 'info');
-          };
-          reader.readAsText(file);
-          event.target.value = '';
-        });
-      }
-
-      if ($('btn-import-play')) {
-        $('btn-import-play').addEventListener('click', function () {
-          const res = parseBulkImportInput();
-          if (res.error) {
-            showStatus($('import-status'), res.error, 'error');
-            return;
-          }
-          hideStatus($('import-status'));
-          startPracticeSession(res.items, 'Custom Temporary Set (' + res.items.length + ')', 'custom', 'ALL');
-        });
-      }
-
-      if ($('btn-import-master')) {
-        $('btn-import-master').addEventListener('click', function () {
-          const res = parseBulkImportInput();
-          if (res.error) {
-            showStatus($('import-status'), res.error, 'error');
-            return;
-          }
-          masterBank = masterBank.concat(res.items);
-          renderStudioBank();
-          refreshLandingCounts();
-          showStatus($('import-status'), 'Added ' + res.items.length + ' items to the Master Bank (now ' + masterBank.length + ' total). Go to Export & Share to download your updated HTML.', 'success');
-        });
-      }
-
-      // Studio Export & Reset
-      if ($('btn-export-html')) {
-        $('btn-export-html').addEventListener('click', exportStandaloneHtml);
-      }
-
-      if ($('btn-export-json')) {
-        $('btn-export-json').addEventListener('click', function () {
-          const nameInput = $('export-json-name');
-          let filename = (nameInput && nameInput.value.trim()) || 'preposition-lab-bank.json';
-          if (!filename.toLowerCase().endsWith('.json')) filename += '.json';
-          triggerDownload(filename, JSON.stringify(masterBank, null, 2), 'application/json;charset=utf-8');
-          showStatus($('export-status'), 'Exported ' + masterBank.length + ' items to "' + filename + '".', 'success');
-        });
-      }
-
-      if ($('btn-reset-request')) {
-        $('btn-reset-request').addEventListener('click', function () {
-          const box = $('reset-confirm-box');
-          if (box) box.classList.remove('hidden');
-        });
-      }
-
-      if ($('btn-reset-cancel')) {
-        $('btn-reset-cancel').addEventListener('click', function () {
-          const box = $('reset-confirm-box');
-          if (box) box.classList.add('hidden');
-        });
-      }
-
-      if ($('btn-reset-confirm')) {
-        $('btn-reset-confirm').addEventListener('click', function () {
-          masterBank = JSON.parse(JSON.stringify(originalBankSnapshot));
-          const box = $('reset-confirm-box');
-          if (box) box.classList.add('hidden');
-          renderStudioBank();
-          refreshLandingCounts();
-          showStatus($('export-status'), 'Restored the original built-in Master Bank (' + masterBank.length + ' items).', 'info');
-        });
-      }
-
-      /* ----------------------------------------------------------------------
-         12. Initialisation
-         ---------------------------------------------------------------------- */
-      try {
-        const savedKey = sessionStorage.getItem('preposition_lab_gemini_key');
-        if (savedKey && $('ai-api-key')) $('ai-api-key').value = savedKey;
-      } catch (e) { /* ignore */ }
-
-      refreshLandingCounts();
-      updateFallbackPrompt();
     })();
   </script>
 </body>
